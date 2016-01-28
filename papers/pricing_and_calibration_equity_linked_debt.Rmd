@@ -1,9 +1,14 @@
 ---
-title: "Pricing And Calibration of Models For Equity-Linked Default"
+title: "ragtop: Complex Derivatives Pricing"
 author: "Brian K. Boonstra"
 date: "First Version: Jan 29, 2016  This Version:`r Sys.Date()`"
-output: rmarkdown::html_document
+output: rmarkdown::html_vignette
 bibliography: converts.bib
+#bibliography: ragtop_references.bib
+vignette: >
+  %\VignetteIndexEntry{ragtop: Complex Derivatives Pricing}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ## Introduction
