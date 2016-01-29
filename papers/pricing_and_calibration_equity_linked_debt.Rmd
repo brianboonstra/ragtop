@@ -1,64 +1,62 @@
 ---
-title: "ragtop: Complex Derivatives Pricing"
+title: "Calibration and Pricing In Models Of Equity-Linked Default"
 author: "Brian K. Boonstra"
-date: "First Version: Jan 29, 2016  This Version:`r Sys.Date()`"
-output: rmarkdown::html_vignette
+date: "First Version: 2016-01-29  This Version: `r Sys.Date()`"
+output: rmarkdown::html_document
 bibliography: converts.bib
-#bibliography: ragtop_references.bib
-vignette: >
-  %\VignetteIndexEntry{ragtop: Complex Derivatives Pricing}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
 ---
 
 ## Introduction
 
 Financial derivatives generally fall into one of just a few classes: fixed income, equities, foreign exchange, commodities, and energy.  Pricing models for such derivatives usually involve standard approaches distinct to each of these asset classes.  For example, equity derivatives are priced on variants of the famous Black-Scholes model, while tranche protection on mortgage-backed securities uses copulas with marginal poisson distribution.  Convertible bonds are one of the few types of derivative securities straddling asset classes, and whose valuation must be linked to reasonable models of *multiple* asset types, involving equity valuations, fixed income and sometimes foreign exchange.
 
-A **convertible bond** is similar to a corporate bond, with promised coupons and notional payments at some known set of future dates, but with a twist.  The bond holder, who has effectively lent money to the issuer, can choose to *convert* the bond into equity (subject to some restrictions), in an amount known as the *conversion value*.  The bond price therefore depends on three major processes:
+A **convertible bond** is similar to a corporate bond^[A standard corporate bond is often called a *straight* bond], with promised coupons and notional payments at some known set of future dates, but with a twist.  The bond holder, who has effectively lent money to the issuer, can choose to *convert* the bond into equity (subject to some restrictions), in an amount known as the *conversion value*.  The bond price therefore depends on three major processes:
 
 - *interest rates* affecting the discounted value of future coupons and notional
 - *equity* value affecting conversion value
 - *default* of the issuer wiping out equity, coupons and notional
 
-Of these processes, the changes in equity value are most important, followed closely by issuer default.  The `ragtop` package provides derivative pricing and calibration based on simply linked models of equities and corporate defaults.  Though convertible bonds are our most important case, we also consider mandatories, compound options, and portfolios of equity options and credit derivatives on the same underlying company.
+Of these processes, the changes in equity value are most important, followed closely by issuer default.  We discuss derivative pricing and calibration based on simply linked models of equities and corporate defaults.  Though convertible bonds are our most important case, we also consider mandatories, compound options, and portfolios of equity options and credit derivatives on the same underlying company.
 
 
 ## Stochastic Model
 
-Our basic stochastic model links equity values $S_t$ with *hazard rate* or default intensity $h$
+Our basic stochastic model^[More explicitly we could write
+$$
+\frac{dS_t}{S_t}=(r(t)+h(S_t,t)-q(t)) dt + \sigma(t) dZ - dJ(h(S_t,t))
+$$] links equity values $S_t$ with *hazard rate* or default intensity $h$
 $$
 	\frac{dS_t}{S_t}=(r+h-q) dt + \sigma dZ - dJ
 $$
-where $h$ is a deterministic function of stock price and time, and $J$ is a Poisson jump process^[More explicitly we could write
-$$
-\frac{dS_t}{S_t}=(r(t)+h(S_t,t)-q(t)) dt + \sigma(t) dZ - dJ(h(S_t,t))
-$$] [see @Lin06; @And04; and @WuC06].  This model is similar to Black-Scholes, with the jump process $J$ representing default, compensated by extra drift in the equity at rate $h$.
+where $r$ and $q$ play their usual roles, $h$ is a deterministic function of stock price and time, and $J$ is a Poisson jump process [see @Lin06; @And04; and @WuC06] adapted to $h$.  This model is a jump-diffusion extension of Black-Scholes, with the jump process $J$ representing default, compensated [@Mer76] by extra drift in the equity at rate $h$.
 
-As an important parsimonious example we may take the default intensity $h$ to be given by a shifted power law
+In addition to these "normal" stochastic dynamics, we will assume that on a known future set of dividend dates $T_k$, the stock will pay dividends in the amount $\kappa_k+\pi_k S_{T_k}$.
+
+As an important parsimonious example we may take the default intensity $h$ to be given by a shifted power law [@Tak01]
 $$
 h(S,t) = h_c + \alpha(t) S^p
 $$
 where $\alpha(\cdot)$ is a deterministic function of time and the power $p$ is a constant generally between -10 and -1.  In practice, the volatility $\sigma$, borrow cost $q$ and (less frequently) even the short rate $r$ can often be set to constants, though we do not make that assumption here.
 
+Note that our stochastic model is nominally two-dimensional, but since the jump process is discrete we can nearly always collapse analyses into a single dimension, at considerable computational savings.
 
 ## Arguments of Intuition
 
-Only two parameters of our model are likely to be well-understood and readily specified by practitioners:
+A model is only useful in practice if we use it to tell us something about the world.  In order to do so with this model, we require some way of choosing its parameters.
+
+Only two of its parameters are likely to be well-understood and readily specified by practitioners:
+
 - The short rate $r(t)$ can be inferred using the usual interest rate curve bootstrapping techniques.
-- The borrow cost $q(t)$ is typically set according to the rates negotiated with a prime broker.
+- The borrow cost $b(t)$ is typically set according to the rates negotiated with a prime broker^[While borrow costs are often ignored in the academic literature, they are a significant influence on the traded value of derivatives in the financial markets.].
+- The constant dividend amounts $\kappa_k$ and their companion proportional amounts $\pi_k$ are nearly always set from past dividends or from professional estimation services^[Bloomberg's BDVD is one such professional dividend estimation service.].
 
-### Stock Volatility $\sigma$
-
-We generally think of stock volatility in terms of equity option markets.  For that reason, we expect to "imply" an appropriate value for $\sigma^{\text{impl}}$ from equity options where possible.  However, it is important to keep in mind that $\sigma^{\text{impl}}$ is inevitably different from the default-free $\sigma^{\text{impl}}_{\text{BS}}$ in the Black-Scholes model.  The two will be closely related, but since some of the price variability is represented by the jump process $dJ$, we will have $\sigma^{\text{impl}} < \sigma^{\text{impl}}_{\text{BS}}$.
-
-Convertible bonds often have tenors far exceeding those found in liquid option markets.  This makes historical volatility estimates^[Historical volatility estimates are usually formed by computing the standard deviation of $\log\left(\frac{S^H_{i}}{S^H_{i-1}}\right)$ for a time series of historical prices $S^H$.] more desirable.  Since historical prices are by definition default-free, they are compatible with $\sigma$ and not with $\sigma_{\text{BS}}$.  (This property of historical volatility estimation for risky entities is generally underappreciated.)
+Our remaining arguments require more careful consideration.  Generally speaking, we require some way of choosing them from observable current or historical market data.
 
 ### Survival Probabilities and Independent Default Intensity $\tilde{h}$
 
-Equity default observations are almost infinitely sparser than equity price observations^[Equity defaults are significantly sparser than major corporate events such as takeovers, spinoffs and special dividends as well.  Modelers do not generally treat corporate events because their details and effects are a complete modeling quagmire.].  Default models and specifications are correspondingly crude.  We think of default intensity (independent of stock price) as being based on a sequence $\{H_i, T_i\}$ such that default time $T_d$ satisfies
+Equity default observations are almost infinitely sparser than equity price observations^[Equity defaults are *also* significantly sparser than major corporate events such as takeovers, spin-offs and special dividends.  Modelers do not generally treat corporate events because their details and effects are a complete modeling quagmire.].  Default models and specifications are [correspondingly crude](https://developers.opengamma.com/quantitative-research/Pricing-and-Risk-Management-of-Credit-Default-Swaps-OpenGamma.pdf) in comparison to Black-Scholes.  We think of default intensity (independent of stock price) as being based on a sequence $\{H_i, T_i\}$ such that default time $T_d$ satisfies
 $$
-	\text{Prob}( T_d > T_i ) = \exp{-H_i T_i}.
+	\text{Prob}( T_d > T_i ) = \exp\left({-H_i T_i}\right).
 $$
 Where possible, the $H_i$ are observed credit default swap (CDS) spreads. Taking $T_0=0$ we then find a step function $\tilde{h}(t)$ with left-discontinuities at $\{T_i\}$ such that
 $$
@@ -70,40 +68,191 @@ $$
 	\text{Prob}( T_d > t ) = \exp{\left(-\int_0^t \tilde{h}(s) ds \right)}
 $$
 
-In most cases this is trivial, since only one spread observation $H$ is available. 
+In most cases this is trivial, since only one spread observation $\{H_1, T_1=5\text{yr}\}$ is available.   When CDS spreads are unavailable, it is common practice to approximate $H$ with an historical average from a [ratings agency lookup table](https://www.moodys.com/research/Annual-Default-Study-Corporate-Default-and-Recovery-Rates-1920-2014--PBC_180036).
 
 For shifted power laws we can match a wide variety of survival probability functions by choosing various intensity modifiers $\alpha(t)$.  A particularly important case is the constant-intensity target with rate $h_c$
 $$
 	\text{Prob}( T_d > t ) = e^{-h_c t}.
 $$
 
+### Stock Volatility $\sigma$
 
+We generally think of stock volatility in terms of equity option markets.  For that reason, we expect to "imply" an appropriate value for $\sigma^{\text{impl}}$ from equity options where possible.  However, it is important to keep in mind that $\sigma^{\text{impl}}$ is inevitably different from the default-free $\sigma^{\text{impl}}_{\text{BS}}$ in the Black-Scholes model.  The two will be closely related, but since some of the price variability is represented by the jump process $dJ$, we will have $\sigma^{\text{impl}} < \sigma^{\text{impl}}_{\text{BS}}$.
+
+Convertible bonds often have tenors far exceeding those found in liquid option markets.  This makes historical volatility estimates^[Historical volatility estimates are usually formed by computing the standard deviation of $\log\left(\frac{S^H_{i}}{S^H_{i-1}}\right)$ for a time series of historical prices $S^H$.][@Bur90] more desirable.  Since historical prices are by definition default-free, they are compatible with $\sigma$ and not with $\sigma_{\text{BS}}$.  This property of historical volatility estimation for risky entities is generally under-appreciated.
+
+
+## Fundamental Derivative Properties
+
+
+### Early Exercise
+
+Some instruments of interest, such as CDS and vanilla options, are amenable to valuation by directly estimating and discounting terminal distributions.  However, both convertible bonds and american-exercise equity options give early exercise rights to their holders.  In addition, corporate bonds (including converts) often have  embedded call options,  granting exercise decisions to the issuer.
+
+Pricing derivatives in the presence of these exercise rights requires dynamic programming in order to solve the corresponding optimal stopping-time problem.  This is best performed by forming the companion partial differential equation (PDE), and solving the PDE by discretization methods as presented below.
+
+### Tenor $T$
+
+All the derivatives we contemplate here have a *tenor* or termination date, on which the derivative value will be know exactly.  For options and CDS, this is the contract expiration date.  For straight and convertible bonds, it is the *effective maturity date*^[Bonds have an official maturity date that, for tax reasons, is sometimes made irrelevant to bond structure by including calls and puts guaranteed to be exercised by either the issuer or the holder.  We also use the term *effective maturity date* to describe upcoming dates when a call or put is considered so certain that modeling is moot, or when a takeover has been announced.].
+
+### Recovery Value $\delta$
+
+In default, equity holders usually receive a negligible award after court proceedings.  However, debt holders often receive substantial payments, whose anticipated size must affect our view of the present value of that debt and any derivatives on it (such as CDS).  Therefore, we specify a function $\delta$, typically a constant, to represent post-default value.  As with historical defaults, historical observations of $\delta$ are distressingly rare, so it is usually chosen according to some long-term average.
 
 ## Representation As A Partial Differential Equation
 
-Assume we have a deterministic short rate $r(t)$, holding cost $q(t)$ and volatility $\sigma(t)$.  Following the usual arguments [Kar91], we can apply the Feynman-Kac theorem to our SDE to obtain a PDE satisfied by any derivative of $S$
+Recalling that short rate $r(t)$, holding cost $q(t)$ and volatility $\sigma(t)$ are deterministic, we can apply the usual arguments [@Kar91,@And06] and the Feynman-Kac theorem to our SDE to obtain a PDE satisfied by any derivative of $S$ that lacks cashflows
 $$
-{{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} t}}} -rV + \left(r-q+h\right)S{{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S}}}+\frac12 \sigma(t)^2 S^2 {{\frac{\partial^2 \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S^2}}}=0
+{{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} t}}} -rV + h(\delta-V) + \left(r-q+h\right)S{{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S}}}+\frac12 \sigma^2 S^2 {{\frac{\partial^2 \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S^2}}}=0.
 $$
 
+This backward parabolic PDE is amenable to numerical integration, which we specify in the final section below.  For now, let us take it as given that for any derivative with known boundary conditions we are able to form solutions $v^(m)_n$ on a grid of times $t^(m), m=0,\dots,M$ and stock prices $S_n, n=-N,\dots,N$.  The present value of our derivative is represented by the entry $v^(M)_0$.
+
+### Boundary Conditions
+
+As discussed above, every derivative provides us with terminal values at expiration or maturity date. This provides us with a vector of values $\vec{v}^{(0)}$ to use as an initial boundary condition.  For boundary conditions at the edge of our solution space, where $S \rightarrow 0$ or $S \rightarrow 0$ we have a choice of boundary conditions, some wiser than others.
+
+
+#### Coupons and Dividends
+
+In practice, both bond prices and stock prices are expected to exhibit discontinuities.  Bonds yield occasional cashflows in the form of coupons.  In order to preserve continuity of value across coupon dates, we simply assume that coupons remain part of the contract, accumulating value at the short rate $r$ and enjoying full recovery in case of default.
+
+Stock dividends are somewhat trickier to handle.  Derivative prices should not themselves jump across the expected discontinuity in stock price from time $T_d^-$ just before the dividend to time $T_d^+$ just after it. We need to adjust prices accordingly, so we use the classic technique of rebasing the grid.  That is to say, we take an interpolation function $\mathcal{I}$ and set
+$$
+V\left(\vec{S}, T_d^-\right) = \mathcal{I}\left( \vec{S} - \kappa - \pi \vec{S} ; \vec{S}, \vec{V}(\vec{S}, T_d^+\right)\right).
+$$
+
+## Full Calibration
+
+We are now ready to discuss the entire calibration-and-pricing cycle.
+
+### Dividends, Rates And Borrow Costs
+
+As discussed above, we use exogenous information sources to decide on these rates.  It is worth noting that we can attain extra computational efficiency at negligible cost by assuming dividends eventually take on the form of a continuous yield rather than discrete payments, say after 3 years.
+
+### Volatility
+
+If we are using option prices to estimate volatility, a reasonable approach is to begin with a degenerate version of our model in which $h=\tilde{h}$ is a function only of time.  Given an at-the-money option of sufficiently long maturity, we then use a root-finder and our PDE solver to estimate $\sigma$.
+
+### Local Default Intensity
+
+Begin by choosing a reasonable simple functional form for local hazard rates $h(S,t)$ with one free parameter $\mu(t)$.  Take a grid $T^(m)$ of future times for we wish to find parameter values $\mu^(m)$.  Zero coupon bonds at these maturities have prices 
+$$
+Z(T^(m))=B(0,T^(m))\exp{\left(-\int_0^{T^(m)} \tilde{h}(s) ds \right)}.
+$$
+Assume we have already worked out $\mu^(\ell)$ for all $\ell<m$.  Then (again using a root-finder) we choose $\mu^(m)$ such that our PDE properly prices $Z(T^(m))$.
+
+### Pricing
+
+We have now fully specified all parameters of our SDE, and are therefore ready to use the PDE solver to find prices and hedge ratios of portfolios of various derivative securities, including convertible bonds CDS, options and so on. 
+
+## Layers
+
+### Contract Differencing
+
+### Exotics
+
+## Solving The PDE
 
 ### Change of Variables
 
-For greater stability and superior computational properties, we change variables
+For greater stability and superior computational tractability, we change variables
 $$
 \begin{aligned}
 	\tau &= T-t \\
-	z &= \log(S/K) - (r-q-\frac12 \sigma^2 ) \tau\\
-	g(z,\tau) &= B\left(0,t(\tau)\right) V( S(z),t(\tau) )
+	z &= \log(S/K) - (\bar{r}-\bar{q}-\frac12 \bar{\sigma}^2 ) \tau\\
+	f(z,\tau) &= e^{-(\bar{r})t(\tau)}V( S(z),t(\tau) )
 \end{aligned}
 $$
+for some arbitrary constant $K$ on a scale roughly similar to stock price $S$.
 
-where $B()$ is the usual discount factor function
+Here the bar operator indicates time averages, as in
 $$
-B\left(0,t(\tau)\right) = \exp\left(-\int_0^{t(\tau)} r(s) d\mspace{-1.0mu}s  \right)
+\bar{r} = \frac1t \int_0^{t(\tau)}r(s)ds 
+$$
+and
+$$
+\bar{\sigma}^2 = \frac1t \int_0^{t(\tau)}\sigma^2(s)ds .
+$$
+
+This transforms our PDE into the more tractable equivalent
+$$
+{{\frac{\partial \mspace{-1.0mu} f}{\partial \mspace{-1.0mu} \tau}}} + \left(r-q+h\right){{\frac{\partial \mspace{-1.0mu} f}{\partial \mspace{-1.0mu} z}}}+\frac12 \sigma^2  {{\frac{\partial^2 \mspace{-1.0mu} f}{\partial \mspace{-1.0mu} z^2}}}=0.
+$$
+
+We elect to enforce Neumann boundary conditions, so we take 
+$$
+\lim_{z \rightarrow \pm \infty} {{\frac{\partial^2 \mspace{-1.0mu} f}{\partial \mspace{-1.0mu} z^2}}} = 0
+$$
+
+### Finite Differencing the PDE
+
+Assume we have a $\vec{f}^{m-1}$, set of solutions for some $\tau=(m-1)dt$ at a given set of grid points $z_n = z_0+n\,dz, n=-N,\dots,N$.  We write this more compactly in alternate forms
+$$
+\vec{f}^{m-1} = f(\left\{z_n\right\}, \tau_{m-1}) = f(\vec{z}, \tau_{m-1})
+$$
+We wish to find approximate values for $\vec{f}^{m}$.  Assume for now we are not subject to exercise boundaries or cashflows.  An implicit finite difference approximation to our PDE will then provide $\vec{f}^{m}$ as the solution to the linear set of equations
+$$
+\vec{f}^{m-1} = C \cdot \vec{f}^{m} \otimes \vec{p}
+$$
+for some matrix $C$, where $\vec{p}$ is the vector of survival probabilities
+$$
+p_n = \exp\left( -h(S_n, \tau_m) dt \right).
+$$
+and $\otimes$ indicates the Hadamard product.
+
+
+Our Neumann boundary conditions ensure $C$ is *tridiagonal*.  Except at boundaries, its diagonal elements take the form
+$$
+c_{n,n} = 1 + \sigma^2 \frac{dt}{dz^2},
+$$
+the superdiagonal elements are
+$$
+c_{n-1,n} = \frac12 \left( +h \frac{dt}{dz} -  \sigma^2 \frac{dt}{dz^2}\right),
+$$
+and the subdiagonals are
+$$
+c_{n,n-1} = \frac12 \left(-h \frac{dt}{dz} -  \sigma^2 \frac{dt}{dz^2}\right).
 $$
 
 
+At the boundaries, we can ignore the second derivative but the convection terms remain, yielding
+$$
+c_{\pm N,\pm N} = h \frac{dt}{dz}
+$$
+and
+$$
+c_{ -N, -N+1} = c_{ N-1,N} = -h \frac{dt}{dz}.
+$$
+
+Having found all these elements, we can obtain our updated grid values using the [tridiagonal algorithm](https://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm).
+
+#### Exercise Boundaries
+
+
+#### Cash Flows On The Grid
+
+#### Choosing Grid Parameters
+
+Our implicit scheme has truncation errors leading to estimation errors of size $O(dt) + O(dz^2)$.  It is unconditionally stable, but in practice begins to perform poorly when convection terms become large compared to the diagonal, which is to say when 
+$$
+h \frac{dt}{dz}   \sim   1 + \sigma^2 \frac{dt}{dz^2}
+$$
+or when dominance of the diagonal grows weak
+$$
+\sigma^2 \frac{dt}{dz^2}  \gg   1 .
+$$
+
+For practical reasons, we would like to fully specify our grid without being terribly concerned with the functional form of these constraints.  We choose a grid width $w$ in terms of standard deviations of $S$, usually about 2 or 3, and a structure constant $y = \frac{dt}{dz^2}$ between $\frac14$ and $4$, and then typically leave these parameters alone.
+
+This leaves us with just one free parameter, namely the timestep count $M$.  From this parameter we easily extract $dt$ and $dz$ from the structure constant $y$ and the relation $dt = T/M$.  Though we can't quite form a closed-form estimate of the $w$-standard-deviation increase in stock price, we can reasonably estimate it with
+$$
+S_{\text{max}} = Q_{\Phi(w)}(S_T) = \frac{S_0}{B(0,t)} e^{\tilde{h}T} e^{w \sigma \sqrt{T}}.
+$$
+Using our change of variable above we can then find $z_{\text{max}} = z\left(S_{\text{max}}\right)$ and then divide by $dz$ to find $N$.
+
+
+#### Anchoring Timesteps
 
 ## References
 
