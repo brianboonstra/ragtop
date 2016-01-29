@@ -119,7 +119,7 @@ In practice, both bond prices and stock prices are expected to exhibit discontin
 
 Stock dividends are somewhat trickier to handle.  Derivative prices should not themselves jump across the expected discontinuity in stock price from time $T_d^-$ just before the dividend to time $T_d^+$ just after it. We need to adjust prices accordingly, so we use the classic technique of rebasing the grid.  That is to say, we take an interpolation function $\mathcal{I}$ and set
 $$
-V\left(\vec{S}, T_d^-\right) = \mathcal{I}\left( \vec{S} - \kappa - \pi \vec{S} ; \vec{S}, \vec{V}(\vec{S}, T_d^+\right)\right).
+V\left(\vec{S}, T_d^- \right) = \mathcal{I}\left( \vec{S} - \kappa - \pi \vec{S} ; \, \, \vec{S}, \vec{V}\left(\vec{S}, T_d^+\right)\right).
 $$
 
 ## Full Calibration
@@ -136,11 +136,11 @@ If we are using option prices to estimate volatility, a reasonable approach is t
 
 ### Local Default Intensity
 
-Begin by choosing a reasonable simple functional form for local hazard rates $h(S,t)$ with one free parameter $\mu(t)$.  Take a grid $T^(m)$ of future times for we wish to find parameter values $\mu^(m)$.  Zero coupon bonds at these maturities have prices 
+Begin by choosing a reasonable simple functional form for local hazard rates $h(S,t)$ with one free parameter $\mu(t)$.  Take a grid $T^{(m)}$ of future times for we wish to find parameter values $\mu^{(m)}$.  Zero coupon bonds at these maturities have prices 
 $$
-Z(T^(m))=B(0,T^(m))\exp{\left(-\int_0^{T^(m)} \tilde{h}(s) ds \right)}.
+Z(T^{(m)})=B(0,T^{(m)})\exp{\left(-\int_0^{T^{(m)}} \tilde{h}(s) ds \right)}.
 $$
-Assume we have already worked out $\mu^(\ell)$ for all $\ell<m$.  Then (again using a root-finder) we choose $\mu^(m)$ such that our PDE properly prices $Z(T^(m))$.
+Assume we have already worked out $\mu^{(\ell)}$ for all $\ell<m$.  Then (again using a root-finder) we choose $\mu^{(m)}$ such that our PDE properly prices $Z(T^{(m)})$.
 
 ### Pricing
 
@@ -187,10 +187,12 @@ $$
 
 ### Finite Differencing the PDE
 
-Assume we have a $\vec{f}^{m-1}$, set of solutions for some $\tau=(m-1)dt$ at a given set of grid points $z_n = z_0+n\,dz, n=-N,\dots,N$.  We write this more compactly in alternate forms
+Assume we have $\vec{f}^{m-1}$, a set of solutions to the PDE for some $\tau=(m-1)dt$ at a given set of grid points $z_n = z_0+n\,dz, n=-N,\dots,N$.  For convenience we may write this  in alternate forms
 $$
 \vec{f}^{m-1} = f(\left\{z_n\right\}, \tau_{m-1}) = f(\vec{z}, \tau_{m-1})
 $$
+
+
 We wish to find approximate values for $\vec{f}^{m}$.  Assume for now we are not subject to exercise boundaries or cashflows.  An implicit finite difference approximation to our PDE will then provide $\vec{f}^{m}$ as the solution to the linear set of equations
 $$
 \vec{f}^{m-1} = C \cdot \vec{f}^{m} \otimes \vec{p}
