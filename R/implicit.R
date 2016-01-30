@@ -15,7 +15,7 @@
 ##
 ## You should have received a copy of the GNU General Public License
 ## along with ragtop.  If not, see <http://www.gnu.org/licenses/>.
-require(stats)
+library(stats)
 require(futile.logger)
 
 stock_level = function(z, tau, K, c, sigma)
@@ -101,3 +101,101 @@ tridiagonals = function(S_hzd, sigma, structure_constant, a_dt_dzinv)
   list(super = superdiag, diag = diag, sub = subdiag)
 }
 
+
+take_implicit_timestep = function(t, dt, dz, r, h, S0, alph,
+                                  discount_factor,
+                                  S, S_hzd,
+                                  prev_grid_values, survival_probabilities,
+                                  tridiag_matrix_entries,
+                                  instrument=NULL,
+                                  dividends=NULL)
+{
+  ## Take one timestep of an implicit solver for a given instrument
+  ## The instrument, if not NULL,  must have a 'recovery_fcn' and
+  ## an 'optionality_fcn' though those properties are themselves
+  ## allowed to be NULL.
+
+  prev_grid_values = adjusted_for_dividends(
+    grid_values = prev_grid_values,
+    t = t, dt = dt,
+    r = r, h = h, S = S, S0 = S0,
+    dividends = dividends
+  )
+  a_dt_dzinv  = alph * dt / dz
+  # The value of holding this security at time t, assuming it will survive
+  # to t+dt just comes from inverting our finite difference matrix
+  hold_cond_on_surv = limSolve::Solve.tridiag(tridiag_matrix_entries$sub,
+                                              tridiag_matrix_entries$diag,
+                                              tridiag_matrix_entries$super,
+                                              prev_grid_values)
+  # We assume our derivative can have no negative values, so
+  # we floor it at zero
+  hold_cond_on_surv[hold_cond_on_surv < 0.0] = 0.0
+  # If it will have value in case of default, work out what that value is
+  if (is.null(instrument) || is.null(instrument$recovery_fcn)) {
+    recovery_values = 0.0
+  } else {
+    recovery_values = instrument$recovery_fcn(S, t, hold_cond_on_surv)
+  }
+  # The overall value of the derivative, assuming both parties want to
+  # keep it in existence, comes from the hold value conditional on
+  # survival times the appropriate likelihood, plus the recovery
+  # value times default likelihood
+  hold_value = (survival_probabilities * hold_cond_on_surv +
+                  (1. - survival_probabilities) * discount_factor * recovery_values)
+  # If optionality is in play, the derivative value could be altered. This
+  # can depend on _other_ derivative values that may be in play, in which
+  # the instrument's optionality_fcn should handle the dependencies
+  # generally by having all instruments involved be reference classes
+  # (RC) which are stateful.
+  # Another use of this optionality_fcn() is to have reasonable prices
+  # at timesteps occurring beyond the tenor of this layer, so that
+  # for example a bond is just set to the notional value corrected
+  # for time value of money
+  if (is.null(instrument) || is.null(instrument$optionality_fcn)) {
+    new_value = hold_value
+  } else {
+    new_value = instrument$optionality_fcn(hold_value, S, t)
+  }
+  new_value
+}
+
+timestep_instruments = function(prev_grid_values,
+                                t, dt, dz, r, h, z, S0, alph,
+                                K, c, sigma, tau, min_hzd,
+                                discount_factor, structure_constant,
+                                hzd_power,
+                                instruments,
+                                dividends = NULL)
+{
+  ## Take an implicit timestep for all the given instruments, under the
+  ## assumption that prev_grid_values is a matrix with one row for
+  ## each instrument and one column for each of the N values of z
+  ## alph is the constant terms of the hazard drift rate at this timestep
+  ## Each instrument, if not NULL,  must have a 'recovery_fcn' and
+  ## an 'optionality_fcn' though those properties are themselves
+  ## allowed to be NULL.
+
+  grid_values = prev_grid_values
+  a_dt_dzinv = alph * dt / dz
+  S = stock_level(z, tau, K, c, sigma)
+  S_hzd = S^hzd_power
+  matrix_entries = tridiagonals(S_hzd, sigma, structure_constant, a_dt_dzinv)
+  h = min_hzd + alph * S_hzd
+  survival_probabilities = exp(-h * dt)
+  for (k in (1:length(instruments))) {
+    instrument = instruments[k]
+    prev_instr_grid_values = prev_grid_values[k,]
+    flog.info("Now timestepping %s on N=%s grid", instrument,
+              length(prev_instr_grid_values))
+    instr_grid_vals = take_implicit_timestep(t, dt, dz, r, h, S0, alph,
+                                             discount_factor,
+                                             S, S_hzd,
+                                             prev_instr_grid_values, survival_probabilities,
+                                             matrix_entries,
+                                             instrument=instrument,
+                                             dividends = dividends)
+    grid_values[k,] = instr_grid_vals
+  }
+  grid_values
+}
