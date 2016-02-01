@@ -18,79 +18,65 @@
 library(stats)
 require(futile.logger)
 
-stock_level = function(z, tau, K, c, sigma)
+
+# TODO: Should we stop using t and T as variables since they could
+#       be confused with the transpose function?
+
+
+#' Structure of implicit numerical integration grid
+#'
+#' Infer a reasonable structure for our implicit grid solver based
+#' on the voltime, structure constant, and requested grid width
+#' in standard deviations
+#'
+#' @return A list with elements \describe{
+#'   \item{\code{T}}{The maximum time for this grid}
+#'   \item{\code{dt}}{Largest permissible timestep size}
+#'   \item{\code{dz}}{Distance between space grid points}
+#'   \item{\code{z0}}{Center of space grid}
+#'   \item{\code{z_width}}{Width in \eqn{z} space}
+#'   \item{\code{half_N}}{A misnomer, actually \eqn{(N-1)/2}}
+#'   \item{\code{N}}{The number of space points}
+#'   \item{\code{z}}{Locations of space points}
+#' }
+construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structure_constant, std_devs_width)
 {
-  ## Stock prices as a function of log-prices z
-  K * exp(z - (c - 0.5 * sigma^2) * tau)
-}
-
-
-hazard_alpha = function(hazard_scale, S0, T, M, hzd, min_hzd, hzd_power)
-{
-  ## Drift rates in stock prices must incorporate hazard rates
-  ## in such a way that other default-sensitive instruments
-  ## like bonds are properly priced
-  ## Here we work out that dependency as a function of stock
-  ## prices and their corresponding hazard rates, creating an
-  ## array of shifts in the constant term of the hazard rate
-  ## given a sequence of timesteps
-
-  al = (hzd - min_hzd) * array(1,dim = M + 1) / S0 ^ hzd_power
-  al[1] = 0
-  last_index = 2
-  for (ix in 1:length(hazard_scale)) {
-    hazard_scale_point = hazard_scale[ix]
-    next_index = hazard_scale_point$timestep_number + 1
-    al[last_index:next_index] = al[last_index:next_index] * hazard_scale_point$scale
-  }
-  rev(al) # Reverse the array to go in timestep backwardation order
-}
-
-
-implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structure_constant, std_devs)
-{
-  ## Infer a reasonable structure for our implicit grid solver based
-  ## on the voltime, structure constant, and requested grid width
-  ## in standard deviations
 
   T = max(tenors)
   dt = T / M
   z0 = log(S0 / K) + (c - 0.5 * sigma^2) * T
   dz = sqrt(dt / structure_constant)
-  z_width = std_devs * sigma * sqrt(T)
+  z_width = std_devs_width * sigma * sqrt(T)
   half_N = as.integer(ceiling(z_width / dz))
   N = 2 * half_N + 1
   z = z0 + dz * (-half_N:half_N)
   flog.info("Grid structure with %s timesteps to time %s at vol %s has %s space steps to %s sdevs widths",
-            M, T, sigma, N, std_devs)
+            M, T, sigma, N, std_devs_width)
   list(
-    T = T, dt = dt, dz = dz, z0 = z0, z_width = z_width, half_N = half_N, N =
-      N, z = z
+    T = T, dt = dt, dz = dz, z0 = z0,
+    z_width = z_width, half_N = half_N, N = N, z = z
   )
 }
 
 
 
-tridiagonals = function(S_hzd, sigma, structure_constant, a_dt_dzinv)
+
+#' Matrix entries for implicit numerical differentiation using Neumann boundary conditions
+construct_tridiagonals = function(sigma, structure_constant, drift)
 {
-  ## Matrix entries for implicit numerical differentiation
-  ## using Neumann boundary conditions
-  ## a_dt_dzinv = the drift alpha at this timestep multiplied by
-  ##                the timestep size dt and divided by the grid spacing dz
-  ## S_hzd = S to the hazard power (S**hzd_power)
-  N = length(S_hzd)
+  N = length(drift)
   K = N - 1
   # Entries in the center of the matrix come from finite differencing
   #  free of boundary conditions
   diag = rep(1.0 + sigma ^ 2 * structure_constant, N)
-  subdiag = -0.5 * (sigma ^ 2 * structure_constant - S_hzd[2:N] * a_dt_dzinv)
-  superdiag = -0.5 * (sigma ^ 2 * structure_constant + S_hzd[1:K] * a_dt_dzinv)
+  subdiag = -0.5 * (sigma ^ 2 * structure_constant - drift[2:N])
+  superdiag = -0.5 * (sigma ^ 2 * structure_constant + drift[1:K])
   # Entries on the low-z/low-S boundary (index 1)
-  neumann_drift_low = a_dt_dzinv * S_hzd[1]
+  neumann_drift_low = drift[1]
   diag[1] = 1. + neumann_drift_low
   superdiag[1] = -neumann_drift_low
   # Entries on the high-z/high-S boundary (index N for diag and K for subdiag)
-  neumann_drift_high = a_dt_dzinv * S_hzd[N]
+  neumann_drift_high = drift[N]
   diag[N] = 1. + neumann_drift_high
   subdiag[K] = -neumann_drift_high
   bad_ix = (abs(diag[2:K])-abs(subdiag[1:(K - 1)])-abs(superdiag[2:K])<0)
@@ -102,26 +88,31 @@ tridiagonals = function(S_hzd, sigma, structure_constant, a_dt_dzinv)
 }
 
 
-take_implicit_timestep = function(t, dt, dz, r, h, S0, alph,
-                                  discount_factor,
-                                  S, S_hzd,
+#' Backwardate grid values one timestep
+#'
+#' Take one timestep of an implicit solver for a given instrument
+#'
+#' @param survival_probabilities Vector of probabilities of survival
+#'  for each space grid node
+#' @param tridiag_matrix_entries Diagonal, superdiagonal and subdiagonal
+#'  of tridiagonal matrix from the numerical integrator
+#' @param local_discount_factor A discount factor to apply to
+#'  recovery values
+#' @param prev_grid_values A vector of space grid values from the
+#'  previously calculated timestep
+#' @param instrument If not NULL/NA,  must have a \code{recovery_fcn} and
+#'  an \code{optionality_fcn} though those properties are
+#'  themselves allowed to be NA.
+#' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
+#'   and \code{proportional}.  Dividend size at the given \code{time} is
+#'   then expected to be equal to \code{fixed + proportional * S / S0}
+take_implicit_timestep = function(t,
+                                  local_discount_factor,
                                   prev_grid_values, survival_probabilities,
                                   tridiag_matrix_entries,
                                   instrument=NULL,
                                   dividends=NULL)
 {
-  ## Take one timestep of an implicit solver for a given instrument
-  ## The instrument, if not NULL,  must have a 'recovery_fcn' and
-  ## an 'optionality_fcn' though those properties are themselves
-  ## allowed to be NULL.
-
-  prev_grid_values = adjusted_for_dividends(
-    grid_values = prev_grid_values,
-    t = t, dt = dt,
-    r = r, h = h, S = S, S0 = S0,
-    dividends = dividends
-  )
-  a_dt_dzinv  = alph * dt / dz
   # The value of holding this security at time t, assuming it will survive
   # to t+dt just comes from inverting our finite difference matrix
   hold_cond_on_surv = limSolve::Solve.tridiag(tridiag_matrix_entries$sub,
@@ -132,7 +123,7 @@ take_implicit_timestep = function(t, dt, dz, r, h, S0, alph,
   # we floor it at zero
   hold_cond_on_surv[hold_cond_on_surv < 0.0] = 0.0
   # If it will have value in case of default, work out what that value is
-  if (is.null(instrument) || is.null(instrument$recovery_fcn)) {
+  if (is.blank(instrument) || is.blank(instrument$recovery_fcn)) {
     recovery_values = 0.0
   } else {
     recovery_values = instrument$recovery_fcn(S, t, hold_cond_on_surv)
@@ -142,7 +133,7 @@ take_implicit_timestep = function(t, dt, dz, r, h, S0, alph,
   # survival times the appropriate likelihood, plus the recovery
   # value times default likelihood
   hold_value = (survival_probabilities * hold_cond_on_surv +
-                  (1. - survival_probabilities) * discount_factor * recovery_values)
+                  (1. - survival_probabilities) * local_discount_factor * recovery_values)
   # If optionality is in play, the derivative value could be altered. This
   # can depend on _other_ derivative values that may be in play, in which
   # the instrument's optionality_fcn should handle the dependencies
@@ -152,7 +143,7 @@ take_implicit_timestep = function(t, dt, dz, r, h, S0, alph,
   # at timesteps occurring beyond the tenor of this layer, so that
   # for example a bond is just set to the notional value corrected
   # for time value of money
-  if (is.null(instrument) || is.null(instrument$optionality_fcn)) {
+  if (is.blank(instrument) || is.blank(instrument$optionality_fcn)) {
     new_value = hold_value
   } else {
     new_value = instrument$optionality_fcn(hold_value, S, t)
@@ -160,42 +151,233 @@ take_implicit_timestep = function(t, dt, dz, r, h, S0, alph,
   new_value
 }
 
-timestep_instruments = function(prev_grid_values,
-                                t, dt, dz, r, h, z, S0, alph,
-                                K, c, sigma, tau, min_hzd,
-                                discount_factor, structure_constant,
-                                hzd_power,
+
+#' Take an implicit timestep for all the given instruments
+#'
+#' Backwardate grid values for all the given instruments from a set of grid
+#'   values matched to time \code{t+dt} to form a new set of grid value as
+#'   of time \code{t}.
+#'
+#' @inheritParams take_implicit_timestep
+#' @param S0 Time zero price of the base equity
+#' @param z Space grid value morphable to stock prices using \code{stock_level_fcn}
+#' @param stock_level_fcn A function for changing space grid value to stock
+#'   prices, with arguments \code{z} and \code{t}
+#' @param discount_factor_fcn A function for computing present values to
+#'   time \code{t} of various cashflows occurring during this timestep, with
+#'   arguments \code{T}, \code{t}
+#' @param variance_cumulation_fcn A function for computing total stock variance
+#'   occurring during this timestep, with arguments \code{T}, \code{t}.  E.g. with
+#'   a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}.
+#' @param variance_cumulation_fcn A function for computing default intensity
+#'   occurring during this timestep, dependent on time and stock price, with
+#'   arguments \code{t}, \code{S}.
+#' @param prev_grid_values A matrix with one column for each
+#'   instrument and one row for each of the \eqn{N} values of \code{z}
+timestep_instruments = function(z, prev_grid_values,
+                                t, dt, S0,
                                 instruments,
+                                stock_level_fcn,
+                                discount_factor_fcn,
+                                default_intensity_fcn,
+                                variance_cumulation_fcn,
                                 dividends = NULL)
 {
-  ## Take an implicit timestep for all the given instruments, under the
-  ## assumption that prev_grid_values is a matrix with one row for
-  ## each instrument and one column for each of the N values of z
-  ## alph is the constant terms of the hazard drift rate at this timestep
-  ## Each instrument, if not NULL,  must have a 'recovery_fcn' and
-  ## an 'optionality_fcn' though those properties are themselves
-  ## allowed to be NULL.
-
-  grid_values = prev_grid_values
-  a_dt_dzinv = alph * dt / dz
-  S = stock_level(z, tau, K, c, sigma)
-  S_hzd = S^hzd_power
-  matrix_entries = tridiagonals(S_hzd, sigma, structure_constant, a_dt_dzinv)
-  h = min_hzd + alph * S_hzd
-  survival_probabilities = exp(-h * dt)
-  for (k in (1:length(instruments))) {
-    instrument = instruments[k]
-    prev_instr_grid_values = prev_grid_values[k,]
-    flog.info("Now timestepping %s on N=%s grid", instrument,
-              length(prev_instr_grid_values))
-    instr_grid_vals = take_implicit_timestep(t, dt, dz, r, h, S0, alph,
-                                             discount_factor,
-                                             S, S_hzd,
-                                             prev_instr_grid_values, survival_probabilities,
-                                             matrix_entries,
-                                             instrument=instrument,
+  local_discount_factor = discount_factor_fcn(t+dt,t)
+  r = -log(local_discount_factor/dt)
+  S = stock_level_fcn(z, t)
+  h = default_intensity_fcn(t, S)
+  sigma = sqrt(variance_cumulation_fcn(t+dt, t)/dt)
+  div_adj_grid_values = adjust_for_dividends(prev_grid_values,
+                                             t, dt, r, h, S, S0,
                                              dividends = dividends)
-    grid_values[k,] = instr_grid_vals
+  survival_probabilities = exp(-h * dt)
+  dz = diff(z)[1] # We are assuming a regular grid in z space
+  structure_constant = dt/dz^2
+  flog.info("Structure constant at %s for dt=%s is %s", t, dt, structure_constant  )
+  matrix_entries = construct_tridiagonals(sigma, structure_constant, drift=h)
+  for (k in (1:length(instruments))) {
+    instrument = instruments[[k]]
+    instr_name = names(instruments)[[k]]
+    prev_instr_grid_values = div_adj_grid_values[,k]
+    flog.info("Now timestepping %s from %s to %s on N=%s grid, current mean value on grid is %s",
+              instr_name, t+dt, t, length(prev_instr_grid_values), mean(prev_instr_grid_values))
+    instr_grid_vals = take_implicit_timestep(t, local_discount_factor,
+                                             prev_instr_grid_values,
+                                             survival_probabilities,
+                                             matrix_entries,
+                                             instrument = instrument,
+                                             dividends = dividends)
+    div_adj_grid_values[,k] = instr_grid_vals
   }
-  grid_values
+  div_adj_grid_values
+}
+
+
+#' A time grid with extra times inserted for coupons, calls and puts
+#'
+#' At its base, this function chooses a time grid with \code{1+min_num_time_steps}
+#'   elements from 0 to \code{Tmax}.  Any coupon, call, or put times occurring in
+#'   one of the supplied instruments are also inserted.
+#' @param min_num_time_steps The minimum number of timesteps the output vector should have
+#' @param Tmax The maximum time on the grid
+#' @param instruments A set of instruments whose maturity and terms
+#'   and conditions can introduce extra timesteps.  Each will be queried for the output of
+#'   a \code{critical_times} function.
+infer_conforming_time_grid = function(min_num_time_steps, Tmax, instruments=NULL)
+{
+  time_grid = seq(from=0, to=Tmax, length.out=1+min_num_time_steps)
+  if (!is.blank(instruments)) {
+    # Cycle through instruments, include their maturities and critical times
+    for (k in (1:length(instruments))) {
+      instrument = instruments[[k]]
+      time_grid = c(time_grid, instrument$maturity)
+      instr_name = names(instruments)[[k]]
+      flog.info("Checking instrument %s of maturity %s for terms and conditions requiring time grid entries",
+                instr_name, instrument$maturity)
+      instr_fields = instrument$getRefClass()$fields()
+      if ("critical_times" %in% instr_fields) {
+        time_grid = c(time_grid, instrument$critical_times())
+      }
+    }
+  }
+  time_grid = unique(time_grid)
+  time_grid = time_grid[time_grid>=0 & time_grid<=Tmax]
+  # Clear out any extraneous timesteps.  If we have any such,
+  #  then the unique digitized grid would be shorter, so that is
+  #  how we check
+  digitized_grid = unique(signif(time_grid,
+                                 digits=TIME_RESOLUTION_SIGNIF_DIGITS))
+  if (length(digitized_grid)<length(time_grid)) {
+    # Shorter.  Keep the endpoints but digitize everything in between
+    betw = unique(signif(time_grid[time_grid>0 & time_grid<Tmax],
+                         digits=TIME_RESOLUTION_SIGNIF_DIGITS))
+    flog.info("Some of the %s requested timesteps are very close to each other.  Combined them to create a grid with only %s timesteps.",
+              lenght(time_grid), 2+length(betw))
+    time_grid = unique(c(0,betw,Tmax))
+  }
+  flog.info("%s time steps requested. Instrument terms and conditions bring the total number to %s",
+            min_num_time_steps, length(time_grid)-1)
+  time_grid
+}
+
+#' Numerically integrate the pricing differential equation
+#'
+#' Use an implicit integration scheme to numerically integrate
+#' the pricing differential equation for each of the given instruments,
+#' backwardating from time \code{Tmax} to time 0.
+#' @inheritParams timestep_instruments
+#' @param Tmax The maximum time on the grid, from which
+#'   all backwardation steps will take place.
+#' @param min_num_time_steps The minimum number of timesteps used.  Calls,
+#'   puts and coupons may result in extra timesteps taken.
+#' @param instruments A list of instruments to be priced.  Each
+#'   one must have a \code{strike} and a \code{optionality_fcn}, as
+#'   with \code{\link{GridPricedInstrument}} and its subclasses.
+#'
+#' @return A grid of present values of derivative prices, adapted to \code{z} at
+#'   each timestep.  Time zero value will appear in the first index.
+integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
+                            stock_level_fcn,
+                            discount_factor_fcn,
+                            default_intensity_fcn,
+                          variance_cumulation_fcn,
+                            dividends=NULL)
+{
+  time_pts = infer_conforming_time_grid(min_num_time_steps, Tmax, instruments=instruments)
+  num_time_pts = length(time_pts)
+  num_time_steps = num_time_pts-1
+  num_space_pts = length(z)
+  num_instruments = length(instruments)
+  grid = array(data=NA, dim=c(num_time_pts, num_space_pts, num_instruments))
+  S_final = stock_level_fcn(z, Tmax)
+  df_final = discount_factor_fcn(Tmax, 0)
+  flog.info("Discount factor to Tmax=%s is %s", Tmax, df_final)
+  # Set the initial condition for the PDE from instrument values at
+  #  maximum time, discounted according to our change of variables
+  for (k in (1:length(instruments))) {
+    instrument = instruments[[k]]
+    grid[num_time_pts,,k] = df_final * instrument$optionality_fcn(0, S=S_final, t=Tmax)
+  }
+  # Take num_time_pts timesteps to integrate
+  for (m in (num_time_steps:1)) {
+    t = time_pts[[m]]
+    dt = time_pts[[m+1]] - time_pts[[m]]
+    prev_grid_values = as.matrix(grid[1+m,,])
+    new_grid_values = timestep_instruments(
+      z, prev_grid_values,
+      t, dt, S0,
+      instruments,
+      stock_level_fcn=stock_level_fcn,
+      discount_factor_fcn=discount_factor_fcn,
+      default_intensity_fcn=default_intensity_fcn,
+      variance_cumulation_fcn=variance_cumulation_fcn,
+      dividends=dividends)
+    grid[m,,] = new_grid_values
+  }
+  # Return grid values at all t.  The present values will be on the
+  # grid at index 1
+  grid
+}
+
+
+#' @export find_present_value
+find_present_value = function(S0, num_time_steps, instruments,
+                              const_volatility=0.5, const_short_rate=0, const_default_intensity=0,
+                              discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
+                              default_intensity_fcn = function(t, S, ...){const_default_intensity+0.0*S},
+                              variance_cumulation_fcn = function(T, t){const_volatility^2*(T-t)},
+                              dividends=NULL,
+                              borrow_cost=0.0,
+                              dividend_rate=0.0,
+                              structure_constant=2.0,
+                              std_devs_width=3.0)
+{
+  Tmax = 0
+  K = S0
+  # Get a strike and maximum maturity from the instruments
+  for (k in (1:length(instruments))) {
+    instrument = instruments[[k]]
+    instr_name = names(instruments)[[k]]
+    instr_fields = instrument$getRefClass()$fields()
+    if ("strike" %in% instr_fields && instrument$strike > 0) {
+      # Set the target strike for grid structure based on the
+      # strike of the *last* instrument in our list
+      K = instrument$strike
+    }
+    if (instrument$maturity > Tmax) {
+      Tmax = instrument$maturity
+    }
+    flog.info("Instrument %s: %s", k, instr_name)
+  }
+  if (Tmax<=0) {
+    stop("Cannot compute present value when no instrument maturity is positive")
+  } else {
+    flog.info("Max maturity: %s", Tmax)
+  }
+  sigma = sqrt(variance_cumulation_fcn(Tmax, 0) / Tmax)
+  r = -log(discount_factor_fcn(Tmax, t=0) / Tmax)
+  c = r - dividend_rate - borrow_cost
+  grid_structure = construct_implicit_grid_structure(Tmax, num_time_steps, S0, K,
+                                           c, sigma,
+                                           structure_constant=structure_constant,
+                                           std_devs_width=std_devs_width)
+  stock_level_fcn = function(z, t) {
+    S_levs = K * exp(z - (c - 0.5 * sigma^2) * (Tmax-t))
+    flog.info("z = %s stock levels at %s from min(S)=%s to max(S)=%s",
+              length(S_levs), t, min(S_levs), max(S_levs))
+    S_levs
+  }
+  grid = integrate_pde(grid_structure$z,
+                       num_time_steps,
+                       S0, Tmax, instruments,
+                        stock_level_fcn,
+                        discount_factor_fcn,
+                        default_intensity_fcn,
+                        variance_cumulation_fcn,
+                        dividends=NULL)
+  flog.info("Completed PDE integration")
+  present_value_grid = as.matrix(grid[1,,])
+  colnames(present_value_grid) = names(instruments)
+  present_value_grid
 }

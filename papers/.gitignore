@@ -1,0 +1,6 @@
+#Intermediate paper outputs
+pricing_and_calibration*
+
+#But of course not the paper source itself
+!pricing_and_calibration_equity_linked_debt.Rmd
+

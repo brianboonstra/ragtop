@@ -6,18 +6,23 @@ Date: 2016-01-20
 Author: Brian K. Boonstra
 Maintainer: Brian K. Boonstra <ragtop@boonstra.org>
 Description: This package prices convertible bonds and a
-        variety of other financial derivatives. It uses an
-        extension of the usual Black-Scholes model in which
-        jump to default may occur at a probability specified
-        by a power-law link between stock price and hazard
-        rate as found in the paper by Takahashi, Kobayashi,
-        and Nakagawa (2001).  We use ideas and techniques
-        from Andersen and Buffum (2002) and Linetsky (2006).
-Depends: limSolve (>= 1.5.5.1), futile.logger (>= 1.4.1)
-Suggests: testthat,
+    variety of other financial derivatives. It uses an
+    extension of the usual Black-Scholes model in which
+    jump to default may occur at a probability specified
+    by a power-law link between stock price and hazard
+    rate as found in the paper by Takahashi, Kobayashi,
+    and Nakagawa (2001).  We use ideas and techniques
+    from Andersen and Buffum (2002) and Linetsky (2006).
+Depends:
+    limSolve (>= 1.5.5.1),
+    futile.logger (>= 1.4.1)
+Suggests:
+    testthat,
+    roxygen2,
     knitr,
     rmarkdown,
     RQuantLib
 License: GPL (>= 2)
 LazyData: TRUE
 VignetteBuilder: knitr
+RoxygenNote: 5.0.1

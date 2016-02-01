@@ -1,0 +1,148 @@
+---
+title: "ragtop: Complex Derivatives Pricing"
+author: "Brian K. Boonstra"
+date: "First Version: Jan 29, 2016  This Version:`r Sys.Date()`"
+output: rmarkdown::html_vignette
+bibliography: converts.bib
+#bibliography: ragtop_references.bib
+vignette: >
+  %\VignetteIndexEntry{ragtop: Complex Derivatives Pricing}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+Financial derivatives generally fall into one of just a few classes: fixed income, equities, foreign exchange, commodities, and energy.  Pricing models for such derivatives usually involve standard approaches distinct to each of these asset classes.  For example, equity derivatives are priced on variants of the famous Black-Scholes model, while tranche protection on mortgage-backed securities uses copulas with marginal poisson distribution.  Convertible bonds are one of the few types of derivative securities straddling asset classes, and whose valuation must be linked to reasonable models of *multiple* asset types, involving equity valuations, fixed income and sometimes foreign exchange.
+
+A **convertible bond** is similar to a corporate bond, with promised coupons and notional payments at some known set of future dates, but with a twist.  The bond holder, who has effectively lent money to the issuer, can choose to *convert* the bond into equity (subject to some restrictions), in an amount known as the *conversion value*.  The bond price therefore depends on three major processes:
+
+- *interest rates* affecting the discounted value of future coupons and notional
+- *equity* value affecting conversion value
+- *default* of the issuer wiping out equity, coupons and notional
+
+Of these processes, the changes in equity value are most important, followed closely by issuer default.  The `ragtop` package provides derivative pricing and calibration based on simply linked models of equities and corporate defaults.  Though convertible bonds are our most important case, we also consider mandatories, compound options, and portfolios of equity options and credit derivatives on the same underlying company.
+
+
+## Stochastic Model
+
+Our basic stochastic model links equity values $S_t$ with *hazard rate* or default intensity $h$
+$$
+	\frac{dS_t}{S_t}=(r+h-q) dt + \sigma dZ - dJ
+$$
+where $h$ is a deterministic function of stock price and time, and $J$ is a Poisson jump process^[More explicitly we could write
+$$
+\frac{dS_t}{S_t}=(r(t)+h(S_t,t)-q(t)) dt + \sigma(t) dZ - dJ(h(S_t,t))
+$$] [see @Lin06; @And04; and @WuC06].  This model is similar to Black-Scholes, with the jump process $J$ representing default, compensated by extra drift in the equity at rate $h$.
+
+As an important parsimonious example we may take the default intensity $h$ to be given by a shifted power law
+$$
+h(S,t) = h_c + \alpha(t) S^p
+$$
+where $\alpha(\cdot)$ is a deterministic function of time and the power $p$ is a constant generally between -10 and -1.  In practice, the volatility $\sigma$, borrow cost $q$ and (less frequently) even the short rate $r$ can often be set to constants, though we do not make that assumption here.
+
+
+## Arguments of Intuition
+
+Only two parameters of our model are likely to be well-understood and readily specified by practitioners:
+- The short rate $r(t)$ can be inferred using the usual interest rate curve bootstrapping techniques.
+- The borrow cost $q(t)$ is typically set according to the rates negotiated with a prime broker.
+
+### Stock Volatility $\sigma$
+
+We generally think of stock volatility in terms of equity option markets.  For that reason, we expect to "imply" an appropriate value for $\sigma^{\text{impl}}$ from equity options where possible.  However, it is important to keep in mind that $\sigma^{\text{impl}}$ is inevitably different from the default-free $\sigma^{\text{impl}}_{\text{BS}}$ in the Black-Scholes model.  The two will be closely related, but since some of the price variability is represented by the jump process $dJ$, we will have $\sigma^{\text{impl}} < \sigma^{\text{impl}}_{\text{BS}}$.
+
+Convertible bonds often have tenors far exceeding those found in liquid option markets.  This makes historical volatility estimates^[Historical volatility estimates are usually formed by computing the standard deviation of $\log\left(\frac{S^H_{i}}{S^H_{i-1}}\right)$ for a time series of historical prices $S^H$.] more desirable.  Since historical prices are by definition default-free, they are compatible with $\sigma$ and not with $\sigma_{\text{BS}}$.  (This property of historical volatility estimation for risky entities is generally underappreciated.)
+
+### Survival Probabilities and Independent Default Intensity $\tilde{h}$
+
+Equity default observations are almost infinitely sparser than equity price observations^[Equity defaults are significantly sparser than major corporate events such as takeovers, spinoffs and special dividends as well.  Modelers do not generally treat corporate events because their details and effects are a complete modeling quagmire.].  Default models and specifications are correspondingly crude.  We think of default intensity (independent of stock price) as being based on a sequence $\{H_i, T_i\}$ such that default time $T_d$ satisfies
+$$
+	\text{Prob}( T_d > T_i ) = \exp{-H_i T_i}.
+$$
+Where possible, the $H_i$ are observed credit default swap (CDS) spreads. Taking $T_0=0$ we then find a step function $\tilde{h}(t)$ with left-discontinuities at $\{T_i\}$ such that
+$$
+H_i T_i = \sum_{j \leq i} h(T_j) (T_j-T_{j-1})
+$$
+
+The survival probability to any time $t$ is then given by the Poisson distribution function of
+$$
+	\text{Prob}( T_d > t ) = \exp{\left(-\int_0^t \tilde{h}(s) ds \right)}
+$$
+
+In most cases this is trivial, since only one spread observation $H$ is available. 
+
+For shifted power laws we can match a wide variety of survival probability functions by choosing various intensity modifiers $\alpha(t)$.  A particularly important case is the constant-intensity target with rate $h_c$
+$$
+	\text{Prob}( T_d > t ) = e^{-h_c t}.
+$$
+
+
+
+## Representation As A Partial Differential Equation
+
+Assume we have a deterministic short rate $r(t)$, holding cost $q(t)$ and volatility $\sigma(t)$.  Following the usual arguments [Kar91], we can apply the Feynman-Kac theorem to our SDE to obtain a PDE satisfied by any derivative of $S$
+$$
+{{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} t}}} -rV + \left(r-q+h\right)S{{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S}}}+\frac12 \sigma(t)^2 S^2 {{\frac{\partial^2 \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S^2}}}=0
+$$
+
+
+### Change of Variables
+
+For greater stability and superior computational properties, we change variables
+$$
+\begin{aligned}
+	\tau &= T-t \\
+	z &= \log(S/K) - (r-q-\frac12 \sigma^2 ) \tau\\
+	g(z,\tau) &= B\left(0,t(\tau)\right) V( S(z),t(\tau) )
+\end{aligned}
+$$
+
+where $B()$ is the usual discount factor function
+$$
+B\left(0,t(\tau)\right) = \exp\left(-\int_0^{t(\tau)} r(s) d\mspace{-1.0mu}s  \right)
+$$
+
+
+
+## Styles
+
+The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+
+    output: 
+      rmarkdown::html_vignette:
+        css: mystyles.css
+
+## Figures
+
+The figure sizes have been customised so that you can easily put two images side-by-side. 
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+    output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+## More Examples
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+
+Also a quote using `>`:
+
+> "He who gives up [code] safety for [code] speed deserves neither."
+([via](https://twitter.com/hadleywickham/status/504368538874703872))
+
+## References
+
+
