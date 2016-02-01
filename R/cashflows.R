@@ -86,6 +86,7 @@ time_adj_dividends = function(relevant_divs, t_final, r, h, S, S0)
 #'   then expected to be equal to \code{fixed + proportional * S / S0}
 #' @param S A set of stock prices from which we can infer the size of
 #'   proportional dividends
+#' @return A set of adjusted grid values in the same shape as \code{grid_values}
 adjust_for_dividends = function(grid_values, t, dt, r, h, S, S0, dividends)
 {
   gs1 = size_in_dimension(grid_values,1)
@@ -125,6 +126,8 @@ adjust_for_dividends = function(grid_values, t, dt, r, h, S, S0, dividends)
 }
 
 #' Dividend rate equivalent to discrete dividends
+#' @return A scalar consistent with a continuous dividend model having the same
+#'  present values as the discrete ones found in \code{dividends}
 effective_dividend_rate = function(Tmax, S0, discount_factor_fcn, dividends, t=0)
 {
   included_ix = (dividends$time > t)  & (dividends$time <= Tmax)
@@ -142,12 +145,16 @@ effective_dividend_rate = function(Tmax, S0, discount_factor_fcn, dividends, t=0
   q
 }
 
+#' Rolled up value of coupons to a given time
+#'
+#' @param t Time to which coupon discounting should be applied, and after which coupons will not be included
+#' @param coupons_df A data.frame of details for each coupon.  It should have the
+#' fields \code{payment_time} and \code{payment_size}.
+#' @param discount_factor_fcn A function used to form values of coupons as of \code{t}.  It should take
+#'   two arguments, a target time and a source time.  This function will always be
+#'   given \code{t} as its second argument and coupon payment times in the first argument.
+#' @return The total present value as of time \code{t} for coupons paid since the \code{model_t}
 value_from_prior_coupons = function(t, coupons_df, discount_factor_fcn, model_t=0)
-## Compute "present" value as of time t for coupons paid since the model_t
-## The discount factor function should take two arguments, and return
-## discount factors in the same number of rows and columns
-## The coupons are expected to be found in a data frame with columns
-## payment_time and payment_size
 {
   coups = coupons_df[(coupons_df$payment_time<=t) & (coupons_df$payment_time>model_t),]
   disc_factors = discount_factor_fcn(coups$payment_time, t)

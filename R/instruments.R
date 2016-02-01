@@ -164,14 +164,25 @@ ZeroCouponBond = setRefClass(
 CouponBond = setRefClass(
   "CouponBond",
   contains="ZeroCouponBond",
-  fields=list(coupons="data.frame"),
+  fields=list(coupons="data.frame", last_computed_cash="numeric"),
   methods = list(
-    accumulate_coupon_values_before = function(t,discount_factor_fcn=discount_factor_fcn) {
+    accumulate_coupon_values_before = function(t, discount_factor_fctn=discount_factor_fcn) {
       "Compute the sum of coupon present values as of {t} according to {discount_factor_fcn}"
-      paid_coupon_ix = (coupons$payment_time<=t)
+      paid_coupon_ix = (coupons$payment_time<=t+maturity*TIME_RESOLUTION_FACTOR)
       paid_coupons = coupons[paid_coupon_ix,]
-      accumulation_proportions = discount_factor_fcn(t,paid_coupons$payment_time)
-      sum(accumulation_proportions*paid_coupons$payment_size)
+      accumulation_proportions = discount_factor_fctn(t,paid_coupons$payment_time)
+      ac = sum(accumulation_proportions*paid_coupons$payment_size)
+      flog.info("Accumulated coupon values at %s are: %s", t, ac)
+      ac
+    },
+    total_coupon_values_between = function(small_t, big_t, discount_factor_fctn=discount_factor_fcn) {
+      "Compute the sum (as of {big_t}) of present values of coupons paid between small_t and big_t"
+      paid_coupon_ix = ( coupons$payment_time>small_t & coupons$payment_time<=big_t )
+      paid_coupons = coupons[paid_coupon_ix,]
+      accumulation_proportions = discount_factor_fctn(big_t,paid_coupons$payment_time)
+      ac = sum(accumulation_proportions*paid_coupons$payment_size)
+      flog.info("Totaled coupon present values in interval (%s,%s] are: %s", small_t, big_t, ac)
+      ac
     },
     critical_times = function() {
       "Important times in the life of this instrument for simulation and grid solvers"
@@ -179,7 +190,32 @@ CouponBond = setRefClass(
       if (nrow(coupons) > 0) {
         ctimes = c(ctimes, coupons$payment_time)
       }
+      ctimes = sort(ctimes)
       ctimes
+    },
+    update_cashflows = function(small_t, big_t, discount_factor_fctn=discount_factor_fcn, ...) {
+      "Update last_computed_cash and return cashflow information for the given time period"
+      df = discount_factor_fctn(big_t, small_t)
+      discounted_cash = df * last_computed_cash
+      cashflows = total_coupon_values_between(small_t, big_t, discount_factor_fctn=discount_factor_fcn)
+      if (maturity>small_t && maturity<=big_t) {
+        cashflows = cashflows + notional * discount_factor_fctn(maturity, small_t)
+      }
+      last_computed_cash <<- last_computed_cash - cashflows
+      flog.info("Totaled cashflows in interval (%s,%s]  as of %s are: %s", small_t, big_t, big_t, cashflows)
+      cashflows
+    },
+    optionality_fcn = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
+      "Return the greater of hold value {v} or conversion value at each stock price level in {S}"
+      if (t >= maturity) {
+        accumulated_past_coupons = accumulate_coupon_values_before(maturity, discount_factor_fctn=discount_factor_fcn)
+        last_computed_cash <<- notional + accumulated_past_coupons
+        v = 0.0*(v+S)
+      } else {
+        v[v < 0] = 0
+        last_computed_grid <<- as.vector(v)
+      }
+      v
     }
   )
 )
@@ -235,14 +271,15 @@ ConvertibleBond = setRefClass(
   fields=list(conversion_ratio="numeric",
               dividend_ceiling="numeric"),
   methods=list(
-    optionality_fcn = function(v,S,t,discount_factor_fcn=discount_factor_fcn,...) {
-      "Return the greater of hold value {v} or conversion value at each stock price level in {S}"
+    optionality_fcn = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
+      "Return the greater of hold value {v} or conversion value at each stock price level in {S}, adjusted to include all past coupons"
       if (t > maturity) {
-        v = 0.0*(v+S) + notional
+        accumulated_past_coupons = accumulate_coupon_values_before(maturity, discount_factor_fctn=discount_factor_fctn)
+        v = 0.0*(v+S) + notional + accumulated_past_coupons
       } else {
         flog.debug("Optionality at t=%s", t)
         exercise_values = S * conversion_ratio
-        accumulated_past_coupons = accumulate_coupon_values_before(t,discount_factor_fcn=discount_factor_fcn)
+        accumulated_past_coupons = accumulate_coupon_values_before(t,discount_factor_fctn=discount_factor_fctn)
         total_early_exercise_value = exercise_values + accumulated_past_coupons
         flog.debug("exercise_values %s total_early_exercise_value %s",
                   toString(exercise_values), toString(total_early_exercise_value))

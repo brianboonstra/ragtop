@@ -96,6 +96,8 @@ construct_tridiagonals = function(sigma, structure_constant, drift)
 #'  for each space grid node
 #' @param tridiag_matrix_entries Diagonal, superdiagonal and subdiagonal
 #'  of tridiagonal matrix from the numerical integrator
+#' @param full_discount_factor A discount factor for the transform from
+#'  grid values to actual derivative prices
 #' @param local_discount_factor A discount factor to apply to
 #'  recovery values
 #' @param prev_grid_values A vector of space grid values from the
@@ -106,13 +108,17 @@ construct_tridiagonals = function(sigma, structure_constant, drift)
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
 #'   then expected to be equal to \code{fixed + proportional * S / S0}
-take_implicit_timestep = function(t,
+take_implicit_timestep = function(t, S, full_discount_factor,
                                   local_discount_factor,
                                   prev_grid_values, survival_probabilities,
                                   tridiag_matrix_entries,
                                   instrument=NULL,
                                   dividends=NULL)
 {
+  # N.B.When accessing optionality_fcn() or recovery_fcn() methods, we adjust
+  #  putative grid values by the discount factor to obtain non-transformed
+  #  prices suitable for comparison to strikes, etc.
+
   # The value of holding this security at time t, assuming it will survive
   # to t+dt just comes from inverting our finite difference matrix
   hold_cond_on_surv = limSolve::Solve.tridiag(tridiag_matrix_entries$sub,
@@ -126,7 +132,7 @@ take_implicit_timestep = function(t,
   if (is.blank(instrument) || is.blank(instrument$recovery_fcn)) {
     recovery_values = 0.0
   } else {
-    recovery_values = instrument$recovery_fcn(S, t, hold_cond_on_surv)
+    recovery_values = full_discount_factor * instrument$recovery_fcn(S, t, hold_cond_on_surv/full_discount_factor)
   }
   # The overall value of the derivative, assuming both parties want to
   # keep it in existence, comes from the hold value conditional on
@@ -146,7 +152,7 @@ take_implicit_timestep = function(t,
   if (is.blank(instrument) || is.blank(instrument$optionality_fcn)) {
     new_value = hold_value
   } else {
-    new_value = instrument$optionality_fcn(hold_value, S, t)
+    new_value = full_discount_factor * instrument$optionality_fcn(hold_value/full_discount_factor, S, t)
   }
   new_value
 }
@@ -183,6 +189,8 @@ timestep_instruments = function(z, prev_grid_values,
                                 variance_cumulation_fcn,
                                 dividends = NULL)
 {
+  full_discount_factor = discount_factor_fcn(t,0)
+  prev_timestep_discount_factor = discount_factor_fcn(t+dt,0)
   local_discount_factor = discount_factor_fcn(t+dt,t)
   r = -log(local_discount_factor/dt)
   S = stock_level_fcn(z, t)
@@ -200,9 +208,20 @@ timestep_instruments = function(z, prev_grid_values,
     instrument = instruments[[k]]
     instr_name = names(instruments)[[k]]
     prev_instr_grid_values = div_adj_grid_values[,k]
+    # Update hold value for cashflows
+    instr_methods = instrument$getRefClass()$methods()
+    if ("update_cashflows" %in% instr_methods) {
+      cash_increase = instrument$update_cashflows(t, t+dt,
+                                                  discount_factor_fcn=discount_factor_fcn)
+      grid_cash_increase = prev_timestep_discount_factor * cash_increase
+      flog.info("Instrument %s has cashflows %s between %s and %s.  Increasing grid values by the corresponding change-of-variables amount %s.",
+                instr_name, cash_increase, t, t+dt, grid_cash_increase)
+      prev_instr_grid_values = prev_instr_grid_values + grid_cash_increase
+    }
     flog.info("Now timestepping %s from %s to %s on N=%s grid, current mean value on grid is %s",
               instr_name, t+dt, t, length(prev_instr_grid_values), mean(prev_instr_grid_values))
-    instr_grid_vals = take_implicit_timestep(t, local_discount_factor,
+    instr_grid_vals = take_implicit_timestep(t, S, full_discount_factor,
+                                             local_discount_factor,
                                              prev_instr_grid_values,
                                              survival_probabilities,
                                              matrix_entries,
@@ -235,9 +254,15 @@ infer_conforming_time_grid = function(min_num_time_steps, Tmax, instruments=NULL
       instr_name = names(instruments)[[k]]
       flog.info("Checking instrument %s of maturity %s for terms and conditions requiring time grid entries",
                 instr_name, instrument$maturity)
-      instr_fields = instrument$getRefClass()$fields()
-      if ("critical_times" %in% instr_fields) {
-        time_grid = c(time_grid, instrument$critical_times())
+      instr_methods = instrument$getRefClass()$methods()
+      if ("critical_times" %in% instr_methods) {
+        inst_crit = instrument$critical_times()
+        time_grid = c(time_grid, inst_crit)
+        flog.info("Relevant terms and conditions for instrument %s in time grid were: %s",
+                  instr_name, dput(inst_crit))
+      } else {
+        flog.info("No relevant terms and conditions for instrument %s in time grid",
+                  instr_name)
       }
     }
   }
@@ -258,6 +283,7 @@ infer_conforming_time_grid = function(min_num_time_steps, Tmax, instruments=NULL
   }
   flog.info("%s time steps requested. Instrument terms and conditions bring the total number to %s",
             min_num_time_steps, length(time_grid)-1)
+  time_grid = sort(time_grid)
   time_grid
 }
 
@@ -297,7 +323,10 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
   #  maximum time, discounted according to our change of variables
   for (k in (1:length(instruments))) {
     instrument = instruments[[k]]
+    instr_name = names(instruments)[[k]]
     grid[num_time_pts,,k] = df_final * instrument$optionality_fcn(0, S=S_final, t=Tmax)
+    flog.info("Terminal values at Tmax=%s for %s average %s",
+              Tmax, instr_name, mean(grid[num_time_pts,,k]))
   }
   # Take num_time_pts timesteps to integrate
   for (m in (num_time_steps:1)) {
@@ -323,7 +352,7 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
 
 #' @export find_present_value
 find_present_value = function(S0, num_time_steps, instruments,
-                              const_volatility=0.5, const_short_rate=0, const_default_intensity=0,
+                              const_volatility=0.5, const_short_rate=0, const_default_intensity=0, override_Tmax=NA,
                               discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
                               default_intensity_fcn = function(t, S, ...){const_default_intensity+0.0*S},
                               variance_cumulation_fcn = function(T, t){const_volatility^2*(T-t)},
@@ -333,7 +362,11 @@ find_present_value = function(S0, num_time_steps, instruments,
                               structure_constant=2.0,
                               std_devs_width=3.0)
 {
-  Tmax = 0
+  if (is.blank(override_Tmax)) {
+    Tmax = 0
+  } else {
+    Tmax = override_Tmax
+  }
   K = S0
   # Get a strike and maximum maturity from the instruments
   for (k in (1:length(instruments))) {
@@ -345,7 +378,7 @@ find_present_value = function(S0, num_time_steps, instruments,
       # strike of the *last* instrument in our list
       K = instrument$strike
     }
-    if (instrument$maturity > Tmax) {
+    if (instrument$maturity > Tmax && is.blank(override_Tmax)) {
       Tmax = instrument$maturity
     }
     flog.info("Instrument %s: %s", k, instr_name)
