@@ -45,12 +45,14 @@ require(futile.logger)
 #'
 #' @field maturity The tenor, expiration date or terminal date by which the value of this security will be certain.
 #' @field last_computed_grid The most recently computed set of values from a grid pricing scheme.  Used internally for pricing chains of derivatives.
+#' @field name A mnemonic name for the instrument, not used by ragtop
 #' @export GridPricedInstrument
 #' @exportClass GridPricedInstrument
 GridPricedInstrument = setRefClass(
   "GridPricedInstrument",
   fields = list(maturity = "numeric",
-                last_computed_grid = "numeric"),
+                last_computed_grid = "numeric",
+                name = "character"),
   methods = list(
     recovery_fcn = function(v,S,t,...) {
       "Return recovery value, given non-default values {v} at time {t}.  Subclasses may be more elaborate, this method simply returns 0.0."
@@ -147,6 +149,8 @@ ZeroCouponBond = setRefClass(
       "Return the notional value in the shape of {S} at any time on or after maturity, otherwise just return {v}"
       if (t >= maturity) {
         v = 0.0*(v+S) + notional
+        flog.info("Timestep t=%s for %s is at or beyond maturity.  Using notional %s.",
+                  t, name, notional)
       }
       v[v < 0] = 0
       last_computed_grid <<- as.vector(v)
@@ -167,11 +171,11 @@ CouponBond = setRefClass(
   fields=list(coupons="data.frame", last_computed_cash="numeric"),
   methods = list(
     accumulate_coupon_values_before = function(t, discount_factor_fctn=discount_factor_fcn) {
-      "Compute the sum of coupon present values as of {t} according to {discount_factor_fcn}"
+      "Compute the sum of coupon present values as of {t} according to {discount_factor_fctn}"
       paid_coupon_ix = (coupons$payment_time<=t+maturity*TIME_RESOLUTION_FACTOR)
       paid_coupons = coupons[paid_coupon_ix,]
-      accumulation_proportions = discount_factor_fctn(t,paid_coupons$payment_time)
-      ac = sum(accumulation_proportions*paid_coupons$payment_size)
+      accumulation_proportions = discount_factor_fctn(t, paid_coupons$payment_time)
+      ac = sum(paid_coupons$payment_size/accumulation_proportions)
       flog.info("Accumulated coupon values at %s are: %s", t, ac)
       ac
     },
@@ -194,22 +198,32 @@ CouponBond = setRefClass(
       ctimes
     },
     update_cashflows = function(small_t, big_t, discount_factor_fctn=discount_factor_fcn, ...) {
-      "Update last_computed_cash and return cashflow information for the given time period"
+      "Update last_computed_cash and return cashflow information for the given time period, valued at big_t"
       df = discount_factor_fctn(big_t, small_t)
-      discounted_cash = df * last_computed_cash
-      cashflows = total_coupon_values_between(small_t, big_t, discount_factor_fctn=discount_factor_fcn)
+      cashflows = total_coupon_values_between(small_t, big_t, discount_factor_fctn=discount_factor_fctn)
       if (maturity>small_t && maturity<=big_t) {
-        cashflows = cashflows + notional * discount_factor_fctn(maturity, small_t)
+        ndf = notional * discount_factor_fctn(maturity, big_t)
+        flog.info("Totaled %s cashflows in interval (%s,%s]  discounted to t=%s were %s.  Also included notional %s, discounted to %s.",
+                  name, small_t, big_t, small_t, cashflows + ndf, notional, ndf)
+        cashflows = cashflows + ndf
+      } else {
+        flog.info("Totaled %s cashflows in interval (%s,%s]  discounted to t=%s were %s. No notional amount included.",
+                  name, small_t, big_t, big_t, cashflows)
       }
-      last_computed_cash <<- last_computed_cash - cashflows
-      flog.info("Totaled cashflows in interval (%s,%s]  as of %s are: %s", small_t, big_t, big_t, cashflows)
+      new_cash = df*(last_computed_cash - cashflows)
+      flog.info("Updating %s last_computed_cash (was: %s) discounted by %s to %s and subtracted cashflows %s discounted to %s to get %s.",
+                name, last_computed_cash, df, df*last_computed_cash,
+                cashflows, df*cashflows, new_cash)
+      last_computed_cash <<- new_cash
       cashflows
     },
     optionality_fcn = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
       "Return the greater of hold value {v} or conversion value at each stock price level in {S}"
       if (t >= maturity) {
-        accumulated_past_coupons = accumulate_coupon_values_before(maturity, discount_factor_fctn=discount_factor_fcn)
+        accumulated_past_coupons = accumulate_coupon_values_before(maturity, discount_factor_fctn=discount_factor_fctn)
         last_computed_cash <<- notional + accumulated_past_coupons
+        flog.info("Timestep t=%s for %s is at or beyond maturity.  Setting last_computed_cash to notional %s plus accumulated coupon value %s.",
+                  t, name, notional, accumulated_past_coupons)
         v = 0.0*(v+S)
       } else {
         v[v < 0] = 0
@@ -274,8 +288,8 @@ ConvertibleBond = setRefClass(
     optionality_fcn = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
       "Return the greater of hold value {v} or conversion value at each stock price level in {S}, adjusted to include all past coupons"
       if (t > maturity) {
-        accumulated_past_coupons = accumulate_coupon_values_before(maturity, discount_factor_fctn=discount_factor_fctn)
-        v = 0.0*(v+S) + notional + accumulated_past_coupons
+        # Just use the straight bond value after maturity
+        v = callSuper(v,S,t,discount_factor_fctn=discount_factor_fctn)
       } else {
         flog.debug("Optionality at t=%s", t)
         exercise_values = S * conversion_ratio

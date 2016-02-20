@@ -212,14 +212,15 @@ timestep_instruments = function(z, prev_grid_values,
     instr_methods = instrument$getRefClass()$methods()
     if ("update_cashflows" %in% instr_methods) {
       cash_increase = instrument$update_cashflows(t, t+dt,
-                                                  discount_factor_fcn=discount_factor_fcn)
-      grid_cash_increase = prev_timestep_discount_factor * cash_increase
-      flog.info("Instrument %s has cashflows %s between %s and %s.  Increasing grid values by the corresponding change-of-variables amount %s.",
-                instr_name, cash_increase, t, t+dt, grid_cash_increase)
+                                                  discount_factor_fctn=discount_factor_fcn)
+      grid_cash_increase =  cash_increase * prev_timestep_discount_factor
+      flog.info("Instrument %s has cashflows %s in interval (%s,%s].  Increasing grid values by the corresponding change-of-variables (x %s) amount %s.",
+                instr_name, cash_increase, t, t+dt, prev_timestep_discount_factor, grid_cash_increase)
       prev_instr_grid_values = prev_instr_grid_values + grid_cash_increase
     }
-    flog.info("Now timestepping %s from %s to %s on N=%s grid, current mean value on grid is %s",
-              instr_name, t+dt, t, length(prev_instr_grid_values), mean(prev_instr_grid_values))
+    flog.info("Now timestepping %s from %s to %s on N=%s grid, current mean value on grid is %s for a mean price of %s",
+              instr_name, t+dt, t, length(prev_instr_grid_values),
+              mean(prev_instr_grid_values), mean(prev_instr_grid_values)/(full_discount_factor*local_discount_factor))
     instr_grid_vals = take_implicit_timestep(t, S, full_discount_factor,
                                              local_discount_factor,
                                              prev_instr_grid_values,
@@ -227,6 +228,9 @@ timestep_instruments = function(z, prev_grid_values,
                                              matrix_entries,
                                              instrument = instrument,
                                              dividends = dividends)
+    flog.info("Done timestepping %s from %s to %s on N=%s grid, new mean value on grid is %s for a mean price of %s",
+              instr_name, t+dt, t, length(prev_instr_grid_values),
+              mean(instr_grid_vals), mean(instr_grid_vals)/full_discount_factor)
     div_adj_grid_values[,k] = instr_grid_vals
   }
   div_adj_grid_values
@@ -278,7 +282,7 @@ infer_conforming_time_grid = function(min_num_time_steps, Tmax, instruments=NULL
     betw = unique(signif(time_grid[time_grid>0 & time_grid<Tmax],
                          digits=TIME_RESOLUTION_SIGNIF_DIGITS))
     flog.info("Some of the %s requested timesteps are very close to each other.  Combined them to create a grid with only %s timesteps.",
-              lenght(time_grid), 2+length(betw))
+              length(time_grid), 2+length(betw))
     time_grid = unique(c(0,betw,Tmax))
   }
   flog.info("%s time steps requested. Instrument terms and conditions bring the total number to %s",
@@ -320,15 +324,17 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
   df_final = discount_factor_fcn(Tmax, 0)
   flog.info("Discount factor to Tmax=%s is %s", Tmax, df_final)
   # Set the initial condition for the PDE from instrument values at
-  #  maximum time, discounted according to our change of variables
+  #  maximum time, discounted by df_final according to our change of variables
   for (k in (1:length(instruments))) {
     instrument = instruments[[k]]
     instr_name = names(instruments)[[k]]
-    grid[num_time_pts,,k] = df_final * instrument$optionality_fcn(0, S=S_final, t=Tmax)
+    grid[num_time_pts,,k] = df_final * instrument$optionality_fcn(0, S=S_final,
+                                                                  t=Tmax,
+                                                                  discount_factor_fctn=discount_factor_fcn)
     flog.info("Terminal values at Tmax=%s for %s average %s",
               Tmax, instr_name, mean(grid[num_time_pts,,k]))
   }
-  # Take num_time_pts timesteps to integrate
+  # Take num_time_steps timesteps to integrate
   for (m in (num_time_steps:1)) {
     t = time_pts[[m]]
     dt = time_pts[[m+1]] - time_pts[[m]]

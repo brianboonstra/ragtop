@@ -208,7 +208,8 @@ coupon_value_at_exercise = function(t, coupons_df, discount_factor_fcn,
   if (accelerate_future_coupons) {
     accel_value = accelerated_coupon_value(t, coupons_df,
                                            discount_factor_fcn=acceleration_discount_factor_fcn,
-                                           acceleration_t=acceleration_t)
+                                           acceleration_t=acceleration_t,
+                                           model_t=0)
   } else {
     accel_value = 0
   }
