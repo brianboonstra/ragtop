@@ -84,11 +84,11 @@ test_that("Single-instrument timestep", {
 })
 
 very_short_bond = ZeroCouponBond(notional=1.0, maturity=0.125, discount_factor_fcn=function(...){NULL})
-zcb_prices_h1 = find_present_value(100, 1, instruments=list(zcb=very_short_bond), const_default_intensity=0.4103464)
-zcb_prices_r1 = find_present_value(100, 1, instruments=list(zcb=very_short_bond), const_short_rate=0.4103464)
-zcb_prices_h3 = find_present_value(100, 3, instruments=list(zcb=very_short_bond), const_default_intensity=0.4103464)
-zcb_prices_r3 = find_present_value(100, 3, instruments=list(zcb=very_short_bond), const_short_rate=0.4103464)
-zcb_prices_rh3 = find_present_value(100, 3, instruments=list(zcb=very_short_bond), const_short_rate=0.4103464, const_default_intensity=0.4103464)
+zcb_prices_h1 = form_present_value_grid(100, 1, instruments=list(zcb=very_short_bond), const_default_intensity=0.4103464)[,1]
+zcb_prices_r1 = form_present_value_grid(100, 1, instruments=list(zcb=very_short_bond), const_short_rate=0.4103464)[,1]
+zcb_prices_h3 = form_present_value_grid(100, 3, instruments=list(zcb=very_short_bond), const_default_intensity=0.4103464)[,1]
+zcb_prices_r3 = form_present_value_grid(100, 3, instruments=list(zcb=very_short_bond), const_short_rate=0.4103464)[,1]
+zcb_prices_rh3 = form_present_value_grid(100, 3, instruments=list(zcb=very_short_bond), const_short_rate=0.4103464, const_default_intensity=0.4103464)[,1]
 test_that("Trivial 1- and 3-timestep ZCB solutions", {
   expect_equal(max(zcb_prices_h1), 0.95, tolerance=1.e-6)
   expect_equal(min(zcb_prices_h1), max(zcb_prices_h1), tolerance=1.e-6)
@@ -106,14 +106,14 @@ split_coup = ZeroCouponBond(maturity=0.875, notional=1, discount_factor_fcn=pct0
 sing = CouponBond(maturity=1, notional=100, coupons=data.frame(payment_time=0.875, payment_size=1),
                   discount_factor_fcn=pct0)
 no_coup = ZeroCouponBond(maturity=1, notional=100)
-gvs_const_h = find_present_value(100, 2,
+gvs_const_h = form_present_value_grid(100, 2,
                                  instruments=list(zcb=no_coup, coupon=split_coup, one_coupon_bond=sing),
                                  const_default_intensity=0.05862091,
                                  const_short_rate = 0)
-gvs_const_r = find_present_value(100, 2,
+gvs_const_r = form_present_value_grid(100, 2,
                                  instruments=list(zcb=no_coup, coupon=split_coup, one_coupon_bond=sing),
                                  const_short_rate=0.11)
-gvs_const_rh = find_present_value(100, 2,
+gvs_const_rh = form_present_value_grid(100, 2,
                                   instruments=list(zcb=no_coup, coupon=split_coup, one_coupon_bond=sing),
                                   const_default_intensity=0.05,
                                   const_short_rate=0.11)

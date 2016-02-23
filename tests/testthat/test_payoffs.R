@@ -18,8 +18,9 @@ coups = data.frame(payment_time=c(0.2, 0.7, 1.2, 1.7),
                    payment_size=c(30,30,30,30))
 conv_bond = ConvertibleBond$new(coupons=coups,
                                 conversion_ratio=0,
-                                maturity=1)
+                                maturity=1,
+                                notional=0)
 test_that("Convertible Bond Coupon Discounting", {
   expect_equal(conv_bond$optionality_fcn(c(0,0), c(0,0.1), 0.9, function(t,T){exp(-0.03*(T-t))})[1],
-               60.8172, tolerance=1e-3)
+               59.19711, tolerance=1e-3)
 })

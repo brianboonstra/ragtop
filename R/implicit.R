@@ -356,8 +356,8 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
 }
 
 
-#' @export find_present_value
-find_present_value = function(S0, num_time_steps, instruments,
+#' @export form_present_value_grid
+form_present_value_grid = function(S0, num_time_steps, instruments,
                               const_volatility=0.5, const_short_rate=0, const_default_intensity=0, override_Tmax=NA,
                               discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
                               default_intensity_fcn = function(t, S, ...){const_default_intensity+0.0*S},
@@ -416,7 +416,33 @@ find_present_value = function(S0, num_time_steps, instruments,
                         variance_cumulation_fcn,
                         dividends=NULL)
   flog.info("Completed PDE integration")
-  present_value_grid = as.matrix(grid[1,,])
-  colnames(present_value_grid) = names(instruments)
+  present_value_grid = cbind(as.matrix(grid[1,,]), matrix(stock_level_fcn(grid_structure$z,0), ncol=1))
+  colnames(present_value_grid) = c(names(instruments), "Underlying")
   present_value_grid
+}
+
+
+#' @export form_present_value_grid
+find_present_value = function(S0, num_time_steps, instruments,
+                                   const_volatility=0.5, const_short_rate=0, const_default_intensity=0, override_Tmax=NA,
+                                   discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
+                                   default_intensity_fcn = function(t, S, ...){const_default_intensity+0.0*S},
+                                   variance_cumulation_fcn = function(T, t){const_volatility^2*(T-t)},
+                                   dividends=NULL,
+                                   borrow_cost=0.0,
+                                   dividend_rate=0.0,
+                                   structure_constant=2.0,
+                                   std_devs_width=3.0)
+{
+  present_value_grid = form_present_value_grid(S0=S0, num_time_steps=num_time_steps, instruments=instruments,
+                                               const_volatility=const_volatility, const_short_rate=const_short_rate,
+                                               const_default_intensity=const_default_intensity, override_Tmax=override_Tmax,
+                                               discount_factor_fcn = discount_factor_fcn,
+                                               default_intensity_fcn = default_intensity_fcn,
+                                               variance_cumulation_fcn = variance_cumulation_fcn,
+                                               dividends=dividends,
+                                               borrow_cost=borrow_cost,
+                                               dividend_rate=dividend_rate,
+                                               structure_constant=structure_constant,
+                                               std_devs_width=std_devs_width)
 }

@@ -26,6 +26,7 @@
 #'   \item{\code{Delta}}{Sensitivity to underlying price}
 #'   \item{\code{Vega}}{Sensitivity to volatility}
 #' }
+#' @export blackscholes
 blackscholes = function(callput, S0, K, r, time, vola, divrate=0, borrow_cost=0)
 {
   sd = vola*sqrt(time)

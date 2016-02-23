@@ -161,6 +161,10 @@ ZeroCouponBond = setRefClass(
 
 #' Standard corporate or government bond
 #'
+#' A coupon bond is treated here as the entire collection of cashflows. In particular,
+#'  coupons are included in the package even after they have been paid, accruing
+#'  at the risk-free rate.
+#'
 #' @field coupons A data.frame of details for each coupon.  It should have the
 #'   columns \code{payment_time} and \code{payment_size}.
 #' @export CouponBond
@@ -218,7 +222,7 @@ CouponBond = setRefClass(
       cashflows
     },
     optionality_fcn = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
-      "Return the greater of hold value {v} or conversion value at each stock price level in {S}"
+      "Return the greater of hold value {v} or exercise value at each stock price level in {S}.  If the given date is beyond maturity, return value at maturity."
       if (t >= maturity) {
         accumulated_past_coupons = accumulate_coupon_values_before(maturity, discount_factor_fctn=discount_factor_fctn)
         last_computed_cash <<- notional + accumulated_past_coupons
@@ -293,10 +297,13 @@ ConvertibleBond = setRefClass(
       } else {
         flog.debug("Optionality at t=%s", t)
         exercise_values = S * conversion_ratio
-        accumulated_past_coupons = accumulate_coupon_values_before(t,discount_factor_fctn=discount_factor_fctn)
+        # Because grid values for bonds represent existing bond plus all past
+        #  coupons, exercise values must have those accrued coupons added for
+        #  a fair comparison
+        accumulated_past_coupons = accumulate_coupon_values_before(t, discount_factor_fctn=discount_factor_fctn)
         total_early_exercise_value = exercise_values + accumulated_past_coupons
         flog.debug("exercise_values %s total_early_exercise_value %s",
-                  toString(exercise_values), toString(total_early_exercise_value))
+                   toString(exercise_values), toString(total_early_exercise_value))
         total_early_exercise_value[total_early_exercise_value < 0] = 0
         exercise_ix = (v < total_early_exercise_value)
         v[exercise_ix] = total_early_exercise_value[exercise_ix]
