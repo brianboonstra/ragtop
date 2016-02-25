@@ -220,6 +220,9 @@ $$
 \lim_{z \rightarrow \pm \infty} {{\frac{\partial^2 \mspace{-1.0mu} f}{\partial \mspace{-1.0mu} z^2}}} = 0
 $$
 
+Note that the Neumann boundary conditions would be more or less exact at high-$S$ boundaries for a solver operating in $S$ space.  For our solver operating in $z$ space, the Neumann boundary conditions lack the (exponential) curvature.  Nevertheless for grids of reasonable size they work very well.
+
+
 ### Finite Differencing the PDE
 
 Assume we have $\vec{f}^{m-1}$, a set of solutions to the PDE for some $\tau=(m-1)dt$ at a given set of grid points $z_n = z_0+n\,dz, n=-N,\dots,N$.  For convenience we may write this  in alternate forms

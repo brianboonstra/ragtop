@@ -51,7 +51,8 @@ construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structu
   N = 2 * half_N + 1
   z = z0 + dz * (-half_N:half_N)
   flog.info("Grid structure with %s timesteps to time %s at vol %s has %s space steps to %s sdevs widths",
-            M, T, sigma, N, std_devs_width)
+            M, T, sigma, N, std_devs_width,
+            name='ragtop.implicit.setup')
   list(
     T = T, dt = dt, dz = dz, z0 = z0,
     z_width = z_width, half_N = half_N, N = N, z = z
@@ -113,7 +114,8 @@ take_implicit_timestep = function(t, S, full_discount_factor,
                                   prev_grid_values, survival_probabilities,
                                   tridiag_matrix_entries,
                                   instrument=NULL,
-                                  dividends=NULL)
+                                  dividends=NULL,
+                                  instr_name="this instrument")
 {
   # N.B.When accessing optionality_fcn() or recovery_fcn() methods, we adjust
   #  putative grid values by the discount factor to obtain non-transformed
@@ -136,10 +138,14 @@ take_implicit_timestep = function(t, S, full_discount_factor,
   }
   # The overall value of the derivative, assuming both parties want to
   # keep it in existence, comes from the hold value conditional on
-  # survival times the appropriate likelihood, plus the recovery
+  # survival times the survival likelihood, plus the recovery
   # value times default likelihood
   hold_value = (survival_probabilities * hold_cond_on_surv +
                   (1. - survival_probabilities) * local_discount_factor * recovery_values)
+  flog.info("Timestep of %s to t=%s has hold conditional on survival averaging %s, recovery values averaging %s and survival probabilities averaging %s for an average value all-in of %s",
+            instr_name, t, mean(hold_cond_on_surv), mean(recovery_values),
+            mean(survival_probabilities), mean(hold_value),
+            name='ragtop.implicit.timestep')
   # If optionality is in play, the derivative value could be altered. This
   # can depend on _other_ derivative values that may be in play, in which
   # the instrument's optionality_fcn should handle the dependencies
@@ -148,7 +154,7 @@ take_implicit_timestep = function(t, S, full_discount_factor,
   # Another use of this optionality_fcn() is to have reasonable prices
   # at timesteps occurring beyond the tenor of this layer, so that
   # for example a bond is just set to the notional value corrected
-  # for time value of money
+  # for time value of money when beyond maturity
   if (is.blank(instrument) || is.blank(instrument$optionality_fcn)) {
     new_value = hold_value
   } else {
@@ -202,8 +208,9 @@ timestep_instruments = function(z, prev_grid_values,
   survival_probabilities = exp(-h * dt)
   dz = diff(z)[1] # We are assuming a regular grid in z space
   structure_constant = dt/dz^2
-  flog.info("Structure constant at %s for dt=%s is %s", t, dt, structure_constant  )
-  matrix_entries = construct_tridiagonals(sigma, structure_constant, drift=h)
+  flog.info("Structure constant at %s for dt=%s is %s", t, dt, structure_constant,
+            name='ragtop.implicit.timestep')
+  matrix_entries = construct_tridiagonals(sigma, structure_constant, drift=h*dt/dz)
   for (k in (1:length(instruments))) {
     instrument = instruments[[k]]
     instr_name = names(instruments)[[k]]
@@ -215,22 +222,26 @@ timestep_instruments = function(z, prev_grid_values,
                                                   discount_factor_fctn=discount_factor_fcn)
       grid_cash_increase =  cash_increase * prev_timestep_discount_factor
       flog.info("Instrument %s has cashflows %s in interval (%s,%s].  Increasing grid values by the corresponding change-of-variables (x %s) amount %s.",
-                instr_name, cash_increase, t, t+dt, prev_timestep_discount_factor, grid_cash_increase)
+                instr_name, cash_increase, t, t+dt, prev_timestep_discount_factor, grid_cash_increase,
+                name='ragtop.implicit.timestep')
       prev_instr_grid_values = prev_instr_grid_values + grid_cash_increase
     }
     flog.info("Now timestepping %s from %s to %s on N=%s grid, current mean value on grid is %s for a mean price of %s",
               instr_name, t+dt, t, length(prev_instr_grid_values),
-              mean(prev_instr_grid_values), mean(prev_instr_grid_values)/(full_discount_factor*local_discount_factor))
+              mean(prev_instr_grid_values), mean(prev_instr_grid_values)/(full_discount_factor*local_discount_factor),
+              name='ragtop.implicit.timestep')
     instr_grid_vals = take_implicit_timestep(t, S, full_discount_factor,
                                              local_discount_factor,
                                              prev_instr_grid_values,
                                              survival_probabilities,
                                              matrix_entries,
                                              instrument = instrument,
-                                             dividends = dividends)
+                                             dividends = dividends,
+                                             instr_name=instr_name)
     flog.info("Done timestepping %s from %s to %s on N=%s grid, new mean value on grid is %s for a mean price of %s",
               instr_name, t+dt, t, length(prev_instr_grid_values),
-              mean(instr_grid_vals), mean(instr_grid_vals)/full_discount_factor)
+              mean(instr_grid_vals), mean(instr_grid_vals)/full_discount_factor,
+              name='ragtop.implicit.timestep')
     div_adj_grid_values[,k] = instr_grid_vals
   }
   div_adj_grid_values
@@ -257,16 +268,19 @@ infer_conforming_time_grid = function(min_num_time_steps, Tmax, instruments=NULL
       time_grid = c(time_grid, instrument$maturity)
       instr_name = names(instruments)[[k]]
       flog.info("Checking instrument %s of maturity %s for terms and conditions requiring time grid entries",
-                instr_name, instrument$maturity)
+                instr_name, instrument$maturity,
+                name='ragtop.implicit.setup')
       instr_methods = instrument$getRefClass()$methods()
       if ("critical_times" %in% instr_methods) {
         inst_crit = instrument$critical_times()
         time_grid = c(time_grid, inst_crit)
         flog.info("Relevant terms and conditions for instrument %s in time grid were: %s",
-                  instr_name, dput(inst_crit))
+                  instr_name, dput(inst_crit),
+                  name='ragtop.implicit.setup')
       } else {
         flog.info("No relevant terms and conditions for instrument %s in time grid",
-                  instr_name)
+                  instr_name,
+                  name='ragtop.implicit.setup')
       }
     }
   }
@@ -282,11 +296,13 @@ infer_conforming_time_grid = function(min_num_time_steps, Tmax, instruments=NULL
     betw = unique(signif(time_grid[time_grid>0 & time_grid<Tmax],
                          digits=TIME_RESOLUTION_SIGNIF_DIGITS))
     flog.info("Some of the %s requested timesteps are very close to each other.  Combined them to create a grid with only %s timesteps.",
-              length(time_grid), 2+length(betw))
+              length(time_grid), 2+length(betw),
+              name='ragtop.implicit.setup')
     time_grid = unique(c(0,betw,Tmax))
   }
   flog.info("%s time steps requested. Instrument terms and conditions bring the total number to %s",
-            min_num_time_steps, length(time_grid)-1)
+            min_num_time_steps, length(time_grid)-1,
+            name='ragtop.implicit.setup')
   time_grid = sort(time_grid)
   time_grid
 }
@@ -332,7 +348,8 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
                                                                   t=Tmax,
                                                                   discount_factor_fctn=discount_factor_fcn)
     flog.info("Terminal values at Tmax=%s for %s average %s",
-              Tmax, instr_name, mean(grid[num_time_pts,,k]))
+              Tmax, instr_name, mean(grid[num_time_pts,,k]),
+              name='ragtop.implicit.setup')
   }
   # Take num_time_steps timesteps to integrate
   for (m in (num_time_steps:1)) {
@@ -387,12 +404,14 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
     if (instrument$maturity > Tmax && is.blank(override_Tmax)) {
       Tmax = instrument$maturity
     }
-    flog.info("Instrument %s: %s", k, instr_name)
+    flog.info("Instrument %s: %s", k, instr_name,
+              name='ragtop.implicit.setup')
   }
   if (Tmax<=0) {
     stop("Cannot compute present value when no instrument maturity is positive")
   } else {
-    flog.info("Max maturity: %s", Tmax)
+    flog.info("Max maturity: %s", Tmax,
+              name='ragtop.implicit.setup')
   }
   sigma = sqrt(variance_cumulation_fcn(Tmax, 0) / Tmax)
   r = -log(discount_factor_fcn(Tmax, t=0) / Tmax)
@@ -404,7 +423,12 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
   stock_level_fcn = function(z, t) {
     S_levs = K * exp(z - (c - 0.5 * sigma^2) * (Tmax-t))
     flog.info("z = %s stock levels at %s from min(S)=%s to max(S)=%s",
-              length(S_levs), t, min(S_levs), max(S_levs))
+              length(S_levs), t, min(S_levs), max(S_levs),
+              name='ragtop.implicit.setup')
+    flog.debug("z %s", deparse(z, width.cutoff=150),
+               name='ragtop.implicit.setup')
+    flog.debug("S %s", deparse(S_levs, width.cutoff=150),
+               name='ragtop.implicit.setup')
     S_levs
   }
   grid = integrate_pde(grid_structure$z,
@@ -415,14 +439,23 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
                         default_intensity_fcn,
                         variance_cumulation_fcn,
                         dividends=NULL)
-  flog.info("Completed PDE integration")
+  flog.info("Completed PDE integration",
+            name='ragtop.implicit')
   present_value_grid = cbind(as.matrix(grid[1,,]), matrix(stock_level_fcn(grid_structure$z,0), ncol=1))
   colnames(present_value_grid) = c(names(instruments), "Underlying")
   present_value_grid
 }
 
 
-#' @export form_present_value_grid
+#' Use a model to estimate the present value of financial derivatives
+#'
+#' Use a finite difference scheme to form estimates of present values for a variety
+#'  of stock prices.  Once the grid has been created, interpolate to obtain the
+#'  value of each instrument at the present stock price \code{S0}
+#'
+#' @return A list of present values, with the same names as \code{instruments}
+#'
+#' @export find_present_value
 find_present_value = function(S0, num_time_steps, instruments,
                                    const_volatility=0.5, const_short_rate=0, const_default_intensity=0, override_Tmax=NA,
                                    discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
@@ -445,4 +478,13 @@ find_present_value = function(S0, num_time_steps, instruments,
                                                dividend_rate=dividend_rate,
                                                structure_constant=structure_constant,
                                                std_devs_width=std_devs_width)
+  present_values = list()
+  for (k in (1:length(instruments))) {
+    instrument = instruments[[k]]
+    instr_name = names(instruments)[[k]]
+    present_values[[instr_name]] = spline(x=present_value_grid[,"Underlying"],
+                                          y=present_value_grid[,instr_name],
+                                          xout=S0)$y
+  }
+  present_values
 }

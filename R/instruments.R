@@ -93,7 +93,16 @@ EquityOption = setRefClass(
 EuropeanOption = setRefClass(
   "EuropeanOption",
   contains = "EquityOption",
+  fields = list(discount_factor_fcn="function"),
   methods = list(
+    recovery_fcn = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
+      "Return 0 for calls and discounted future payout for puts."
+      recovery = 0
+      if (-1==callput) {
+        recovery = strike * discount_factor_fctn(maturity, t)
+      }
+      recovery
+    },
     optionality_fcn = function(v,S,t,...) {
       "Return {v} up to maturity time.  Return exercise value after that time."
       if (t >= maturity) {
@@ -113,6 +122,14 @@ AmericanOption = setRefClass(
   "AmericanOption",
   contains = "EquityOption",
   methods = list(
+    recovery_fcn = function(v,S,t,...) {
+      "Return 0 for calls and discounted future payout for puts."
+      recovery = 0
+      if (-1==callput) {
+        recovery = strike
+      }
+      recovery
+    },
     optionality_fcn = function(v,S,t,...) {
       "Return the greater of hold value {v} or early exercise value at each stock price level in {S} up to maturity time.  Return exercise value after that time."
       if (t < maturity) {
