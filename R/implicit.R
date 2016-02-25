@@ -210,7 +210,7 @@ timestep_instruments = function(z, prev_grid_values,
   structure_constant = dt/dz^2
   flog.info("Structure constant at %s for dt=%s is %s", t, dt, structure_constant,
             name='ragtop.implicit.timestep')
-  matrix_entries = construct_tridiagonals(sigma, structure_constant, drift=h*dt/dz)
+  matrix_entries = construct_tridiagonals(sigma, structure_constant, drift=h*dt)
   for (k in (1:length(instruments))) {
     instrument = instruments[[k]]
     instr_name = names(instruments)[[k]]
