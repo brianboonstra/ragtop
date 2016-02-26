@@ -82,7 +82,7 @@ construct_tridiagonals = function(sigma, structure_constant, drift)
   subdiag[K] = -neumann_drift_high
   bad_ix = (abs(diag[2:K])-abs(subdiag[1:(K - 1)])-abs(superdiag[2:K])<0)
   if (any(bad_ix)) {
-    warning(paste0("Implicit routine encounterned potentially noninvertible matrix.  Bad indexes: ",
+    warning(paste0("Implicit routine encountered potentially noninvertible matrix.  Bad indexes: ",
                    toString(which(bad_ix))))
   }
   list(super = superdiag, diag = diag, sub = subdiag)
@@ -210,7 +210,7 @@ timestep_instruments = function(z, prev_grid_values,
   structure_constant = dt/dz^2
   flog.info("Structure constant at %s for dt=%s is %s", t, dt, structure_constant,
             name='ragtop.implicit.timestep')
-  matrix_entries = construct_tridiagonals(sigma, structure_constant, drift=h*dt)
+  matrix_entries = construct_tridiagonals(sigma, structure_constant, drift=h*dt/dz)
   for (k in (1:length(instruments))) {
     instrument = instruments[[k]]
     instr_name = names(instruments)[[k]]

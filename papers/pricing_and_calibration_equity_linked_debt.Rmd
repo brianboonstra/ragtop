@@ -212,7 +212,7 @@ $$
 
 This transforms our PDE into the more tractable equivalent
 $$
-{{\frac{\partial \mspace{-1.0mu} f}{\partial \mspace{-1.0mu} \tau}}} + \left(r-q+h\right){{\frac{\partial \mspace{-1.0mu} f}{\partial \mspace{-1.0mu} z}}}+\frac12 \sigma^2  {{\frac{\partial^2 \mspace{-1.0mu} f}{\partial \mspace{-1.0mu} z^2}}}=0.
+{{\frac{\partial \mspace{-1.0mu} f}{\partial \mspace{-1.0mu} \tau}}} + h{{\frac{\partial \mspace{-1.0mu} f}{\partial \mspace{-1.0mu} z}}}+\frac12 \sigma^2  {{\frac{\partial^2 \mspace{-1.0mu} f}{\partial \mspace{-1.0mu} z^2}}}=0.
 $$
 
 We elect to enforce Neumann boundary conditions, so we take 
