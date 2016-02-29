@@ -19,7 +19,7 @@
 #' Vectorized Black-Scholes pricing of european-exercise options
 #'
 #' Price options according to the famous Black-Scholes formula, with the
-#' optional addition of a jump-to-default intensity.
+#' optional addition of a jump-to-default intensity and discrete dividends.
 #'
 #' Note that if the \code{default_intensity} is set larger than zero then
 #'  put-call parity still holds.  Greeks are reduced according to cumulated default
@@ -29,14 +29,43 @@
 #' @param callput 1 for calls, -1 for puts
 #' @param S0 initial underlying price
 #' @param default_intensity hazard rate of stock default
+#' @param divrate A continuous rate for dividends and other cashflows such as foreign interest rates
+#' @param borrow_cost A continuous rate for stock borrow costs
+#' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
+#'   and \code{proportional}.  Dividend size at the given \code{time} is
+#'   then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
+#'   dividends will be converted to proprtional for purposes of this algorithm.
 #' @return A list with elements \describe{
 #'   \item{\code{Price}}{The present value(s)}
 #'   \item{\code{Delta}}{Sensitivity to underlying price}
 #'   \item{\code{Vega}}{Sensitivity to volatility}
 #' }
 #' @export blackscholes
-blackscholes = function(callput, S0, K, r, time, vola, default_intensity=0, divrate=0, borrow_cost=0)
+blackscholes = function(callput, S0, K, r, time, vola,
+                        default_intensity=0, divrate=0, borrow_cost=0,
+                        dividends=NULL)
 {
+  if (!is.blank(dividends)) {
+    # Divs are present. Sum any relevant ones and get present value.
+    # Form an initial sum of the correct shape.
+    div_sum = 0 * S0 + 0*K + 0*r + 0*time + 0*vola + 0*callput
+    included_ix = (dividends$time > 0)  & (dividends$time <= time)
+    relevant_divs = dividends[included_ix,c('time', 'fixed', 'proportional')]
+    if (nrow(relevant_divs) > 0) {
+      flog.info("Found %s dividends",
+                nrow(relevant_divs))
+      # Discount without consideration for default intensity.  For options
+      #  the absence of dividends in case of default is handled by terminal
+      #  likelihood.
+      # Subtracting present value properly adjusts the terminal distibution
+      #  in case of proportional dividends.  For fixed dividends, only a
+      #  grid scheme can properly handle it.  We just pretend they are
+      #  proportional here.
+      div_sum = div_sum + time_adj_dividends(relevant_divs, 0, r,
+                                             h=0, S=S0, S0=S0)
+      S0 = S0 - div_sum
+    }
+  }
   sd = vola*sqrt(time)
   q = divrate + borrow_cost - default_intensity
   d1 = log(S0/K)+(r-q)*T+0.5*sd^2

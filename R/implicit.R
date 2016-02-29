@@ -438,7 +438,7 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
                         discount_factor_fcn,
                         default_intensity_fcn,
                         variance_cumulation_fcn,
-                        dividends=NULL)
+                        dividends=dividends)
   flog.info("Completed PDE integration",
             name='ragtop.implicit')
   present_value_grid = cbind(as.matrix(grid[1,,]), matrix(stock_level_fcn(grid_structure$z,0), ncol=1))
