@@ -327,7 +327,7 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
                             stock_level_fcn,
                             discount_factor_fcn,
                             default_intensity_fcn,
-                          variance_cumulation_fcn,
+                            variance_cumulation_fcn,
                             dividends=NULL)
 {
   time_pts = infer_conforming_time_grid(min_num_time_steps, Tmax, instruments=instruments)
@@ -351,11 +351,48 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
               Tmax, instr_name, mean(grid[num_time_pts,,k]),
               name='ragtop.implicit.setup')
   }
-  # Take num_time_steps timesteps to integrate
-  for (m in (num_time_steps:1)) {
+  grid = iterate_grid_from_timestep(num_time_steps, time_pts, z, S0, instruments,
+                             stock_level_fcn=stock_level_fcn,
+                             discount_factor_fcn=discount_factor_fcn,
+                             default_intensity_fcn=default_intensity_fcn,
+                             variance_cumulation_fcn=variance_cumulation_fcn,
+                             dividends = dividends,
+                             grid = grid)
+  # Return grid values at all t.  The present values will be on the
+  # grid at index 1
+  grid
+}
+
+#' Iterate over a set of timesteps to integrate the pricing differential equation
+#'
+#' Timestep an implicit integration scheme to numerically integrate
+#' the pricing differential equation for each of the given instruments,
+#' backwardating from time \code{Tmax} to time 0.
+#' @inheritParams timestep_instruments
+#' @param grid An optional grid into which results at each timestep will
+#'   be written.  Its size should be at least
+#'   \code{(1+starting_time_step, length(z), length(instruments))}
+#' @param starting_time_step The index into time_pts of the first timestep
+#'  to be emplyed.  This must be no larger than the length of time_pts, minus one
+#'
+#' @return Either a populated grid of present values of derivative prices, or a matrix
+#'   of values at the first time point, adapted to \code{z} at
+#'   each timestep.  Time zero value will appear in the first index of any grid.
+iterate_grid_from_timestep = function(starting_time_step, time_pts, z, S0, instruments,
+                                      stock_level_fcn,
+                                      discount_factor_fcn,
+                                      default_intensity_fcn,
+                                      variance_cumulation_fcn,
+                                      dividends = NULL,
+                                      grid = NULL,
+                                      original_grid_values=as.matrix(grid[1+starting_time_step,,]))
+{
+  prev_grid_values = original_grid_values
+  new_grid_values = original_grid_values
+  # Take starting_time_step timesteps to integrate
+  for (m in (starting_time_step:1)) {
     t = time_pts[[m]]
     dt = time_pts[[m+1]] - time_pts[[m]]
-    prev_grid_values = as.matrix(grid[1+m,,])
     new_grid_values = timestep_instruments(
       z, prev_grid_values,
       t, dt, S0,
@@ -365,13 +402,18 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
       default_intensity_fcn=default_intensity_fcn,
       variance_cumulation_fcn=variance_cumulation_fcn,
       dividends=dividends)
-    grid[m,,] = new_grid_values
+    if (!is.blank(grid)) {
+      # Save values at this timestep if necessary
+      grid[m,,] = new_grid_values
+    }
+    prev_grid_values = new_grid_values
   }
-  # Return grid values at all t.  The present values will be on the
-  # grid at index 1
-  grid
+  if (is.blank(grid)) {
+    iteration_result = new_grid_value
+  } else {
+    iteration_result = grid
+  }
 }
-
 
 #' @export form_present_value_grid
 form_present_value_grid = function(S0, num_time_steps, instruments,
