@@ -4,7 +4,7 @@
 ##
 ## This file is part of the ragtop package for GNU R.
 ## It is made available under the terms of the GNU General Public
-## License, version 2, or a345t your option, any later version,
+## License, version 2, or at your option, any later version,
 ## incorporated herein by reference.
 ##
 ## This program is distributed in the hope that it will be
@@ -16,9 +16,9 @@
 ## You should have received a copy of the GNU General Public License
 ## along with ragtop.  If not, see <http://www.gnu.org/licenses/>.
 
+#' Shift a set of grid values for dividends paid, using spline interpolation
 shift_for_dividends = function(grid_values_before_shift, stock_prices, div_sum)
 {
-  ## We need to shift grid values to account for the dividend paid
   ## In theory a linear interpolation is fine but in practice
   ## a smoother interpolator gives better results with little
   ## computational penalty, so we use splines
@@ -36,6 +36,13 @@ shift_for_dividends = function(grid_values_before_shift, stock_prices, div_sum)
   new_grid_values
 }
 
+#' Find the sum of time-adjusted dividend values
+#'
+#' For each of the N elements of \code{S/h} find the sum of the
+#' given M dividends, discounted to \code{t_final} by \code{r} and \code{h}
+#' @param relevant_divs A \code{data.frame} with columns \code{time}, \code{fixed},
+#'   and \code{proportional}.  Dividend size at the given \code{time} is
+#'   then expected to be equal to \code{fixed + proportional * S / S0}
 time_adj_dividends = function(relevant_divs, t_final, r, h, S, S0)
 {
   ## For each of the N elements of S/h find the sum of the
@@ -61,12 +68,20 @@ time_adj_dividends = function(relevant_divs, t_final, r, h, S, S0)
   div_sum
 }
 
+#' Find the sum of time-adjusted dividend values and adjust grid prices according
+#'  to their size in the given interval
+#'
+#' Analyze \code{dividends} to find ones paid in the interval \code{(t,t+dt])}. Form
+#'  present value as of time \code{t} for them, and then use spline interpolation
+#'  to adjust instrument values accordingly.
+#'
+#' @param grid_value A \code{matrix} with one row for each level of \code{S} and one
+#'  column per set of \code{S}-associated instrument values
+#' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
+#'   and \code{proportional}.  Dividend size at the given \code{time} is
+#'   then expected to be equal to \code{fixed + proportional * S / S0}
 adjust_for_dividends = function(grid_values, t, dt, r, h, S, S0, dividends)
 {
-  ## Adjust grid values according to any dividends paid during this timestep
-  ## The dividends are expected to be represented by a data frame with
-  ## columns 'time', 'fixed' and 'proportional' where the proportional amount
-  ## is a multiplier of the stock price over S0 to form conditional dividend size
   ## Grid values are expected to come from f[k,m-1,]
   flog.info("adjust_for_dividends() grid_values %s by %s, S length %s",
             size_in_dimension(grid_values,1), size_in_dimension(grid_values,2), length(S))
@@ -105,50 +120,54 @@ adjust_for_dividends = function(grid_values, t, dt, r, h, S, S0, dividends)
   grid_values
 }
 
+#' Present value of past coupons paid
+#'
+#' Present value as of time \code{t} for coupons paid since the \code{model_t}
+#'
+#' @param t The time toward which all coupons should be present valued
+#' @param coupons_df A data.frame of details for each coupon.  It should have the
+#'   columns \code{payment_time} and \code{payment_size}.
+#' @param discount_factor_fcn A function specifying how the contract says future coupons should be discounted for this instrument in case the acceleration clause is triggered
 value_from_prior_coupons = function(t, coupons_df, discount_factor_fcn, model_t=0)
 {
-  ## Compute "present" value as of time t for coupons paid since the model_t
-  ## The discount factor function should take two arguments, and return
-  ## discount factors in the same number of rows and columns
-  ## The coupons are expected to be found in a data frame with columns
-  ## payment_time and payment_size
   coups = coupons_df[(coupons_df$payment_time<=t) & (coupons_df$payment_time>model_t),]
   disc_factors = discount_factor_fcn(coups$payment_time, t)
   pvs = coups$payment_size / disc_factors
   sum(pvs)
 }
 
+#' Present value of coupons according to an acceleration schedule
+#'
+#' Compute "present" value as of time t for coupons that
+#' would otherwise have been paid up to time acceleration_t, in the
+#' case of accelerated coupon provisions for forced conversions (or
+#' sometimes even unforced ones).
+#' @inheritParams value_from_prior_coupons
+#' @param discount_factor_fcn A function specifying how the contract says future coupons should be discounted for this instrument in case the acceleration clause is triggered
+#' @param coupons_df A data.frame of details for each coupon.  It should have the
+#'   columns \code{payment_time} and \code{payment_size}.
 accelerated_coupon_value = function(t, coupons_df, discount_factor_fcn, acceleration_t=Inf)
 {
-  ## Compute "present" value as of time t for coupons that
-  ## would otherwise have been paid up to time acceleration_t, in the
-  ## case of accelerated coupon provisions for forced conversions (or
-  ## sometimes even unforced ones).
-  ##
-  ## The discount factor function should take two arguments, and return
-  ## discount factors in the same number of rows and columns
-  ## The coupons are expected to be found in a data frame with columns
-  ## payment_time and payment_size
   coups = coupons_df[(coupons_df$payment_time<=acceleration_t) & (coupons_df$payment_time>t),]
   disc_factors = discount_factor_fcn(t, coups$payment_time)
   pvs = coups$payment_size / disc_factors
   sum(pvs)
 }
 
+#' Present value of coupons according to an acceleration schedule
+#'
+#' Compute "present" value as of time t for coupons that
+#' would otherwise have been paid up to time \code{acceleration_t}, in the
+#' case of accelerated coupon provisions for forced conversions (or
+#' sometimes even unforced ones).
+#' @inheritParams value_from_prior_coupons
+#' @inheritParams accelerated_coupon_value
+#' @param discount_factor_fcn A function specifying how future cashflows should generally be discounted for this instrument
 coupon_value_at_exercise = function(t, coupons_df, discount_factor_fcn, model_t=0,
                                     accelerate_future_coupons=FALSE,
                                     acceleration_discount_factor_fcn=discount_factor_fcn,
                                     acceleration_t=Inf)
 {
-  ## Compute "present" value as of time t for coupons that
-  ## would otherwise have been paid up to time acceleration_t, in the
-  ## case of accelerated coupon provisions for forced conversions (or
-  ## sometimes even unforced ones), plus past coupons paid.
-  ##
-  ## The discount factor functions should take two arguments, and return
-  ## discount factors in the same number of rows and columns
-  ## The coupons are expected to be found in a data frame with columns
-  ## payment_time and payment_size
   if (accelerate_future_coupons) {
     accel_value = accelerated_coupon_value(t, coupons_df,
                                            discount_factor_fcn=acceleration_discount_factor_fcn,
