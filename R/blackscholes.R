@@ -28,7 +28,11 @@
 #' All inputs must either be scalars or have the same nonscalar shape.
 #' @param callput 1 for calls, -1 for puts
 #' @param S0 initial underlying price
-#' @param default_intensity hazard rate of stock default
+#' @param K strike
+#' @param r risk-free interest rate
+#' @param time Time from \code{0} until expiration
+#' @param vola Default-free volatility of the underlying
+#' @param default_intensity hazard rate of underlying default
 #' @param divrate A continuous rate for dividends and other cashflows such as foreign interest rates
 #' @param borrow_cost A continuous rate for stock borrow costs
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
