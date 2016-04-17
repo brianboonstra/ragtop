@@ -220,33 +220,44 @@ timestep_instruments = function(z, prev_grid_values,
     instrument = instruments[[k]]
     instr_name = names(instruments)[[k]]
     prev_instr_grid_values = div_adj_grid_values[,k]
-    # Update hold value for cashflows
-    instr_methods = instrument$getRefClass()$methods()
-    flog.info("Now timestepping %s from %s to %s on N=%s grid, current mean value on grid is %s for a mean price of %s",
-              instr_name, t+dt, t, length(prev_instr_grid_values),
-              mean(prev_instr_grid_values), mean(prev_instr_grid_values)/(full_discount_factor*local_discount_factor),
-              name='ragtop.implicit.timestep')
-    if ("update_cashflows" %in% instr_methods) {
-      cash_increase = instrument$update_cashflows(t, t+dt,
-                                                  discount_factor_fctn=discount_factor_fcn)
-      grid_cash_increase =  cash_increase * prev_timestep_discount_factor
-      flog.info("Instrument %s has cashflows up to %s in interval (%s,%s].  Increasing grid values by the corresponding change-of-variables (x %s) amount up to %s.",
-                instr_name, max(cash_increase), t, t+dt, prev_timestep_discount_factor, max(grid_cash_increase),
+    if (instrument$maturity >= t) {
+      if (all(is.na(prev_instr_grid_values))) {
+        instr_grid_vals = full_discount_factor * instrument$optionality_fcn(0, S, t)
+      } else {
+        # Update hold value for cashflows
+        instr_methods = instrument$getRefClass()$methods()
+        flog.info("Now timestepping %s from %s to %s on N=%s grid, current mean value on grid is %s for a mean price of %s",
+                  instr_name, t+dt, t, length(prev_instr_grid_values),
+                  mean(prev_instr_grid_values), mean(prev_instr_grid_values)/(full_discount_factor*local_discount_factor),
+                  name='ragtop.implicit.timestep')
+        if ("update_cashflows" %in% instr_methods) {
+          cash_increase = instrument$update_cashflows(t, t+dt,
+                                                      discount_factor_fctn=discount_factor_fcn)
+          grid_cash_increase =  cash_increase * prev_timestep_discount_factor
+          flog.info("Instrument %s has cashflows up to %s in interval (%s,%s].  Increasing grid values by the corresponding change-of-variables (x %s) amount up to %s.",
+                    instr_name, max(cash_increase), t, t+dt, prev_timestep_discount_factor, max(grid_cash_increase),
+                    name='ragtop.implicit.timestep')
+          prev_instr_grid_values = prev_instr_grid_values + grid_cash_increase
+        }
+        instr_grid_vals = take_implicit_timestep(t, S, full_discount_factor,
+                                                 local_discount_factor,
+                                                 prev_instr_grid_values,
+                                                 survival_probabilities,
+                                                 matrix_entries,
+                                                 instrument = instrument,
+                                                 dividends = dividends,
+                                                 instr_name=instr_name)
+        flog.info("Done timestepping %s from %s to %s on N=%s grid, new mean value on grid is %s for a mean price of %s",
+                  instr_name, t+dt, t, length(prev_instr_grid_values),
+                  mean(instr_grid_vals), mean(instr_grid_vals)/full_discount_factor,
+                  name='ragtop.implicit.timestep')
+      }
+    } else {
+      flog.info("Instrument %s has maturity %s prior to interval [%s,%s].  Skipping any grid computation.",
+                instr_name, instrument$maturity, t, t+dt,
                 name='ragtop.implicit.timestep')
-      prev_instr_grid_values = prev_instr_grid_values + grid_cash_increase
+      instr_grid_vals = NA*(prev_instr_grid_values)
     }
-    instr_grid_vals = take_implicit_timestep(t, S, full_discount_factor,
-                                             local_discount_factor,
-                                             prev_instr_grid_values,
-                                             survival_probabilities,
-                                             matrix_entries,
-                                             instrument = instrument,
-                                             dividends = dividends,
-                                             instr_name=instr_name)
-    flog.info("Done timestepping %s from %s to %s on N=%s grid, new mean value on grid is %s for a mean price of %s",
-              instr_name, t+dt, t, length(prev_instr_grid_values),
-              mean(instr_grid_vals), mean(instr_grid_vals)/full_discount_factor,
-              name='ragtop.implicit.timestep')
     div_adj_grid_values[,k] = instr_grid_vals
   }
   div_adj_grid_values
@@ -305,8 +316,8 @@ infer_conforming_time_grid = function(min_num_time_steps, Tmax, instruments=NULL
               name='ragtop.implicit.setup')
     time_grid = unique(c(0,betw,Tmax))
   }
-  flog.info("%s time steps requested. Instrument terms and conditions bring the total number to %s",
-            min_num_time_steps, length(time_grid)-1,
+  flog.info("%s time steps requested. Instrument terms and conditions bring the total number to %s up to max t=%s",
+            min_num_time_steps, length(time_grid)-1, time_grid[length(time_grid)],
             name='ragtop.implicit.setup')
   time_grid = sort(time_grid)
   time_grid
@@ -349,9 +360,13 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
   for (k in (1:length(instruments))) {
     instrument = instruments[[k]]
     instr_name = names(instruments)[[k]]
-    grid[num_time_pts,,k] = df_final * instrument$optionality_fcn(0, S=S_final,
-                                                                  t=Tmax,
-                                                                  discount_factor_fctn=discount_factor_fcn)
+    if (instrument$maturity>=Tmax) {
+      grid[num_time_pts,,k] = df_final * instrument$optionality_fcn(0, S=S_final,
+                                                                    t=instrument$maturity,
+                                                                    discount_factor_fctn=discount_factor_fcn)
+    } else {
+      grid[num_time_pts,,k] = NA
+    }
     flog.info("Terminal values at Tmax=%s for %s average %s",
               Tmax, instr_name, mean(grid[num_time_pts,,k]),
               name='ragtop.implicit.setup')
@@ -407,14 +422,14 @@ iterate_grid_from_timestep = function(starting_time_step, time_pts, z, S0, instr
       default_intensity_fcn=default_intensity_fcn,
       variance_cumulation_fcn=variance_cumulation_fcn,
       dividends=dividends)
-    if (!is.blank(grid)) {
+    if (!is.null(grid)) {
       # Save values at this timestep if necessary
       grid[m,,] = new_grid_values
     }
     prev_grid_values = new_grid_values
   }
-  if (is.blank(grid)) {
-    iteration_result = new_grid_value
+  if (is.null(grid)) {
+    iteration_result = new_grid_values
   } else {
     iteration_result = grid
   }

@@ -168,7 +168,7 @@ ZeroCouponBond = setRefClass(
       if (t >= maturity) {
         v = 0.0*(v+S) + notional
         flog.info("Timestep t=%s for %s is at or beyond maturity.  Using notional %s.",
-                  t, name, notional)
+                  t, name, notional, name="ragtop.instruments.optionality.zcb")
       }
       v[v < 0] = 0
       last_computed_grid <<- as.vector(v)
@@ -198,7 +198,8 @@ CouponBond = setRefClass(
       paid_coupons = coupons[paid_coupon_ix,]
       accumulation_proportions = discount_factor_fctn(t, paid_coupons$payment_time)
       ac = sum(paid_coupons$payment_size/accumulation_proportions)
-      flog.info("Accumulated coupon values at %s are: %s", t, ac)
+      flog.info("Accumulated coupon values at %s are: %s", t, ac,
+                name="ragtop.instruments.cashflows.bond")
       ac
     },
     total_coupon_values_between = function(small_t, big_t, discount_factor_fctn=discount_factor_fcn) {
@@ -207,7 +208,8 @@ CouponBond = setRefClass(
       paid_coupons = coupons[paid_coupon_ix,]
       accumulation_proportions = discount_factor_fctn(big_t,paid_coupons$payment_time)
       ac = sum(accumulation_proportions*paid_coupons$payment_size)
-      flog.info("Totaled coupon present values in interval (%s,%s] are: %s", small_t, big_t, ac)
+      flog.info("Totaled coupon present values in interval (%s,%s] are: %s", small_t, big_t, ac,
+                name="ragtop.instruments.cashflows.bond")
       ac
     },
     critical_times = function() {
@@ -221,21 +223,26 @@ CouponBond = setRefClass(
     },
     update_cashflows = function(small_t, big_t, discount_factor_fctn=discount_factor_fcn, ...) {
       "Update last_computed_cash and return cashflow information for the given time period, valued at big_t"
+      if (is.blank(last_computed_cash)) {
+        last_computed_cash <<- 0
+      }
       df = discount_factor_fctn(big_t, small_t)
       cashflows = total_coupon_values_between(small_t, big_t, discount_factor_fctn=discount_factor_fctn)
       if (maturity>small_t && maturity<=big_t) {
         ndf = notional * discount_factor_fctn(maturity, big_t)
-        flog.info("Totaled %s cashflows in interval (%s,%s]  discounted to t=%s were %s.  Also included notional %s, discounted to %s.",
-                  name, small_t, big_t, small_t, cashflows + ndf, notional, ndf)
+        flog.info("Totaled %s cashflows in interval (%s,%s]  discounted to t=%s were %s.  This also included notional %s, discounted to %s.",
+                  name, small_t, big_t, small_t, cashflows + ndf, notional, ndf,
+                  name="ragtop.instruments.cashflows.bond")
         cashflows = cashflows + ndf
       } else {
         flog.info("Totaled %s cashflows in interval (%s,%s]  discounted to t=%s were %s. No notional amount included.",
-                  name, small_t, big_t, big_t, cashflows)
+                  name, small_t, big_t, big_t, cashflows,
+                  name="ragtop.instruments.cashflows.bond")
       }
       new_cash = df*(last_computed_cash - cashflows)
       flog.info("Updating %s last_computed_cash (was: %s) discounted by %s to %s and subtracted cashflows %s discounted to %s to get %s.",
-                name, last_computed_cash, df, df*last_computed_cash,
-                cashflows, df*cashflows, new_cash)
+                name, last_computed_cash, df, df*new_cash,
+                cashflows, df*cashflows, new_cash, name="ragtop.instruments.cashflows.bond")
       last_computed_cash <<- new_cash
       cashflows
     },
@@ -245,7 +252,7 @@ CouponBond = setRefClass(
         accumulated_past_coupons = accumulate_coupon_values_before(maturity, discount_factor_fctn=discount_factor_fctn)
         last_computed_cash <<- notional + accumulated_past_coupons
         flog.info("Timestep t=%s for %s is at or beyond maturity.  Setting last_computed_cash to notional %s plus accumulated coupon value %s.",
-                  t, name, notional, accumulated_past_coupons)
+                  t, name, notional, accumulated_past_coupons, name="ragtop.instruments.optionality.bond")
         v = 0.0*(v+S)
       } else {
         v[v < 0] = 0
@@ -305,33 +312,65 @@ ConvertibleBond = setRefClass(
   "ConvertibleBond",
   contains="CallableBond",
   fields=list(conversion_ratio="numeric",
-              dividend_ceiling="numeric"),
+              dividend_ceiling="numeric",
+              last_computed_exercise_value="numeric",
+              last_computed_exercise_decision="logical",
+              last_used_S="numeric",
+              last_used_t="numeric"),
   methods=list(
-    optionality_fcn = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
-      "Return the greater of hold value {v} or conversion value at each stock price level in {S}, adjusted to include all past coupons"
-      if (t > maturity) {
-        # Just use the straight bond value after maturity
-        flog.info("Optionality at t=%s is past maturity for this convertible bond", t)
-        v = callSuper(v,S,t,discount_factor_fctn=discount_factor_fctn)
-      } else {
-        flog.info("Optionality of this convertible bond %s at t=%s", name, t)
-        exercise_values = S * conversion_ratio
+    exercise_decision = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
+      "Find indexes where hold value {v} will be inferior to conversion value at each stock price level in {S}, adjusted to include all past coupons"
+      # Memoize for efficiency
+      if (is.blank(last_used_S) || anyNA(last_used_S) || is.blank(last_used_t) || any(S!=last_used_S) || t!=last_used_t) {
+        flog.info("Evaluating exercise decisions of convertible bond %s at t=%s", name, t,
+                  name="ragtop.instruments.exercise.convertible")
         # Because grid values for bonds represent existing bond plus all past
         #  coupons, exercise values must have those accrued coupons added for
         #  a fair comparison
         accumulated_past_coupons = accumulate_coupon_values_before(t, discount_factor_fctn=discount_factor_fctn)
+        exercise_values = S * conversion_ratio
         total_early_exercise_value = exercise_values + accumulated_past_coupons
         flog.debug("exercise_values %s total_early_exercise_value %s",
                    toString(exercise_values), toString(total_early_exercise_value))
         total_early_exercise_value[total_early_exercise_value < 0] = 0
         flog.info("Differences between %s grid value and exercise value range from %s to %s, averaging %s",
                   name, min(v - total_early_exercise_value), max(v - total_early_exercise_value),
-                  mean(v - total_early_exercise_value))
-        exercise_ix = (v < total_early_exercise_value)
-        v[exercise_ix] = total_early_exercise_value[exercise_ix]
-        last_computed_grid <<- as.vector(v)
+                  mean(v - total_early_exercise_value), name="ragtop.instruments.exercise.convertible")
+        exercise_ix = as.vector(v < total_early_exercise_value)
+        last_computed_exercise_decision <<- exercise_ix
+        last_computed_exercise_value <<- total_early_exercise_value
+        last_used_S <<- S
+        last_used_t <<- t
+      } else {
+        flog.info("Reusing previously computed %s exercise decisions at t=%s",
+                  name, t, name="ragtop.instruments.exercise.convertible")
       }
-      v
+      list(exercise_indexes=last_computed_exercise_decision,
+           exercise_values=last_computed_exercise_value)
+    },
+    update_cashflows = function(small_t, big_t, discount_factor_fctn=discount_factor_fcn, ...) {
+      exercise_free_cashflows = callSuper(small_t, big_t, discount_factor_fctn=discount_factor_fctn)
+      if (is.blank(last_computed_exercise_decision) || is.blank(last_computed_grid)) {
+        cashflows = exercise_free_cashflows
+      } else {
+        cashflows = 0 * last_computed_grid + exercise_free_cashflows
+        flog.info("Exercise-free cashflows for %s were %s in time interval (%s,%s].  Zeroing them out for %s of %s grid entry cash flows due to conversion.",
+                  name, mean(exercise_free_cashflows), small_t, big_t,
+                  sum(last_computed_exercise_decision), length(last_computed_grid),
+                  name="ragtop.instruments.cashflows.convertible")
+        cashflows[last_computed_exercise_decision] = 0
+      }
+      cashflows
+    },
+    optionality_fcn = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
+      "Return the greater of hold value {v} or conversion value at each stock price level in {S}, adjusted to include all past coupons"
+      exer = exercise_decision(v,S,t,discount_factor_fctn=discount_factor_fctn,...)
+      ev = as.vector(v)
+      flog.info("Last computed exer values for %s have mean %s",
+                name, mean(exer$exercise_values), name="ragtop.instruments.exercise.convertible")
+      ev[exer$exercise_indexes] = exer$exercise_values[exer$exercise_indexes]
+      last_computed_grid <<- ev
+      last_computed_grid
     }
   )
 )
