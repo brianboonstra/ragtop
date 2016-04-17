@@ -80,6 +80,7 @@ time_adj_dividends = function(relevant_divs, t_final, r, h, S, S0)
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
 #'   then expected to be equal to \code{fixed + proportional * S / S0}
+#' @xport adjust_for_dividends
 adjust_for_dividends = function(grid_values, t, dt, r, h, S, S0, dividends)
 {
   ## Grid values are expected to come from f[k,m-1,]

@@ -72,18 +72,48 @@ blackscholes = function(callput, S0, K, r, time, vola,
   }
   sd = vola*sqrt(time)
   q = divrate + borrow_cost - default_intensity
-  d1 = log(S0/K)+(r-q)*T+0.5*sd^2
+  d1 = log(S0/K)+(r-q)*time+0.5*sd^2
   d1 = d1/sd
   d2 = d1-sd
-  v = callput*(S0*exp(-q*T)*pnorm(callput*d1)-K*exp(-r*T)*pnorm(callput*d2))
-  delta = exp(-q*T)*callput*pnorm(callput*d1)
-  vega = S0*exp(-q*T)*dnorm(d1)*sqrt(T)*abs(callput)  # Include abs(callput) to properly vectorize
-  surv_prob = exp(-default_intensity*T)
-  default_value = max(0, -callput*K*exp(-r*T))
+  v = callput*(S0*exp(-q*time)*pnorm(callput*d1)-K*exp(-r*time)*pnorm(callput*d2))
+  delta = exp(-q*time)*callput*pnorm(callput*d1)
+  vega = S0*exp(-q*time)*dnorm(d1)*sqrt(time)*abs(callput)  # Include abs(callput) to properly vectorize
+  surv_prob = exp(-default_intensity*time)
+  default_value = max(0, -callput*K*exp(-r*time))
   surv_delta = 0
   surv_vega = 0
   ans = list(Price=surv_prob*v + (1-surv_prob)*default_value,
              Delta=surv_prob*delta,
              Vega=surv_prob*vega)
   ans
+}
+
+#' @export black_scholes_on_term_structures
+black_scholes_on_term_structures = function(callput, S0, K, time,
+           const_volatility=0.5, const_short_rate=0, const_default_intensity=0,
+           discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
+           survival_probability_fcn = function(T, t, ...){exp(-const_default_intensity*(T-t))},
+           variance_cumulation_fcn = function(T, t){const_volatility^2*(T-t)},
+           dividends=NULL,
+           borrow_cost=0.0,
+           dividend_rate=0.0)
+{
+  if (length(time)>1) {
+    stop("Only a single expiration time may be provided.")
+  }
+  if (time<=0) {
+    stop("Expiration time must be strictly positive.")
+  }
+  vola = sqrt(variance_cumulation_fcn(time, 0)/time)
+  std_time = time
+  r = -log(discount_factor_fcn(time,0))/time
+  h = -log(survival_probability_fcn(time,0))/time
+  flog.debug("black_scholes_on_term_structures() finds constant equivalents r=%s, h=%s and vola=%s",
+             r, h, vola)
+  bs = blackscholes(callput=callput, S0=S0, K=K, r=r, time=std_time, vola=vola,
+                    default_intensity=h, divrate=dividend_rate, borrow_cost=borrow_cost,
+                    dividends=dividends)
+  flog.debug("black_scholes_on_term_structures() finds P=%s D=%s Vg=%s",
+             bs$Price, bs$Delta, bs$Vega)
+  bs
 }

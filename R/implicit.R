@@ -16,7 +16,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with ragtop.  If not, see <http://www.gnu.org/licenses/>.
 library(stats)
-require(futile.logger)
+library(futile.logger)
 
 
 # TODO: Should we stop using t and T as variables since they could
@@ -28,6 +28,11 @@ require(futile.logger)
 #' Infer a reasonable structure for our implicit grid solver based
 #' on the voltime, structure constant, and requested grid width
 #' in standard deviations
+#'
+#' @param structure_constant The maximum ratio between time intervals \code{dt}
+#'  and the square of space intervals \code{dz^2}
+#' @param std_devs_width The number of standard deviations, in \code{sigma * sqrt(T)}
+#'  units, to incorporate into the grid
 #'
 #' @return A list with elements \describe{
 #'   \item{\code{T}}{The maximum time for this grid}
@@ -217,19 +222,19 @@ timestep_instruments = function(z, prev_grid_values,
     prev_instr_grid_values = div_adj_grid_values[,k]
     # Update hold value for cashflows
     instr_methods = instrument$getRefClass()$methods()
-    if ("update_cashflows" %in% instr_methods) {
-      cash_increase = instrument$update_cashflows(t, t+dt,
-                                                  discount_factor_fctn=discount_factor_fcn)
-      grid_cash_increase =  cash_increase * prev_timestep_discount_factor
-      flog.info("Instrument %s has cashflows %s in interval (%s,%s].  Increasing grid values by the corresponding change-of-variables (x %s) amount %s.",
-                instr_name, cash_increase, t, t+dt, prev_timestep_discount_factor, grid_cash_increase,
-                name='ragtop.implicit.timestep')
-      prev_instr_grid_values = prev_instr_grid_values + grid_cash_increase
-    }
     flog.info("Now timestepping %s from %s to %s on N=%s grid, current mean value on grid is %s for a mean price of %s",
               instr_name, t+dt, t, length(prev_instr_grid_values),
               mean(prev_instr_grid_values), mean(prev_instr_grid_values)/(full_discount_factor*local_discount_factor),
               name='ragtop.implicit.timestep')
+    if ("update_cashflows" %in% instr_methods) {
+      cash_increase = instrument$update_cashflows(t, t+dt,
+                                                  discount_factor_fctn=discount_factor_fcn)
+      grid_cash_increase =  cash_increase * prev_timestep_discount_factor
+      flog.info("Instrument %s has cashflows up to %s in interval (%s,%s].  Increasing grid values by the corresponding change-of-variables (x %s) amount up to %s.",
+                instr_name, max(cash_increase), t, t+dt, prev_timestep_discount_factor, max(grid_cash_increase),
+                name='ragtop.implicit.timestep')
+      prev_instr_grid_values = prev_instr_grid_values + grid_cash_increase
+    }
     instr_grid_vals = take_implicit_timestep(t, S, full_discount_factor,
                                              local_discount_factor,
                                              prev_instr_grid_values,
@@ -338,7 +343,7 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
   grid = array(data=NA, dim=c(num_time_pts, num_space_pts, num_instruments))
   S_final = stock_level_fcn(z, Tmax)
   df_final = discount_factor_fcn(Tmax, 0)
-  flog.info("Discount factor to Tmax=%s is %s", Tmax, df_final)
+  flog.info("Discount factor to Tmax=%s is %s", Tmax, df_final, name='ragtop.implicit.setup')
   # Set the initial condition for the PDE from instrument values at
   #  maximum time, discounted by df_final according to our change of variables
   for (k in (1:length(instruments))) {
@@ -415,6 +420,25 @@ iterate_grid_from_timestep = function(starting_time_step, time_pts, z, S0, instr
   }
 }
 
+#' Use a model to estimate the present value of financial derivatives on a grid of initial underlying values
+#'
+#' Use a finite difference scheme to form estimates of present values for a variety
+#'  of stock prices on a grid of initial underlying prices, determined by constructing
+#'  a logarithmic equivalent conforming to the grid parameters \code{structure_constant}
+#'  and \code{structure_constant}
+#'
+#' If any instrument in the \code{instruments} has a strike, then the grid will be
+#'  normalized to the last such instrument's strike.
+#'
+#' @inheritParams construct_implicit_grid_structure
+#' @inheritParams timestep_instruments
+#' @param const_volatility A constant to use for volatility in case \code{variance_cumulation_fcn}
+#'  is not given
+#' @param const_short_rate A constant to use for the instantaneous interest rate in case \code{discount_factor_fcn}
+#'  is not given
+#' @param const_default_intensity A constant to use for the instantaneous default intensity in case \code{default_intensity_fcn}
+#'  is not given
+#'
 #' @export form_present_value_grid
 form_present_value_grid = function(S0, num_time_steps, instruments,
                               const_volatility=0.5, const_short_rate=0, const_default_intensity=0, override_Tmax=NA,
@@ -495,6 +519,7 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
 #'  of stock prices.  Once the grid has been created, interpolate to obtain the
 #'  value of each instrument at the present stock price \code{S0}
 #'
+#' @inheritParams timestep_instruments
 #' @return A list of present values, with the same names as \code{instruments}
 #'
 #' @export find_present_value

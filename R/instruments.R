@@ -35,6 +35,7 @@
 require(futile.logger)
 
 # TODO: Allow initialization of some instruments from QuantLib classes
+# TODO: Handle daycount conventions and dates, perhaps using Quantlib
 
 #' Representation of financial instrument amenable to grid pricing schemes
 #'
@@ -310,9 +311,10 @@ ConvertibleBond = setRefClass(
       "Return the greater of hold value {v} or conversion value at each stock price level in {S}, adjusted to include all past coupons"
       if (t > maturity) {
         # Just use the straight bond value after maturity
+        flog.info("Optionality at t=%s is past maturity for this convertible bond", t)
         v = callSuper(v,S,t,discount_factor_fctn=discount_factor_fctn)
       } else {
-        flog.debug("Optionality at t=%s", t)
+        flog.info("Optionality of this convertible bond %s at t=%s", name, t)
         exercise_values = S * conversion_ratio
         # Because grid values for bonds represent existing bond plus all past
         #  coupons, exercise values must have those accrued coupons added for
@@ -322,6 +324,9 @@ ConvertibleBond = setRefClass(
         flog.debug("exercise_values %s total_early_exercise_value %s",
                    toString(exercise_values), toString(total_early_exercise_value))
         total_early_exercise_value[total_early_exercise_value < 0] = 0
+        flog.info("Differences between %s grid value and exercise value range from %s to %s, averaging %s",
+                  name, min(v - total_early_exercise_value), max(v - total_early_exercise_value),
+                  mean(v - total_early_exercise_value))
         exercise_ix = (v < total_early_exercise_value)
         v[exercise_ix] = total_early_exercise_value[exercise_ix]
         last_computed_grid <<- as.vector(v)

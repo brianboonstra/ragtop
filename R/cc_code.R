@@ -9,6 +9,9 @@
 ## Modified from:
 ## http://stackoverflow.com/questions/19655579/a-function-that-returns-true-on-na-null-nan-in-r
 ## Copyright user Backlin
+#' Return TRUE if the argument is empty, NULL or NA
+#'
+#' @export is.blank
 is.blank <- function(x, false.triggers=FALSE){
   if(is.function(x) || typeof(x)=="S4") return(FALSE) # Some of the tests below trigger
   # warnings when used on functions

@@ -2,6 +2,7 @@ library(futile.logger)
 
 #' Constant to define when times are considered so close to each other
 #'  that they should be treated as simultaneous
+#' @export TIME_RESOLUTION_SIGNIF_DIGITS
 TIME_RESOLUTION_SIGNIF_DIGITS = 7
 TIME_RESOLUTION_FACTOR = 10^(-TIME_RESOLUTION_SIGNIF_DIGITS)
 
