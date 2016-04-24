@@ -46,8 +46,11 @@ library(futile.logger)
 #' }
 construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structure_constant, std_devs_width)
 {
-
   T = max(tenors)
+  flog.info("construct_implicit_grid_structure(%s, %s, %s, %s, %s, %s, %s, %s)",
+            T, M, S0, K, c, sigma, structure_constant, std_devs_width,
+            name='ragtop.implicit.setup'
+  )
   dt = T / M
   z0 = log(S0 / K) + (c - 0.5 * sigma^2) * T
   dz = sqrt(dt / structure_constant)
@@ -55,8 +58,8 @@ construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structu
   half_N = as.integer(ceiling(z_width / dz))
   N = 2 * half_N + 1
   z = z0 + dz * (-half_N:half_N)
-  flog.info("Grid structure with %s timesteps to time %s at vol %s has %s space steps to %s sdevs widths",
-            M, T, sigma, N, std_devs_width,
+  flog.info("Grid structure with %s timesteps to time %s at vol %s has %s space steps to (%s sdevs widths) of size %s",
+            M, T, sigma, N, std_devs_width, dz,
             name='ragtop.implicit.setup')
   list(
     T = T, dt = dt, dz = dz, z0 = z0,
@@ -316,10 +319,10 @@ infer_conforming_time_grid = function(min_num_time_steps, Tmax, instruments=NULL
               name='ragtop.implicit.setup')
     time_grid = unique(c(0,betw,Tmax))
   }
+  time_grid = sort(time_grid)
   flog.info("%s time steps requested. Instrument terms and conditions bring the total number to %s up to max t=%s",
             min_num_time_steps, length(time_grid)-1, time_grid[length(time_grid)],
             name='ragtop.implicit.setup')
-  time_grid = sort(time_grid)
   time_grid
 }
 
@@ -361,15 +364,26 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
     instrument = instruments[[k]]
     instr_name = names(instruments)[[k]]
     if (instrument$maturity>=Tmax) {
-      grid[num_time_pts,,k] = df_final * instrument$optionality_fcn(0, S=S_final,
-                                                                    t=instrument$maturity,
-                                                                    discount_factor_fctn=discount_factor_fcn)
+      undisc_terminal_vals = instrument$terminal_values(0*S_final, S=S_final,
+                                                        t=instrument$maturity,
+                                                        discount_factor_fctn=discount_factor_fcn)
+      if (any(is.na(undisc_terminal_vals))) {  # Make sure nobody gave us a crazy instrument object
+        flog.error("Bug in instrument class.  Terminal values at Tmax=%s for %s returned NA in %s of %s cases",
+                   Tmax, instr_name, sum(is.na(undisc_terminal_vals)),
+                   length(undisc_terminal_vals),
+                   name='ragtop.implicit.setup')
+        stop(paste("Invalid terminal values for", instr_name))
+      }
+      grid[num_time_pts,,k] = df_final * undisc_terminal_vals
+      flog.info("Terminal values at Tmax=%s for %s avg is %s",
+                Tmax, instr_name, mean(grid[num_time_pts,,k]),
+                name='ragtop.implicit.setup')
     } else {
+      flog.info("Terminal values of %s are being set to NA because its maturity %s is strictly less than Tmax of %s",
+                instr_name, instrument$maturity, Tmax,
+                name='ragtop.implicit.setup')
       grid[num_time_pts,,k] = NA
     }
-    flog.info("Terminal values at Tmax=%s for %s average %s",
-              Tmax, instr_name, mean(grid[num_time_pts,,k]),
-              name='ragtop.implicit.setup')
   }
   grid = iterate_grid_from_timestep(num_time_steps, time_pts, z, S0, instruments,
                              stock_level_fcn=stock_level_fcn,
@@ -488,15 +502,17 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
     flog.info("Instrument %s: %s", k, instr_name,
               name='ragtop.implicit.setup')
   }
-  if (Tmax<=0) {
+  if (Tmax <= 0) {
     stop("Cannot compute present value when no instrument maturity is positive")
   } else {
     flog.info("Max maturity: %s", Tmax,
               name='ragtop.implicit.setup')
   }
   sigma = sqrt(variance_cumulation_fcn(Tmax, 0) / Tmax)
-  r = -log(discount_factor_fcn(Tmax, t=0) / Tmax)
+  r = -log(discount_factor_fcn(Tmax, t=0) ) / Tmax
   c = r - dividend_rate - borrow_cost
+  flog.info("Constant sigma equivalent sigma=%s and rate equivalent r=%s, implies c=%s",
+            sigma, r, c)
   grid_structure = construct_implicit_grid_structure(Tmax, num_time_steps, S0, K,
                                            c, sigma,
                                            structure_constant=structure_constant,

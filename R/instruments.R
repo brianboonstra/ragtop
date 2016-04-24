@@ -61,9 +61,14 @@ GridPricedInstrument = setRefClass(
     },
     optionality_fcn = function(v,...) {
       # To be overridden by subclasses
-      "Return a terminal value, or a version of {v} at time {t} corrected for any optionality conditions."
+      "Return a version of {v} at time {t} corrected for any optionality conditions."
       last_computed_grid <<- as.vector(v)
       v
+    },
+    terminal_values = function(v,...) {
+      # To be overridden by subclasses
+      "Return a terminal value. defaults to simply calling {optionality_fcn}."
+      optionality_fcn(v,...)
     }
   )
 )
@@ -318,29 +323,40 @@ ConvertibleBond = setRefClass(
               last_used_S="numeric",
               last_used_t="numeric"),
   methods=list(
+    compute_exercise_decision = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
+      flog.info("Evaluating exercise decisions of convertible bond %s at t=%s", name, t,
+                name="ragtop.instruments.exercise.convertible")
+      # Because grid values for bonds represent existing bond plus all past
+      #  coupons, exercise values must have those accrued coupons added for
+      #  a fair comparison
+      exercise_values = S * conversion_ratio
+      if (t>=maturity) {
+        if (all(v<=0)) {  # Must be initialization of grid
+          total_early_exercise_value = exercise_values
+          v = notional
+        }
+      } else {
+        accumulated_past_coupons = accumulate_coupon_values_before(t, discount_factor_fctn=discount_factor_fctn)
+        total_early_exercise_value = exercise_values + accumulated_past_coupons
+      }
+      flog.debug("exercise_values %s total_early_exercise_value %s",
+                 toString(exercise_values), toString(total_early_exercise_value))
+      total_early_exercise_value[total_early_exercise_value < 0] = 0
+      flog.info("Differences between %s grid value and exercise value range from %s to %s, averaging %s",
+                name, min(v - total_early_exercise_value), max(v - total_early_exercise_value),
+                mean(v - total_early_exercise_value), name="ragtop.instruments.exercise.convertible")
+      exercise_ix = as.vector(v < total_early_exercise_value)
+      last_computed_exercise_decision <<- exercise_ix
+      last_computed_exercise_value <<- total_early_exercise_value
+      last_used_S <<- S
+      last_used_t <<- t
+      last_computed_exercise_value
+    },
     exercise_decision = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
       "Find indexes where hold value {v} will be inferior to conversion value at each stock price level in {S}, adjusted to include all past coupons"
       # Memoize for efficiency
       if (is.blank(last_used_S) || anyNA(last_used_S) || is.blank(last_used_t) || any(S!=last_used_S) || t!=last_used_t) {
-        flog.info("Evaluating exercise decisions of convertible bond %s at t=%s", name, t,
-                  name="ragtop.instruments.exercise.convertible")
-        # Because grid values for bonds represent existing bond plus all past
-        #  coupons, exercise values must have those accrued coupons added for
-        #  a fair comparison
-        accumulated_past_coupons = accumulate_coupon_values_before(t, discount_factor_fctn=discount_factor_fctn)
-        exercise_values = S * conversion_ratio
-        total_early_exercise_value = exercise_values + accumulated_past_coupons
-        flog.debug("exercise_values %s total_early_exercise_value %s",
-                   toString(exercise_values), toString(total_early_exercise_value))
-        total_early_exercise_value[total_early_exercise_value < 0] = 0
-        flog.info("Differences between %s grid value and exercise value range from %s to %s, averaging %s",
-                  name, min(v - total_early_exercise_value), max(v - total_early_exercise_value),
-                  mean(v - total_early_exercise_value), name="ragtop.instruments.exercise.convertible")
-        exercise_ix = as.vector(v < total_early_exercise_value)
-        last_computed_exercise_decision <<- exercise_ix
-        last_computed_exercise_value <<- total_early_exercise_value
-        last_used_S <<- S
-        last_used_t <<- t
+        compute_exercise_decision(v, S, t, discount_factor_fctn=discount_factor_fctn, ...)
       } else {
         flog.info("Reusing previously computed %s exercise decisions at t=%s",
                   name, t, name="ragtop.instruments.exercise.convertible")
