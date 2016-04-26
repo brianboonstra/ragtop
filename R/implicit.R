@@ -27,7 +27,16 @@ library(futile.logger)
 #'
 #' Infer a reasonable structure for our implicit grid solver based
 #' on the voltime, structure constant, and requested grid width
-#' in standard deviations
+#' in standard deviations.
+#'
+#' Generally speaking pricing will be good to about 10bp of
+#' relative accuracy when the ratio of timesteps to voltime
+#' (in annualized units) is over 200.
+#'
+#' Cases with pathologically low volatility may go awry (in the sense of
+#'  yielding ultimately inaccurate PDE solutions), as the
+#'  {structure_constant} will force a step in {z} space much bigger
+#'  than the width in standard deviations.
 #'
 #' @param structure_constant The maximum ratio between time intervals \code{dt}
 #'  and the square of space intervals \code{dz^2}
@@ -44,7 +53,8 @@ library(futile.logger)
 #'   \item{\code{N}}{The number of space points}
 #'   \item{\code{z}}{Locations of space points}
 #' }
-construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structure_constant, std_devs_width)
+construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structure_constant, std_devs_width,
+                                             min_z_width=0)
 {
   T = max(tenors)
   flog.info("construct_implicit_grid_structure(%s, %s, %s, %s, %s, %s, %s, %s)",
@@ -55,11 +65,15 @@ construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structu
   z0 = log(S0 / K) + (c - 0.5 * sigma^2) * T
   dz = sqrt(dt / structure_constant)
   z_width = std_devs_width * sigma * sqrt(T)
+  if (dz*4>z_width) {
+    flog.warn("Volatility is tiny in comparison to timestep size.  Very few space steps for the underlying will be used, and answers should be treated skeptically.",
+              name='ragtop.implicit.setup.width')
+  }
   half_N = as.integer(ceiling(z_width / dz))
   N = 2 * half_N + 1
   z = z0 + dz * (-half_N:half_N)
-  flog.info("Grid structure with %s timesteps to time %s at vol %s has %s space steps to (%s sdevs widths) of size %s",
-            M, T, sigma, N, std_devs_width, dz,
+  flog.info("Grid structure with %s timesteps to time %s at vol %s has %s space steps to (%s sdevs widths, z width %s) of size %s",
+            M, T, sigma, N, std_devs_width, z_width, dz,
             name='ragtop.implicit.setup')
   list(
     T = T, dt = dt, dz = dz, z0 = z0,
@@ -206,7 +220,7 @@ timestep_instruments = function(z, prev_grid_values,
   full_discount_factor = discount_factor_fcn(t,0)
   prev_timestep_discount_factor = discount_factor_fcn(t+dt,0)
   local_discount_factor = discount_factor_fcn(t+dt,t)
-  r = -log(local_discount_factor/dt)
+  r = -log(local_discount_factor)/dt
   S = stock_level_fcn(z, t)
   h = default_intensity_fcn(t, S)
   sigma = sqrt(variance_cumulation_fcn(t+dt, t)/dt)
@@ -214,9 +228,12 @@ timestep_instruments = function(z, prev_grid_values,
                                              t, dt, r, h, S, S0,
                                              dividends = dividends)
   survival_probabilities = exp(-h * dt)
+  flog.info("Default intensity at %s averages %s.  Short rate averages %s.  Local volatility is %s.",
+            t, mean(h), mean(r), sigma,
+            name='ragtop.implicit.timestep')
   dz = diff(z)[1] # We are assuming a regular grid in z space
   structure_constant = dt/dz^2
-  flog.info("Structure constant at %s for dt=%s is %s", t, dt, structure_constant,
+  flog.info("Structure constant at %s for dt=%s is %s.", t, dt, structure_constant,
             name='ragtop.implicit.timestep')
   matrix_entries = construct_tridiagonals(sigma, structure_constant, drift=h*dt/dz)
   for (k in (1:length(instruments))) {
@@ -512,7 +529,8 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
   r = -log(discount_factor_fcn(Tmax, t=0) ) / Tmax
   c = r - dividend_rate - borrow_cost
   flog.info("Constant sigma equivalent sigma=%s and rate equivalent r=%s, implies c=%s",
-            sigma, r, c)
+            sigma, r, c,
+            name='ragtop.implicit.setup')
   grid_structure = construct_implicit_grid_structure(Tmax, num_time_steps, S0, K,
                                            c, sigma,
                                            structure_constant=structure_constant,

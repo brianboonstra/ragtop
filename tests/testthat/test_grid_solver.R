@@ -4,6 +4,7 @@ context("Grid solver")
 
 flog.threshold(WARN, name="ragtop")
 flog.threshold(WARN)
+flog.threshold(ERROR, name='ragtop.implicit.setup.width')
 
 pct4 = function(T,t=0) {
   exp(-0.04*(T-t))
@@ -127,37 +128,3 @@ test_that("Proper discounting of coupon bonds", {
 })
 
 
-euro_simple_call = EuropeanOption$new(maturity=1, strike=100, callput=1)
-euro_put = EuropeanOption$new(maturity=1, strike=90, callput=-1, discount_factor_fcn=function(T,t){1})
-grid_european_prices = find_present_value(S0=100, instruments=list(call=euro_simple_call, put=euro_put),
-                            const_default_intensity = 0.07, num_time_steps=50, std_devs_width=3)
-exact_european_prices = list(call=blackscholes(callput=1, S0=100, K=100, r=0, default_intensity =0.07, time=1, vola=0.5)$Price,
-                            put=blackscholes(callput=-1, S0=100, K=90, r=0, default_intensity =0.07, time=1, vola=0.5)$Price)
-test_that("European options correctly priced", {
-  expect_equal(exact_european_prices, grid_european_prices, tolerance=1.e-2)
-})
-
-a_proportional_div = data.frame(time=0.5, fixed=0, proportional=20)
-grid_european_1div_prices = find_present_value(S0=100, instruments=list(call=euro_simple_call, put=euro_put),
-                                          const_default_intensity = 0.07, num_time_steps=50, std_devs_width=3,
-                                          dividends=a_proportional_div)
-exact_european_1div_prices = list(call=blackscholes(callput=1, S0=100, K=100, r=0,
-                                                    default_intensity =0.07, time=1, vola=0.5,
-                                                    dividends=a_proportional_div)$Price,
-                                  put=blackscholes(callput=-1, S0=100, K=90, r=0,
-                                                   default_intensity =0.07, time=1, vola=0.5,
-                                                   dividends=a_proportional_div)$Price)
-test_that("European options with a stock dividend correctly priced", {
-  expect_equal(exact_european_1div_prices, grid_european_1div_prices, tolerance=1.e-1)
-})
-
-
-amer_put_price_20k_steps = 11.6570723  # 20,000 steps in a Leisen-Reimer tree, good to about 1 part in 10^5, 0.001 in this case.  The early exercise premium is about 1.626.
-amer_put = AmericanOption(maturity=1, strike=110, callput=-1)
-grid_amer_price = find_present_value(S0=100, instruments=list(amer_put=amer_put),
-                                     const_short_rate = 0.06,
-                                     const_volatility = 0.20,
-                                     num_time_steps=200, std_devs_width=5)
-test_that("American options correctly priced", {
-  expect_equal(amer_put_price_20k_steps, grid_amer_price$amer_put, tolerance=1.e-1)
-})

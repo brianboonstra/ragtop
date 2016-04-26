@@ -4,6 +4,7 @@ context("Convertibles")
 
 flog.threshold(WARN, name="ragtop")
 flog.threshold(WARN)
+flog.threshold(ERROR, name='ragtop.implicit.setup.width')
 
 pct4 = function(T,t=0) {
   exp(-0.04*(T-t))
@@ -72,13 +73,13 @@ cbeq = ConvertibleBond(conversion_ratio=25, maturity=1.5, notional=0,
                        discount_factor_fcn=pct0, name='ConvertibleBond')
 euro_zero_strike_call = EuropeanOption(maturity=cbeq$maturity, strike=0, callput=1, name="CallStrike0")
 S0 = 100
-grid_equity_equiv_prices = find_present_value(S0=S0, instruments=list(call=euro_zero_strike_call, convertible_bond=cbeq),
-                                          const_volatility=0.5, const_default_intensity = 0.07,
-                                          num_time_steps=50, std_devs_width=3)
-callval=blackscholes(callput=1, S0=S0, K=euro_zero_strike_call$strike, r=0, default_intensity=0.07, time=cbeq$maturity, vola=0.5)$Price
+equity_equiv_prices = find_present_value(S0=S0,
+                                         instruments=list(call=euro_zero_strike_call, convertible_bond=cbeq),
+                                         num_time_steps=200, const_default_intensity=0.0,
+                                         const_volatility = 0.4, const_short_rate=0.0, std_devs_width=4)
 test_that("Trivial equity-equivalent", {
-  expect_equal(callval, grid_equity_equiv_prices[,'call'], tolerance=1.e-2)
-  expect_equal(callval, grid_equity_equiv_prices[,'convertible_bond'], tolerance=1.e-2)
+  expect_equal(S0, equity_equiv_prices$call, tolerance=1.e-1)
+  expect_equal(S0, equity_equiv_prices$convertible_bond, tolerance=1.e-1)
 })
 
 
@@ -89,12 +90,10 @@ cbopt = ConvertibleBond(conversion_ratio=25, maturity=1.5, notional=1000,
 S0 = 40
 euro_simple_call = EuropeanOption$new(maturity=cbopt$maturity,
                                       strike=cbopt$notional/cbopt$conversion_ratio,
-                                      callput=1)
-grid_european_prices = find_present_value(S0=S0, instruments=list(call=euro_simple_call, convertible_bond=cbopt),
-                                          const_volatility=0.5, const_default_intensity = 0.0,
-                                          num_time_steps=50, std_devs_width=3)
-callval=blackscholes(callput=1, S0=S0, K=euro_simple_call$strike, r=0, default_intensity=0.0, time=cbopt$maturity, vola=0.5)$Price
+                                      callput=1, name="EquivCall")
+opt_equiv_prices = find_present_value(S0=S0, instruments=list(call=euro_simple_call, convertible_bond=cbopt),
+                                          num_time_steps=200, const_default_intensity=0.0,
+                                          const_volatility = 0.4, const_short_rate=0.0, std_devs_width=4)
 test_that("Option-equivalent convertible", {
-  expect_equal(grid_european_prices[,'call']+cbopt$notional,
-               grid_european_prices[,'convertible_bond'], tolerance=1.e-2)
+  expect_equal(opt_equiv_prices$call+cbopt$notional, opt_equiv_prices$convertible_bond, tolerance=1.e-2)
 })

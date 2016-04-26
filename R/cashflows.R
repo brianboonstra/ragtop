@@ -85,7 +85,8 @@ adjust_for_dividends = function(grid_values, t, dt, r, h, S, S0, dividends)
 {
   ## Grid values are expected to come from f[k,m-1,]
   flog.info("adjust_for_dividends() grid_values %s by %s, S length %s",
-            size_in_dimension(grid_values,1), size_in_dimension(grid_values,2), length(S))
+            size_in_dimension(grid_values,1), size_in_dimension(grid_values,2), length(S),
+            name='ragtop.cashflows.dividends')
   num_layers = size_in_dimension(grid_values,2)
   num_grid_vals_per_layer = size_in_dimension(grid_values,1)
   num_underlying_vals = size_in_dimension(S,1)
@@ -94,7 +95,7 @@ adjust_for_dividends = function(grid_values, t, dt, r, h, S, S0, dividends)
                "must match underlying prices length",num_underlying_vals))
   }
   if (is.blank(dividends)) {
-    flog.info("No discrete dividends to treat")
+    flog.info("No discrete dividends to treat", name='ragtop.cashflows.dividends')
   } else {
     # Divs are present. Sum any relevant ones
     div_sum = 0 * S
