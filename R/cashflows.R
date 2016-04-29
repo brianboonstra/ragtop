@@ -71,7 +71,7 @@ time_adj_dividends = function(relevant_divs, t_final, r, h, S, S0)
 #' Find the sum of time-adjusted dividend values and adjust grid prices according
 #'  to their size in the given interval
 #'
-#' Analyze \code{dividends} to find ones paid in the interval \code{(t,t+dt])}. Form
+#' Analyze \code{dividends} to find ones paid in the interval \code{(t,t+dt]}. Form
 #'  present value as of time \code{t} for them, and then use spline interpolation
 #'  to adjust instrument values accordingly.
 #'
@@ -80,7 +80,8 @@ time_adj_dividends = function(relevant_divs, t_final, r, h, S, S0)
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
 #'   then expected to be equal to \code{fixed + proportional * S / S0}
-#' @xport adjust_for_dividends
+#' @return An object like \code{grid_values} with entries modified according to the dividends
+#' @export adjust_for_dividends
 adjust_for_dividends = function(grid_values, t, dt, r, h, S, S0, dividends)
 {
   ## Grid values are expected to come from f[k,m-1,]
@@ -164,6 +165,7 @@ accelerated_coupon_value = function(t, coupons_df, discount_factor_fcn, accelera
 #' sometimes even unforced ones).
 #' @inheritParams value_from_prior_coupons
 #' @inheritParams accelerated_coupon_value
+#' @return A scalar equal to the present value
 #' @param discount_factor_fcn A function specifying how future cashflows should generally be discounted for this instrument
 coupon_value_at_exercise = function(t, coupons_df, discount_factor_fcn, model_t=0,
                                     accelerate_future_coupons=FALSE,

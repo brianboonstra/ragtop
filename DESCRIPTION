@@ -21,6 +21,7 @@ Suggests:
     roxygen2,
     knitr,
     rmarkdown,
+    RColorBrewer,
     RQuantLib
 License: GPL (>= 2)
 LazyData: TRUE

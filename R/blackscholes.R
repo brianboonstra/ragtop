@@ -44,6 +44,8 @@
 #'   \item{\code{Delta}}{Sensitivity to underlying price}
 #'   \item{\code{Vega}}{Sensitivity to volatility}
 #' }
+#' @examples
+#' blackscholes(callput=-1, S0=100, K=90, r=0.03, default_intensity=0.07, time=1, vola=0.5)
 #' @export blackscholes
 blackscholes = function(callput, S0, K, r, time, vola,
                         default_intensity=0, divrate=0, borrow_cost=0,
@@ -88,6 +90,28 @@ blackscholes = function(callput, S0, K, r, time, vola,
   ans
 }
 
+#' Black-Scholes pricing of european-exercise options with term structure arguments
+#'
+#' Price an option according to the famous Black-Scholes formula, with the
+#' optional addition of a jump-to-default intensity and discrete dividends.  Volatility
+#' and rates may be provided as constants or as 2+ parameter functions with
+#' first argument \code{T} corresponding to maturity and second argument \code{t} corresponding to
+#' model date.
+#'
+#' Any term structures will be converted to equivalent constant arguments by calling
+#' them with the arguments \code{(time, 0)}.
+#'
+#' @inheritParams blackscholes
+#' @param dividend_rate A continuous rate for dividends and other cashflows such as foreign interest rates
+#' @param discount_factor_fcn A function for computing present values to
+#'   time \code{t} of various cashflows occurring during this timestep, with
+#'   arguments \code{T}, \code{t}
+#' @param survival_probability_fcn A function for probability of survival, with
+#'   arguments \code{T}, \code{t} and \code{T>t}.  E.g. with
+#'   a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}.
+#' @param variance_cumulation_fcn A function for computing total stock variance
+#'   occurring during this timestep, with arguments \code{T}, \code{t}.  E.g. with
+#'   a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}.
 #' @export black_scholes_on_term_structures
 black_scholes_on_term_structures = function(callput, S0, K, time,
            const_volatility=0.5, const_short_rate=0, const_default_intensity=0,

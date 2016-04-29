@@ -12,6 +12,13 @@ nocite: |
   @Bie07, @Gr03, @Bay11
 abstract: Many real-world investment portfolios have a value that is sensitive to both (i) changes in equity price and (ii) risk of default.  In some cases, notably convertible bonds, these sensitivities are present in a single instrument.  Primitive mixed-discounting approaches are unsatisfactory for both theoretical and practical reasons, yet are common in existing open-source treatments.   Elaborating on @And04, this technical report describes a useful stochastic model linking equity and debt, its translation to a grid scheme for pricing various derivatives classes, and best practices for calibrating it.
 ---
+```{r global_options, include=FALSE}
+library(ragtop)
+library(futile.logger)
+flog.threshold(ERROR)
+knitr::opts_chunk$set(fig.width=6.5, fig.height=4, fig.path='Figs/',
+                      echo=FALSE, warning=FALSE, message=FALSE, comment=FALSE)
+```
 
 ## Introduction
 
@@ -35,7 +42,7 @@ $$] links equity values $S_t$ with *hazard rate* or default intensity $h$
 $$
 	\frac{dS_t}{S_t}=(r+h-q) dt + \sigma dZ - dJ
 $$
-where $r$ and $q$ play their usual roles, $h$ is a deterministic function of stock price and time, and $J$ is a Poisson jump process [see @Lin06; @And04; and @WuC06] adapted to the *default intensity* or *hazard rate* $h$.  This model is a *jump-diffusion* extension of Black-Scholes, with the jump process $J$ representing default, compensated [@Mer76] by extra drift in the equity at rate $h$.
+where $r$ and $q$ play their usual roles, $h$ is a deterministic function of stock price and time, and $J$ is a Poisson jump process [see @Lin06; @And04; and @WuC06] adapted to the *default intensity* or *hazard rate* $h$.  This model is a *jump-diffusion* extension of Black-Scholes, with the jump process $J$ representing default, compensated [@Mer76] by extra drift{\footnote{The extra compensatory drift can provide some surprising pricing effects when $h$ is large.}} in the equity at rate $h$.
 
 In addition to these "normal" stochastic dynamics, we will assume that on a known future set of dividend dates $T_k$, the stock will pay dividends in the amount $\kappa_k+\pi_k S_{T_k}$, a combination of fixed and proportional values^[In most cases, corporate dividends are "sticky" and likely to be held constant over short time horizons.  As time increases, the amount is ever more uncertain, making proportional assignments more reasonable.].
 
@@ -82,10 +89,28 @@ For shifted power laws we can match a wide variety of survival probability funct
 $$
 	\text{Prob}( T_d > t ) = e^{-h_c t}.
 $$
+This specification is compatible with a simple extension to the standard Black Scholes model and the associated Black-Scholes formula for European-exercise options.
 
 ### Stock Volatility $\sigma$
 
 We generally think of stock volatility in terms of equity option markets.  For that reason, we expect to "imply" an appropriate value for $\sigma^{\text{impl}}$ from equity options where possible.  However, it is important to keep in mind that $\sigma^{\text{impl}}$ is inevitably different from the default-free $\sigma^{\text{impl}}_{\text{BS}}$ in the Black-Scholes model.  The two will be closely related, but since some of the price variability is represented by the jump process $dJ$, we will have $\sigma^{\text{impl}} < \sigma^{\text{impl}}_{\text{BS}}$.
+
+```{r plot_defaultfree_vola, fig.width=6, fig.height=4}
+h = seq(0,17,l=100)
+s = sapply(h, function(x){
+    calibrate_defaultable_volatility(
+      default_free_vola=0.44, 
+      time=1.5, 
+      const_short_rate=0.02,
+      const_default_intensity=x/100)
+    })
+plot(h, s,
+     ylim=c(min(s, na.rm=T), 0.47),
+     ylab='Default-free Vola', xlab='Default Intensity (%)', type='l',
+     main='Defaultable Volatility Equivalent to\n44% Black-Scholes Volatility')
+abline(h=0.44, col='lightgray', lty='dashed')
+points(0,0.44,pch=19)
+```
 
 It is well-known that $\sigma^{\text{impl}}_{\text{BS}}$ exhibits *skew*, in the sense that, empirically, its value is not constant across all options of the same tenor, particularly as we vary the option strike.  This can be interpreted as evidence that the Black-Scholes stochastic model is "wrong", which is of course quite reasonable from our point of view, where we favor a different stochastic model.  
 

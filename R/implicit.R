@@ -200,12 +200,12 @@ take_implicit_timestep = function(t, S, full_discount_factor,
 #' @param discount_factor_fcn A function for computing present values to
 #'   time \code{t} of various cashflows occurring during this timestep, with
 #'   arguments \code{T}, \code{t}
+#' @param default_intensity_fcn A function for computing default intensity
+#'   occurring during this timestep, dependent on time and stock price, with
+#'   arguments \code{t}, \code{S}.
 #' @param variance_cumulation_fcn A function for computing total stock variance
 #'   occurring during this timestep, with arguments \code{T}, \code{t}.  E.g. with
 #'   a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}.
-#' @param variance_cumulation_fcn A function for computing default intensity
-#'   occurring during this timestep, dependent on time and stock price, with
-#'   arguments \code{t}, \code{S}.
 #' @param prev_grid_values A matrix with one column for each
 #'   instrument and one row for each of the \eqn{N} values of \code{z}
 timestep_instruments = function(z, prev_grid_values,
