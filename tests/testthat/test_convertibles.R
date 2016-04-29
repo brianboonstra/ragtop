@@ -69,14 +69,14 @@ test_that("Straight Coupon Bond Equivalents", {
 })
 
 
-cbeq = ConvertibleBond(conversion_ratio=25, maturity=1.5, notional=0,
+cbeq = ConvertibleBond(conversion_ratio=1, maturity=1.5, notional=0,
                        discount_factor_fcn=pct0, name='ConvertibleBond')
 euro_zero_strike_call = EuropeanOption(maturity=cbeq$maturity, strike=0, callput=1, name="CallStrike0")
 S0 = 100
 equity_equiv_prices = find_present_value(S0=S0,
                                          instruments=list(call=euro_zero_strike_call, convertible_bond=cbeq),
-                                         num_time_steps=200, const_default_intensity=0.0,
-                                         const_volatility = 0.4, const_short_rate=0.0, std_devs_width=4)
+                                         num_time_steps=200, const_default_intensity=0.07,
+                                         const_volatility = 0.4, const_short_rate=0.03, std_devs_width=4)
 test_that("Trivial equity-equivalent", {
   expect_equal(S0, equity_equiv_prices$call, tolerance=1.e-1)
   expect_equal(S0, equity_equiv_prices$convertible_bond, tolerance=1.e-1)
@@ -85,9 +85,9 @@ test_that("Trivial equity-equivalent", {
 
 
 
-cbopt = ConvertibleBond(conversion_ratio=25, maturity=1.5, notional=1000,
+cbopt = ConvertibleBond(conversion_ratio=5./3., maturity=1.5, notional=100,
                        discount_factor_fcn=pct0, name='ConvertibleBond')
-S0 = 40
+S0 = 0.95 * cbopt$notional/cbopt$conversion_ratio
 euro_simple_call = EuropeanOption$new(maturity=cbopt$maturity,
                                       strike=cbopt$notional/cbopt$conversion_ratio,
                                       callput=1, name="EquivCall")
@@ -95,5 +95,5 @@ opt_equiv_prices = find_present_value(S0=S0, instruments=list(call=euro_simple_c
                                           num_time_steps=200, const_default_intensity=0.0,
                                           const_volatility = 0.4, const_short_rate=0.0, std_devs_width=4)
 test_that("Option-equivalent convertible", {
-  expect_equal(opt_equiv_prices$call+cbopt$notional, opt_equiv_prices$convertible_bond, tolerance=1.e-2)
+  expect_equal(cbopt$conversion_ratio * opt_equiv_prices$call+cbopt$notional, opt_equiv_prices$convertible_bond, tolerance=1.e-2)
 })
