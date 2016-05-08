@@ -15,9 +15,50 @@ abstract: Many real-world investment portfolios have a value that is sensitive t
 ```{r global_options, include=FALSE}
 library(ragtop)
 library(futile.logger)
+library(ggplot2)
+library(reshape2)
+library(stringr)
+library(MASS)
 flog.threshold(ERROR)
 knitr::opts_chunk$set(fig.width=6.5, fig.height=4, fig.path='Figs/',
                       echo=FALSE, warning=FALSE, message=FALSE, comment=FALSE)
+# PALETTES: see http://www.r-bloggers.com/the-paul-tol-21-color-salute/
+# FOCUS PALETTES
+# Red as highlight
+redfocus = c("#CB181D", "#252525", "#525252", "#737373", "#969696", "#BDBDBD", "#D9D9D9", "#F0F0F0")
+ 
+# Green as highlight
+greenfocus = c("#41AB5D", "#252525", "#525252", "#737373", "#969696", "#BDBDBD", "#D9D9D9", "#F0F0F0")
+ 
+# Blue as highlight
+bluefocus = c("#0033FF", "#252525", "#525252", "#737373", "#969696", "#BDBDBD", "#D9D9D9", "#F0F0F0")
+ 
+# EQUAL WEIGHT
+# Generated with rainbow(12, s = 0.6, v = 0.75)
+rainbow12equal = c("#BF4D4D", "#BF864D", "#BFBF4D", "#86BF4D", "#4DBF4D", "#4DBF86", "#4DBFBF", "#4D86BF", "#4D4DBF", "#864DBF", "#BF4DBF", "#BF4D86")
+rainbow10equal = c("#BF4D4D", "#BF914D", "#A8BF4D", "#63BF4D", "#4DBF7A", "#4DBFBF", "#4D7ABF", "#634DBF", "#A84DBF", "#BF4D91")
+rainbow8equal = c("#BF4D4D", "#BFA34D", "#86BF4D", "#4DBF69", "#4DBFBF", "#4D69BF", "#864DBF", "#BF4DA3")
+rainbow6equal = c("#BF4D4D", "#BFBF4D", "#4DBF4D", "#4DBFBF", "#4D4DBF", "#BF4DBF")
+ 
+# Generated with package "gplots" function rich.colors(12)
+rich12equal = c("#000040", "#000093", "#0020E9", "#0076FF", "#00B8C2", "#04E466", "#49FB25", "#E7FD09", "#FEEA02", "#FFC200", "#FF8500", "#FF3300")
+rich10equal = c("#000041", "#0000A9", "#0049FF", "#00A4DE", "#03E070", "#5DFC21", "#F6F905", "#FFD701", "#FF9500", "#FF3300")
+rich8equal = c("#000041", "#0000CB", "#0081FF", "#02DA81", "#80FE1A", "#FDEE02", "#FFAB00", "#FF3300")
+rich6equal = c("#000043", "#0033FF", "#01CCA4", "#BAFF12", "#FFCC00", "#FF3300")
+ 
+# Generated with package "fields" function tim.colors(12), which is said to emulate the default matlab colorset
+tim12equal = c("#00008F", "#0000EA", "#0047FF", "#00A2FF", "#00FEFF", "#5AFFA5", "#B5FF4A", "#FFED00", "#FF9200", "#FF3700", "#DB0000", "#800000")
+tim10equal = c("#00008F", "#0000FF", "#0070FF", "#00DFFF", "#50FFAF", "#BFFF40", "#FFCF00", "#FF6000", "#EF0000", "#800000")
+tim8equal = c("#00008F", "#0020FF", "#00AFFF", "#40FFBF", "#CFFF30", "#FF9F00", "#FF1000", "#800000")
+tim6equal = c("#00008F", "#005AFF", "#23FFDC", "#ECFF13", "#FF4A00", "#800000")
+ 
+# Generated with sort(brewer.pal(8,"Dark2")) #Dark2, Set2
+dark8equal = c("#1B9E77", "#666666", "#66A61E", "#7570B3", "#A6761D", "#D95F02", "#E6AB02", "#E7298A")
+dark6equal = c("#1B9E77", "#66A61E", "#7570B3", "#D95F02", "#E6AB02", "#E7298A")
+set8equal = c("#66C2A5", "#8DA0CB", "#A6D854", "#B3B3B3", "#E5C494", "#E78AC3", "#FC8D62", "#FFD92F")
+set6equal = c("#66C2A5", "#8DA0CB", "#A6D854", "#E78AC3", "#FC8D62", "#FFD92F")
+ 
+
 ```
 
 ## Introduction
@@ -114,7 +155,97 @@ points(0,0.44,pch=19)
 
 It is well-known that $\sigma^{\text{impl}}_{\text{BS}}$ exhibits *skew*, in the sense that, empirically, its value is not constant across all options of the same tenor, particularly as we vary the option strike.  This can be interpreted as evidence that the Black-Scholes stochastic model is "wrong", which is of course quite reasonable from our point of view, where we favor a different stochastic model.  
 
-If we price options of various strikes $K$ in our model using a constant $\sigma$, and then compute the corresponding *volatility skew curve*, we can see how much of the empirical volatility skew can be explained by equity-linked jump to default^[We do not argue here that equity-linked default intensity is truly the most import contributor to volatility skew.  Skew at short tenors is associated with other kinds of price jumps, and at long tenors is associated with stochastic volatility.].  To the extent the curves our similar, we regard our model as pricing all derivatives in a manner logically consistent with empirical volatility skew.
+```{r plot_vrx_skew_curves, cache=TRUE, fig.width=6, fig.height=4}
+vrx_stock = 33.38
+libor = 0.53
+trading_days = 44; calendar_years = 2/12;
+def_probs=c(0,0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2)
+vrx_put_bids = c(0.02, 0.06, 0.11, 0.20, 0.34, 0.52, 0.84, 1.30, 1.80, 2.46, 3.25, 4.20, 5.45, 6.60, 8.25, 9.85)
+vrx_put_asks = c(0.04, 0.09, 0.19, 0.21, 0.41, 0.63, 0.95, 1.39, 1.86, 2.50, 3.40, 4.35, 5.60, 7.30, 8.95, 10.90)
+vrx_put_strikes = seq(2.5,40,by=2.5)
+T = trading_days / 252; r = -log(exp(-(libor)*(calendar_years)))/T;
+bs_intensity_skew = function(Y){sapply(1:length(vrx_put_asks),
+                                       function(X){
+                                         implied_volatility(vrx_put_asks[[X]], PUT, vrx_stock, vrx_put_strikes[[X]],
+                                                            r, T, default_intensity=Y)
+                                         }
+                                       )}
+
+unlinked_skews = data.frame(default_intensity=rep(def_probs, each=length(vrx_put_asks)),
+                            strike=rep(vrx_put_strikes, times=length(def_probs)),
+                            bid=rep(vrx_put_bids, times=length(def_probs)),
+                            ask=rep(vrx_put_asks, times=length(def_probs)))
+unlinked_skews$bid_volatility = sapply(1:(length(vrx_put_bids)*length(def_probs)),
+                                       function(X){
+                                         100*implied_volatility(unlinked_skews$bid[[X]], PUT, vrx_stock,
+                                                            unlinked_skews$strike[[X]], r, T,
+                                                            unlinked_skews$default_intensity[[X]],
+                                                            max_vola = 1000)
+                                         })
+unlinked_skews$ask_volatility = sapply(1:(length(vrx_put_asks)*length(def_probs)),
+                                       function(X){
+                                         100*implied_volatility(unlinked_skews$ask[[X]], PUT, vrx_stock,
+                                                            unlinked_skews$strike[[X]], r, T,
+                                                            unlinked_skews$default_intensity[[X]],
+                                                            max_vola = 1000)
+                                       })
+unlinked_skews$default_intensity = unlinked_skews$default_intensity * 100
+unlinked_skews$mid_volatility = 0.5*(unlinked_skews$bid_volatility+unlinked_skews$ask_volatility)
+
+
+ggplot(data=unlinked_skews, aes(y=mid_volatility,x=strike,color=as.factor(default_intensity)))+geom_line()+labs(title="Valeant Default-Free Volatility Skew\nJune 2016 Options As Of April 18 2016",x='Strike',y='Mid Volatility (%)')+labs(color="Def. Intensity (%)") +geom_vline(xintercept=vrx_stock, color='darkgray') + annotate("text",x=vrx_stock-0.75,y=180,label='VRX=33.38',angle=90,size=4,color='darkgray')
+
+```
+
+If we price options of various strikes $K$ in our model using a constant $\sigma$, and then compute the corresponding *volatility skew curve* of $\sigma^{\text{impl}}_{\text{BS}}(K)$, we can see how much of the empirical volatility skew can be explained by equity-linked jump to default^[We do not argue here that equity-linked default intensity is truly the most important contributor to volatility skew.  Skew at short tenors is associated with other kinds of price jumps, and at long tenors is associated with stochastic volatility.].  To the extent the curves our similar, we regard our model as pricing all derivatives in a manner logically consistent with empirical volatility skew.
+
+```{r plot_skew_by_power, cache=TRUE, fig.width=6, fig.height=4}
+  skew_for_power = function(p,h=0.05,strikes=c(50,100,200)) {
+    library(ragtop)
+    library(limSolve)
+    library(stringr)
+    library(MASS)
+    pct2 = function(T,t){exp(-0.02*(T-t))}
+    instruments = lapply(strikes,
+                         function(x) {
+                           EuropeanOption(maturity=3.53, strike=x, callput=PUT,
+                                          discount_factor_fcn=pct2,
+                                          name=paste0("P", str_pad(x,3,pad="0")))
+                         }
+    )
+    names(instruments) = lapply(instruments, function(x){x$name})
+    default_intensity_fcn= function(t, S, ...){0.95*h+0.05*h*(100/S)^p}
+    pvs = find_present_value(S0=100, num_time_steps=250, instruments=instruments,
+                             const_volatility=0.5, discount_factor_fcn=pct2,
+                             default_intensity_fcn=default_intensity_fcn ,
+                             structure_constant=2.0,
+                             std_devs_width=3.0)
+    vols = implied_volatilities(pvs, -1, 100, strikes, 0.02, 3.53)
+    vols
+  }
+
+  powers = c(0, 1, 2, 3, 5, 7, 10)
+  strikes=c(seq(10,49,by=1),seq(50,102,by=2),seq(105,155,by=5),seq(160,300,by=20))
+
+  cl = parallel::makeCluster(max(1, parallel::detectCores()-1))
+  parallel::clusterExport(cl,'skew_for_power')
+  parallel::clusterExport(cl,'strikes')
+  skews = as.data.frame(parallel::parSapply(cl,powers, function(p){skew_for_power(p,strikes=strikes)}))
+  parallel::stopCluster(cl)
+
+  names(skews) = as.character(MASS::fractions(powers))
+  skews$strike = strikes
+  long_skews = melt(skews,id.vars='strike', variable.name='Power', value.name='Volatility')
+  pct_skews = long_skews
+  pct_skews$Volatility =100*pct_skews$Volatility
+
+  pct_skews$Power = as.factor(pct_skews$Power)
+  ggplot(pct_skews, aes(x=strike,y=Volatility, color=Power)) +
+    geom_line() + geom_vline(xintercept=100, color='darkgray') +
+    labs(title="Volatility Skews By Default Intensity Power\n5% Initial Default Intensity",
+         color="Def. Int. Power",
+         x="Strike", y="Volatility (%)")
+```
 
 Convertible bonds often have tenors far exceeding those found in liquid option markets.  This makes historical volatility estimates^[Historical volatility estimates are usually formed by computing the standard deviation of $\log\left(\frac{S^H_{i}}{S^H_{i-1}}\right)$ for a time series of historical prices $S^H$.][@Bur90] more desirable.  Since historical prices are by definition default-free, they are compatible with $\sigma$ and not with $\sigma_{\text{BS}}$.  This property of historical volatility estimation for risky entities is generally under-appreciated.
 
@@ -124,7 +255,7 @@ Convertible bonds often have tenors far exceeding those found in liquid option m
 
 ### Early Exercise
 
-Some instruments of interest, such as CDS and vanilla options, are amenable to valuation by directly estimating and discounting terminal distributions.  However, both convertible bonds and american-exercise equity options give early exercise rights to their holders.  In addition, corporate bonds (including converts) often have embedded call options, granting exercise decisions to the issuer.
+Some instruments of interest, such as CDS and vanilla options, are amenable to valuation by directly estimating and discounting terminal distributions.  However, both convertible bonds and american-exercise equity options give early exercise rights to their holders.  In addition, corporate bonds (including converts) often have embedded call options, granting exercise decisions to the issuer.  Embedded put options also appear with some frequency.
 
 Note that exercise of a call option is often accompanied by *coupon acceleration* according to a contractually determined rate curve.  This feature is trivial to handle as part of the exercise condition in a model.  Call options may also be *provisional*^[Provisional calls are also known as *conditional* calls or *soft* calls.],  being exercisable only when the historical stock price path has met certain criteria.  This latter condition is substantially more difficult to treat.
 
@@ -149,21 +280,21 @@ This backward parabolic PDE is amenable to numerical integration, which we speci
 
 ### Boundary Conditions
 
-As discussed above, every derivative provides us with terminal values at expiration or maturity date. This provides us with a vector of values $\vec{v}^{(0)}$ to use as an initial boundary condition.  For boundary conditions at the edge of our solution space, where $S \rightarrow 0$ or $S \rightarrow 0$ we have a choice of boundary conditions, some wiser than others.
+As discussed above, every derivative provides us with terminal values at expiration or maturity date. This provides us with a vector of values $\vec{v}^{(0)}$ to use as an initial boundary condition.  For boundary conditions at the edge of our solution space, where $S \rightarrow 0$ or $S \rightarrow \infty$ we have a choice of boundary conditions, some wiser than others.
 
 
 #### Coupons and Dividends
 
 In practice, both bond prices and stock prices are expected to exhibit discontinuities.  Bonds yield occasional cashflows in the form of coupons.  In order to preserve continuity of value across coupon dates, we simply assume that coupons remain part of the contract, accumulating value at the short rate $r$ and enjoying full recovery in case of default.
 
-Stock dividends are somewhat trickier to handle.  Derivative prices should not themselves jump across the expected discontinuity in stock price from time $T_d^-$ just before the dividend to time $T_d^+$ just after it. We need to adjust prices accordingly, so we use the classic technique of rebasing the grid[@Tav00].  That is to say, we take an interpolation function $\mathcal{I}$ and set
+Stock dividends are somewhat trickier to handle.  Derivative prices should not themselves jump across the expected discontinuity in stock price from time $T_d^-$ just before the dividend to time $T_d^+$ just after it. We need to adjust the grid's relationship between underlying prices and derivative price accordingly, so we use the classic technique of rebasing the grid[@Tav00].  That is to say, we take an interpolation function $\mathcal{I}$ and set
 $$
 V\left(\vec{S}, T^{-}_{d} \right) = \mathcal{I}\left( \vec{S} - \kappa - \pi \vec{S} ; \, \, \vec{S}, \vec{V}\left(\vec{S}, T_d^+\right)\right).
 $$
 
 #### Dividend Protection
 
-Dividend protection terms alter the conversion ratio in proportion to dividend sizes exceeding some contractual mechanism, and are fairly common.   It is easy to demonstrate that  dividend protected binds can be priced accurately using our  usual approach, with dividends respecified never to exceed the protection level.
+Dividend protection terms alter the conversion ratio in proportion to dividend sizes exceeding some contractual mechanism, and are fairly common.   It is easy to demonstrate that  dividend protected bonds can be priced accurately using our usual approach, with dividends respecified never to exceed the protection level.  Note however, that this trick would affect all securities priced on the grid, even ones without dividend protection, so we must be sure to restrict our application of the ceiling only to protected instruments.
 
 
 
@@ -189,7 +320,60 @@ Assume we have already worked out $\mu^{(\ell)}$ for all $\ell<m$.  Then (again 
 
 ### Pricing
 
-We have now fully specified all parameters of our SDE, and are therefore ready to use the PDE solver to find prices and hedge ratios of portfolios of various derivative securities, including convertible bonds CDS, options and so on. 
+We have now fully specified all parameters of our SDE, and are therefore ready to use the PDE solver to find prices and hedge ratios of portfolios of various derivative securities, including convertible bonds CDS, options and so on.
+
+```{r plot_conv_bond_by_S, cache=TRUE, fig.width=6.5, fig.height=4.5}
+p=6.0; h=0.10
+pct4 = function(T,t=0) {
+  exp(-0.04*(T-t))
+}
+cb = ConvertibleBond(conversion_ratio=3.5, maturity=1.5, notional=100,
+                     discount_factor_fcn=pct4, name='Convertible')
+S0 = 10
+default_intensity_fcn = function(t, S, ...){0.9*h+0.1*h*(S0/S)^p}
+if (T) {
+  cbgrid = as.data.frame(form_present_value_grid(S0=S0, grid_center=S0,
+                                                 instruments=list(Convertible=cb),
+                                                 num_time_steps=250,
+                                                 default_intensity_fcn=default_intensity_fcn,
+                                                 const_volatility = 0.4, discount_factor_fcn=pct4,
+                                                 std_devs_width=5))
+  unlinkedgrid = as.data.frame(form_present_value_grid(S0=S0, grid_center=S0,
+                                                 instruments=list(Unlinked=cb),
+                                                 num_time_steps=250,
+                                                 const_default_intensity = h,
+                                                 const_volatility = 0.4, discount_factor_fcn=pct4,
+                                                 std_devs_width=5))
+}
+present_value = spline(x=cbgrid[,"Underlying"],
+                       y=cbgrid[,"Convertible"],
+                       xout=S0)$y
+straight_bond_value_no_link = cb$notional * exp(-h*cb$maturity) * cb$discount_factor_fcn(cb$maturity,0)
+
+golden_ratio = 0.5*(1+sqrt(5))
+target_aspect_ratio = (3.5*S0)/(golden_ratio*cb$notional*1.5)
+p = (
+  ggplot(cbgrid,
+         aes(x=Underlying,y=Convertible)) +
+    geom_line(mapping=aes(x=Underlying, y=Unlinked), data=unlinkedgrid, color="green") +
+    coord_fixed(ratio=target_aspect_ratio) +
+    geom_line() +
+    scale_y_continuous(limits=c(0,cb$notional*1.5)) +
+    scale_x_continuous(limits=c(0,3.5*S0)) +
+    geom_abline(slope=cb$conversion_ratio, color="darkgray", linetype='dotted') +
+    annotate("text", x=S0, y=S0*cb$conversion_ratio-5, label="Conversion Value",
+             angle=180*atan(cb$conversion_ratio*target_aspect_ratio)/pi,
+             size=3, color="darkgray")+
+    geom_hline(yintercept=straight_bond_value_no_link,
+               color="darkgray", linetype='dashed') +
+    annotate("text", x=S0*3, y=straight_bond_value_no_link-5, label="Straight Bond Unlinked",
+             size=3, color="darkgray")  +
+    geom_point(aes(x=S0,y=present_value), color="red") +
+    labs(title="Convertible Bond Value, Equity-Linked Default Model")
+)
+
+print(p)
+```
 
 ## Layers
 

@@ -16,6 +16,17 @@
 ## You should have received a copy of the GNU General Public License
 ## along with ragtop.  If not, see <http://www.gnu.org/licenses/>.
 
+
+#' Constant CALL for defining option contracts
+#'
+#' @export CALL
+CALL = 1
+
+#' Constant PUT for defining option contracts
+#'
+#' @export PUT
+PUT = -1
+
 #' Vectorized Black-Scholes pricing of european-exercise options
 #'
 #' Price options according to the famous Black-Scholes formula, with the

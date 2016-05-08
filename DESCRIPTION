@@ -21,6 +21,11 @@ Suggests:
     roxygen2,
     knitr,
     rmarkdown,
+    reshape2,
+    dygraph,
+    stringr,
+    ggplot2,
+    MASS,
     RColorBrewer,
     RQuantLib
 License: GPL (>= 2)

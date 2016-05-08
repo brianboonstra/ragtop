@@ -6,6 +6,8 @@ flog.threshold(WARN)
 flog.threshold(WARN, name="ragtop")
 flog.threshold(ERROR, name='ragtop.implicit.setup.width')
 
+pct2 = function(T,t) {exp(-0.02*(T-t))}
+
 euro_zero_strike_call = EuropeanOption(maturity=3.53, strike=0, callput=1, name="CallStrike0")
 test_that("European options equivalent to equity, trivial cases", {
   expect_equal(100,
@@ -74,5 +76,14 @@ test_that("American options correctly priced", {
   expect_equal(amer_put_price_20k_steps, grid_amer_price$amer_put, tolerance=1.e-1)
 })
 
-
-
+long_term_ITM_put = EuropeanOption(maturity=3.53, strike=200, callput=PUT,
+                                  discount_factor_fcn=pct2, name='Put200')
+default_intensity_fcn= function(t, S, ...){h=0.05;p=1;0.95*h+0.05*h*(100/S)^p}
+price = find_present_value(S0=100, num_time_steps=250, instruments=list(p200=long_term_ITM_put),
+                         const_volatility=0.5, discount_factor_fcn=pct2,
+                         default_intensity_fcn=default_intensity_fcn ,
+                         structure_constant=2.0,
+                         std_devs_width=3.0)$p200
+test_that("A power function works", {
+  expect_equal(109.2, price, tolerance=0.1)
+})

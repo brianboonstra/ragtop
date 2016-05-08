@@ -4,6 +4,7 @@ library(futile.logger)
 #'  that they should be treated as simultaneous
 #' @export TIME_RESOLUTION_SIGNIF_DIGITS
 TIME_RESOLUTION_SIGNIF_DIGITS = 7
+#' @export TIME_RESOLUTION_FACTOR
 TIME_RESOLUTION_FACTOR = 10^(-TIME_RESOLUTION_SIGNIF_DIGITS)
 
 log_layout_fcn = function(level, msg, ...)

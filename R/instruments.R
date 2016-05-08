@@ -105,7 +105,11 @@ EuropeanOption = setRefClass(
       "Return 0 for calls and discounted future payout for puts."
       recovery = 0
       if (-1==callput) {
-        recovery = strike * discount_factor_fctn(maturity, t)
+        df = discount_factor_fctn(maturity, t)
+        recovery = strike * df
+        if (recovery>2*max(S)) {
+          flog.warn("Unexpected large recovery value %s, strike %s, df %s", recovery, strike, df)
+        }
       }
       recovery
     },
@@ -226,14 +230,14 @@ CouponBond = setRefClass(
       ctimes = sort(ctimes)
       ctimes
     },
-    update_cashflows = function(small_t, big_t, discount_factor_fctn=discount_factor_fcn, ...) {
+    update_cashflows = function(small_t, big_t, discount_factor_fctn=discount_factor_fcn, include_notional=TRUE, ...) {
       "Update last_computed_cash and return cashflow information for the given time period, valued at big_t"
       if (is.blank(last_computed_cash)) {
         last_computed_cash <<- 0
       }
       df = discount_factor_fctn(big_t, small_t)
       cashflows = total_coupon_values_between(small_t, big_t, discount_factor_fctn=discount_factor_fctn)
-      if (maturity>small_t && maturity<=big_t) {
+      if (include_notional && maturity>small_t && maturity<=big_t) {
         ndf = notional * discount_factor_fctn(maturity, big_t)
         flog.info("Totaled %s cashflows in interval (%s,%s]  discounted to t=%s were %s.  This also included notional %s, discounted to %s.",
                   name, small_t, big_t, small_t, cashflows + ndf, notional, ndf,
@@ -330,10 +334,13 @@ ConvertibleBond = setRefClass(
       #  coupons, exercise values must have those accrued coupons added for
       #  a fair comparison
       exercise_values = S * conversion_ratio
-      if (t>=maturity) {
-        if (all(v<=0)) {  # Must be initialization of grid
+      if (t >= maturity) {
+        if (all(v <= 0)) {  # Must be initialization of grid
           total_early_exercise_value = exercise_values
-          v = notional
+          v = notional + 0*S
+          flog.info("Since instrument %s t=%s was at or beyond the maturity %s, initialized total_early_exercise_value with S * conversion_ratio",
+                    name, t, maturity,
+                    name="ragtop.instruments.exercise.convertible")
         }
       } else {
         accumulated_past_coupons = accumulate_coupon_values_before(t, discount_factor_fctn=discount_factor_fctn)
@@ -341,11 +348,24 @@ ConvertibleBond = setRefClass(
       }
       flog.debug("exercise_values %s total_early_exercise_value %s",
                  toString(exercise_values), toString(total_early_exercise_value))
-      total_early_exercise_value[total_early_exercise_value < 0] = 0
+      total_early_exercise_value[total_early_exercise_value < 0] = 0  # Should just be a safety measure
       flog.info("Differences between %s grid value and exercise value range from %s to %s, averaging %s",
                 name, min(v - total_early_exercise_value), max(v - total_early_exercise_value),
-                mean(v - total_early_exercise_value), name="ragtop.instruments.exercise.convertible")
+                mean(v - total_early_exercise_value),
+                name="ragtop.instruments.exercise.convertible")
       exercise_ix = as.vector(v < total_early_exercise_value)
+      if (sum(exercise_ix)>0) {
+        flog.info("%s at %s has %s of %s nodes that appear exercisable, for value (unadjusted by coupons) ranging from %s to %s",
+                  name, t, sum(exercise_ix), length(S),
+                  min(exercise_values[exercise_ix]), max(exercise_values[exercise_ix]),
+                  name="ragtop.instruments.exercise.convertible")
+      }
+      if (sum(exercise_ix) < length(S)) {
+        flog.info("%s at %s has %s of %s nodes that do not appear exercisable, for value (including past coupons) ranging from %s to %s",
+                  name, t, length(S) - sum(exercise_ix), length(S),
+                  min(v[!exercise_ix]), max(v[!exercise_ix]),
+                  name="ragtop.instruments.exercise.convertible")
+      }
       last_computed_exercise_decision <<- exercise_ix
       last_computed_exercise_value <<- total_early_exercise_value
       last_used_S <<- S
@@ -365,9 +385,12 @@ ConvertibleBond = setRefClass(
            exercise_values=last_computed_exercise_value)
     },
     update_cashflows = function(small_t, big_t, discount_factor_fctn=discount_factor_fcn, ...) {
-      exercise_free_cashflows = callSuper(small_t, big_t, discount_factor_fctn=discount_factor_fctn)
+      exercise_free_cashflows = callSuper(small_t, big_t, discount_factor_fctn=discount_factor_fctn, include_notional=FALSE, ...)
       if (is.blank(last_computed_exercise_decision) || is.blank(last_computed_grid)) {
         cashflows = exercise_free_cashflows
+        flog.info("Since our last computed %s exercise decision or grid was blank, setting cashflows from %s to %s the same as a straight bond, to %s",
+                  name, small_t, big_t, exercise_free_cashflows,
+                  name="ragtop.instruments.cashflows.convertible")
       } else {
         cashflows = 0 * last_computed_grid + exercise_free_cashflows
         flog.info("Exercise-free cashflows for %s were %s in time interval (%s,%s].  Zeroing them out for %s of %s grid entry cash flows due to conversion.",
@@ -382,11 +405,35 @@ ConvertibleBond = setRefClass(
       "Return the greater of hold value {v} or conversion value at each stock price level in {S}, adjusted to include all past coupons"
       exer = exercise_decision(v,S,t,discount_factor_fctn=discount_factor_fctn,...)
       ev = as.vector(v)
-      flog.info("Last computed exer values for %s have mean %s",
-                name, mean(exer$exercise_values), name="ragtop.instruments.exercise.convertible")
+      flog.info("Last computed exer values for %s have %s cases of early exercise",
+                name, sum(exer$exercise_indexes), name="ragtop.instruments.exercise.convertible")
       ev[exer$exercise_indexes] = exer$exercise_values[exer$exercise_indexes]
       last_computed_grid <<- ev
       last_computed_grid
+    },
+    terminal_values = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
+      accumulated_past_coupons = accumulate_coupon_values_before(t, discount_factor_fctn=discount_factor_fctn)
+      total_bond_values = notional + 0 * S
+      exercise_values = S * conversion_ratio
+      total_early_exercise_value = exercise_values
+      terminal = total_bond_values
+      exer_ix = (terminal<total_early_exercise_value)
+      some_exercisable = any(exer_ix)
+      if (some_exercisable) {
+        num_exercised = sum(exer_ix)
+        cases_with_exer = total_early_exercise_value[exer_ix]
+        flog.info("Terminal values for %s have %s of %s indicating exercise, exceeding notional of %s, ranging in value (not past coupons of %s) from %s to %s",
+                  name, num_exercised, length(S), notional, accumulated_past_coupons,
+                  min(cases_with_exer), max(cases_with_exer),
+                  name="ragtop.instruments.exercise.convertible")
+        terminal[exer_ix] = total_early_exercise_value[exer_ix]
+      } else {
+        num_exercised = 0
+        flog.info("Terminal values for %s have no nodes indicating exercise, all values set to notional, with past coupons were %s + %s = %s",
+                  name, notional, accumulated_past_coupons, notional + accumulated_past_coupons,
+                  name="ragtop.instruments.exercise.convertible")
+      }
+      terminal
     }
   )
 )

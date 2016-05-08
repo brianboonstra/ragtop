@@ -88,21 +88,21 @@ construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structu
 construct_tridiagonals = function(sigma, structure_constant, drift)
 {
   N = length(drift)
-  K = N - 1
+  Nm1 = N - 1
   # Entries in the center of the matrix come from finite differencing
   #  free of boundary conditions
   diag = rep(1.0 + sigma ^ 2 * structure_constant, N)
   subdiag = -0.5 * (sigma ^ 2 * structure_constant - drift[2:N])
-  superdiag = -0.5 * (sigma ^ 2 * structure_constant + drift[1:K])
+  superdiag = -0.5 * (sigma ^ 2 * structure_constant + drift[1:Nm1])
   # Entries on the low-z/low-S boundary (index 1)
   neumann_drift_low = drift[1]
   diag[1] = 1. + neumann_drift_low
   superdiag[1] = -neumann_drift_low
-  # Entries on the high-z/high-S boundary (index N for diag and K for subdiag)
+  # Entries on the high-z/high-S boundary (index N for diag and Nm1 for subdiag)
   neumann_drift_high = drift[N]
   diag[N] = 1. + neumann_drift_high
-  subdiag[K] = -neumann_drift_high
-  bad_ix = (abs(diag[2:K])-abs(subdiag[1:(K - 1)])-abs(superdiag[2:K])<0)
+  subdiag[Nm1] = -neumann_drift_high
+  bad_ix = (abs(diag[2:Nm1])-abs(subdiag[1:(Nm1 - 1)])-abs(superdiag[2:Nm1])<0)
   if (any(bad_ix)) {
     warning(paste0("Implicit routine encountered potentially noninvertible matrix.  Bad indexes: ",
                    toString(which(bad_ix))))
@@ -149,6 +149,9 @@ take_implicit_timestep = function(t, S, full_discount_factor,
                                               tridiag_matrix_entries$diag,
                                               tridiag_matrix_entries$super,
                                               prev_grid_values)
+  # limSolve::Solve.tridiag() uses LAPACK DGTSV Gaussian elimination
+  #  with partial pivoting rather than the naive tridiagonal algorithm
+
   # We assume our derivative can have no negative values, so
   # we floor it at zero
   hold_cond_on_surv[hold_cond_on_surv < 0.0] = 0.0
@@ -156,14 +159,16 @@ take_implicit_timestep = function(t, S, full_discount_factor,
   if (is.blank(instrument) || is.blank(instrument$recovery_fcn)) {
     recovery_values = 0.0
   } else {
-    recovery_values = full_discount_factor * instrument$recovery_fcn(S, t, hold_cond_on_surv/full_discount_factor)
+    recovery_at_t = instrument$recovery_fcn(v=hold_cond_on_surv/full_discount_factor, S=S, t=t)
+    recovery_values = full_discount_factor * recovery_at_t
   }
   # The overall value of the derivative, assuming both parties want to
   # keep it in existence, comes from the hold value conditional on
   # survival times the survival likelihood, plus the recovery
   # value times default likelihood
-  hold_value = (survival_probabilities * hold_cond_on_surv +
-                  (1. - survival_probabilities) * local_discount_factor * recovery_values)
+  survival_value = survival_probabilities * hold_cond_on_surv
+  default_value = (1. - survival_probabilities) * local_discount_factor * recovery_values
+  hold_value = survival_value + default_value
   flog.info("Timestep of %s to t=%s has hold conditional on survival averaging %s, recovery values averaging %s and survival probabilities averaging %s for an average value all-in of %s",
             instr_name, t, mean(hold_cond_on_surv), mean(recovery_values),
             mean(survival_probabilities), mean(hold_value),
@@ -223,13 +228,16 @@ timestep_instruments = function(z, prev_grid_values,
   r = -log(local_discount_factor)/dt
   S = stock_level_fcn(z, t)
   h = default_intensity_fcn(t, S)
+  if (length(h) != length(S)) {
+    stop("Default intensity function must return an array of the same size as S")
+  }
   sigma = sqrt(variance_cumulation_fcn(t+dt, t)/dt)
   div_adj_grid_values = adjust_for_dividends(prev_grid_values,
                                              t, dt, r, h, S, S0,
                                              dividends = dividends)
   survival_probabilities = exp(-h * dt)
-  flog.info("Default intensity at %s averages %s.  Short rate averages %s.  Local volatility is %s.",
-            t, mean(h), mean(r), sigma,
+  flog.info("Default intensity at %s averages %s.  Short rate averages %s.  Local volatility is %s. Surv probs range from %s to %s with avg %s.",
+            t, mean(h), mean(r), sigma, min(survival_probabilities), max(survival_probabilities), mean(survival_probabilities),
             name='ragtop.implicit.timestep')
   dz = diff(z)[1] # We are assuming a regular grid in z space
   structure_constant = dt/dz^2
@@ -254,7 +262,7 @@ timestep_instruments = function(z, prev_grid_values,
           cash_increase = instrument$update_cashflows(t, t+dt,
                                                       discount_factor_fctn=discount_factor_fcn)
           grid_cash_increase =  cash_increase * prev_timestep_discount_factor
-          flog.info("Instrument %s has cashflows up to %s in interval (%s,%s].  Increasing grid values by the corresponding change-of-variables (x %s) amount up to %s.",
+          flog.info("Instrument %s has cashflows up to %s in interval (%s,%s].  Increasing grid values prior to taking the timestep by the corresponding change-of-variables (x %s) amount up to %s.",
                     instr_name, max(cash_increase), t, t+dt, prev_timestep_discount_factor, max(grid_cash_increase),
                     name='ragtop.implicit.timestep')
           prev_instr_grid_values = prev_instr_grid_values + grid_cash_increase
@@ -392,8 +400,8 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
         stop(paste("Invalid terminal values for", instr_name))
       }
       grid[num_time_pts,,k] = df_final * undisc_terminal_vals
-      flog.info("Terminal values at Tmax=%s for %s avg is %s",
-                Tmax, instr_name, mean(grid[num_time_pts,,k]),
+      flog.info("Terminal values at Tmax=%s for %s avg is %s after present valuing using discount factor %s",
+                Tmax, instr_name, mean(grid[num_time_pts,,k]), df_final,
                 name='ragtop.implicit.setup')
     } else {
       flog.info("Terminal values of %s are being set to NA because its maturity %s is strictly less than Tmax of %s",
@@ -484,6 +492,7 @@ iterate_grid_from_timestep = function(starting_time_step, time_pts, z, S0, instr
 #'  is not given
 #' @param const_default_intensity A constant to use for the instantaneous default intensity in case \code{default_intensity_fcn}
 #'  is not given
+#' @param grid_center A reasonable central value for the grid, defaults to S0 or an instrument strike
 #'
 #' @export form_present_value_grid
 form_present_value_grid = function(S0, num_time_steps, instruments,
@@ -495,7 +504,8 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
                               borrow_cost=0.0,
                               dividend_rate=0.0,
                               structure_constant=2.0,
-                              std_devs_width=3.0)
+                              std_devs_width=3.0,
+                              grid_center=NA)
 {
   if (is.blank(override_Tmax)) {
     Tmax = 0
@@ -518,6 +528,10 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
     }
     flog.info("Instrument %s: %s", k, instr_name,
               name='ragtop.implicit.setup')
+  }
+  if (!is.blank(grid_center)) {
+    flog.info("Grid center forced to K=%s", grid_center, name='ragtop.implicit.setup')
+    K = grid_center
   }
   if (Tmax <= 0) {
     stop("Cannot compute present value when no instrument maturity is positive")
