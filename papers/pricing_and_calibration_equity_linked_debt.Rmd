@@ -523,6 +523,49 @@ Once we have set our dividend date at a timestep boundary, we deal with dividend
 
 ## Performance
 
-(forthcoming)
+Analyzing performance of our basic PDE solver in simple cases shows that convergence is slightly superlinear in timestep size for the simplest default intensity processes
+
+``` {r plot_step_size_convergence, cache=TRUE, fig.width=6, fig.height=4}
+euro_zero_strike_call = EuropeanOption(maturity=3.53, strike=0, 
+                                       callput=1, name="CallStrike0")
+eqcall =  function(n) {
+  find_present_value(S0=100,instruments=list(c=euro_zero_strike_call),num_time_steps=n)$c
+  }
+
+s=c(3,5,15,25,50,100,150,200,300,400,500,600,750,1000)
+cs = sapply(s,eqcall)/100
+es = (cs - cs[[length(cs)]])[1:(length(s)-1)]
+num_steps = s[1:length(es)]
+conv.rate.model = lm(log(es)~log(num_steps))
+plot(s, (cs - cs[[length(cs)]]), log='xy',
+     col='orange', pch=19,
+     xlab='Step Count (log scale)',
+     ylab='Relative Error (log scale)',
+     main='Polynomial Convergence In Step Size'
+)
+lines(num_steps, exp(predict(conv.rate.model, 
+                           newdata=list(x=num_steps))),
+      col="gray", lty=4)
+```
+
+Grid width is also important for most securities.  Here, the simple case boasts superlinear convergence in width due to the narrow tails of the gaussian distribution.
+
+``` {r plot_width_convergence, cache=TRUE, fig.width=6, fig.height=4}
+euro_zero_strike_call = EuropeanOption(maturity=3.53, strike=0, callput=1, name="CallStrike0")
+eqwcall =  function(w) {
+  find_present_value(S0=100,instruments=list(c=euro_zero_strike_call),
+                     num_time_steps=200, std_devs_width=w)$c
+}
+w=c(0.25,0.5,0.75,1,1.5,2,2.5,3,3.5,4,4.5,5,6)
+ws = sapply(w,eqwcall)/100
+werr = (ws[[length(ws)]]-ws)[1:(length(w)-1)]
+widths = w[1:length(werr)]
+plot(widths, werr, log='y',
+     col='darkgreen',pch=19,
+     xlab='Width In Standard Deviations',
+     ylab='Relative Error (log scale)',
+     main='Convergence In Grid Width'
+)
+```
 
 ## References
