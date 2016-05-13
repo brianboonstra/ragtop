@@ -568,4 +568,47 @@ plot(widths, werr, log='y',
 )
 ```
 
+
+In the case of more complex equity-linked default, and a coupon-bearing convertible bond, we observe relative errors about twice as large, though we still enjoy superlinear convergence. 
+``` {r plot_cb_convergence, cache=TRUE, fig.width=6, fig.height=4}
+  h = 0.1; p = 6;
+  pct2 = function(T,t=0) {
+    exp(-0.02*(T-t))
+  }
+  default_intensity_fcn = function(t, S, ...){0.9*h+0.1*h*(S0/S)^p}
+  coup_times = seq(0.4, 4.4, by=0.5)
+  maturity = coup_times[[length(coup_times)]]
+  cb = ConvertibleBond(conversion_ratio=2.5, maturity=maturity, notional=100,
+                        coupons=data.frame(
+                          payment_time=coup_times,
+                          payment_size=1 + 0 * coup_times),
+                        discount_factor_fcn=pct2,
+                        name='CB')
+  S0 = cb$notional / cb$conversion_ratio
+  cbprice =  function(n) {
+    find_present_value(S0 = S0, instruments = list(CB=cb),
+                       num_time_steps = n,
+                       default_intensity_fcn = default_intensity_fcn,
+                       discount_factor_fcn = pct2,
+                       std_devs_width=4,
+                       )$CB
+  }
+  s = c(3, 5, 8, 15, 25, 50, 100, 150, 200, 300, 400, 500, 600, 750, 1000)
+  cs = sapply(s, cbprice)
+  es = ((cs - cs[[length(cs)]])[1:(length(cs)-1)])/cs[[1]]
+  num_steps = s[1:length(es)]
+  conv.rate.model = lm(log(es)~log(num_steps))
+  plot(num_steps, es, log='xy',
+       col='purple', pch=19,
+       xlab='Step Count (log scale)',
+       ylab='Relative Error (log scale)',
+       main='Convertible Bond, Equity-Linked Default'
+  )
+  text(x=num_steps[[2]], y=es[[length(cs)-3]],
+       labels=expression(h==0.09 + 0.01*frac(100^6,S^6)),
+       pos=4)
+  lines(num_steps, exp(predict(conv.rate.model,
+                               newdata=list(x=num_steps))),
+        col="gray", lty=4)
+```
 ## References
