@@ -26,13 +26,13 @@
 ## With apologies to all the world's wonderful functional
 ## programmers.
 
-## We are currently using reference classes for instruments
+## We are currently using reference classes for instruments,
 ## though R6 classes are a tempting alternative.  Calling
-## syntax is close or identical so the change should be
+## syntax is close or identical so a change to R6 should be
 ## easy.
 
 ## Logging
-require(futile.logger)
+library(futile.logger)
 
 # TODO: Allow initialization of some instruments from QuantLib classes
 # TODO: Handle daycount conventions and dates, perhaps using Quantlib
@@ -108,7 +108,9 @@ EuropeanOption = setRefClass(
         df = discount_factor_fctn(maturity, t)
         recovery = strike * df
         if (recovery>2*max(S)) {
-          flog.warn("Unexpected large recovery value %s, strike %s, df %s", recovery, strike, df)
+          flog.warn("Unexpected large recovery value %s, strike %s, df %s, max(S) is %s",
+                    recovery, strike, df, max(S),
+                    name='ragtop.instruments.recovery.european')
         }
       }
       recovery

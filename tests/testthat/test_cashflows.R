@@ -54,23 +54,23 @@ test_that("Dividend discounting and summing", {
 test_that("Basic dividend adjustments no discounting", {
   expect_equal(adjust_for_dividends(
     grid_values=3:7, t=0.9, dt=0.3, r=0, h=0, S=250*(23:27), S0=250*25,
-    data.frame(time=1.01,fixed=200,proportional=0)),
+    data.frame(time=1.01,fixed=200,proportional=0))[,1],
     c(2.2, 3.2, 4.2, 5.2, 6.2), tolerance=1.e-3)
   expect_equal(adjust_for_dividends(
     grid_values=3:7, t=0.9, dt=0.3, r=0, h=0, S=250*(23:27), S0=250*25,
-    data.frame(time=1.01,fixed=0, proportional=200)),
+    data.frame(time=1.01,fixed=0, proportional=200))[,1],
     c(2.264, 3.232, 4.2, 5.168, 6.136), tolerance=1.e-3)
 })
 
 test_that("Basic dividend adjustments with interest rates", {
   expect_equal(adjust_for_dividends(
     grid_values=3:7, t=0.9, dt=0.3, r=0.2, h=0, S=250*(23:27), S0=250*25,
-    data.frame(time=1.01,fixed=200, proportional=0)),
+    data.frame(time=1.01,fixed=200, proportional=0))[,1],
     c(2.1690150136972, 3.1690150136972, 4.1690150136972, 5.1690150136972,
       6.1690150136972), tolerance=1.e-3)
   expect_equal(adjust_for_dividends(
     grid_values=3:7, t=0.9, dt=0.3, r=0.2, h=0, S=250*(23:27), S0=250*25,
-    data.frame(time=1.01,fixed=0, proportional=200)),
+    data.frame(time=1.01,fixed=0, proportional=200))[,1],
     c(2.23549381260142, 3.20225441314931, 4.1690150136972, 5.13577561424509,
       6.10253621479298), tolerance=1.e-3)
 })
@@ -78,22 +78,22 @@ test_that("Basic dividend adjustments with interest rates", {
 test_that("Basic dividend adjustments with hazard rates", {
   expect_equal(adjust_for_dividends(
     grid_values=3:7, t=0.9, dt=0.3, r=0, h=0.2+0*(3:7), S=250*(23:27), S0=250*25,
-    data.frame(time=1.01,fixed=200,proportional=0)),
+    data.frame(time=1.01,fixed=200,proportional=0))[,1],
     c(2.1690150136972, 3.1690150136972, 4.1690150136972, 5.1690150136972,
       6.1690150136972), tolerance=1.e-5)
   expect_equal(adjust_for_dividends(
     grid_values=3:7, t=0.9, dt=0.3, r=0, h=0.2+0*(3:7), S=250*(23:27), S0=250*25,
-    data.frame(time=1.01,fixed=0, proportional=200)),
+    data.frame(time=1.01,fixed=0, proportional=200))[,1],
     c(2.23549381260142, 3.20225441314931, 4.1690150136972, 5.13577561424509,
       6.10253621479298), tolerance=1.e-5)
   expect_equal(adjust_for_dividends(
     grid_values=3:7, t=0.9, dt=0.3, r=0, h=0.05+0.04*(3:7), S=250*(23:27), S0=250*25,
-    data.frame(time=1.01,fixed=0, proportional=200)),
+    data.frame(time=1.01,fixed=0, proportional=200))[,1],
     c(2.23983910202986, 3.20073725569112, 4.16108303910297, 5.12087030001549,
       6.08009282445678), tolerance=1.e-5)
   expect_equal(adjust_for_dividends(
     grid_values=3:7, t=0.9, dt=0.3, r=0.3, h=0.05+0.04*(3:7), S=250*(23:27), S0=250*25,
-    data.frame(time=1.01,fixed=0, proportional=200)),
+    data.frame(time=1.01,fixed=0, proportional=200))[,1],
     c(2.19525124852845, 3.15385585170476, 4.11187568490703, 5.06930423502015,
       6.02613492358666), tolerance=1.e-5)
 })
@@ -105,21 +105,21 @@ test_that("Multilayer grid, one div", {
     data.frame(time=1.01,fixed=200,proportional=0))[,1],
     adjust_for_dividends(
       grid_values=nontriv_layer_1, t=0.9, dt=0.3, r=0, h=0, S=250*(20:28), S0=250*25,
-      data.frame(time=1.01,fixed=200,proportional=0)),
+      data.frame(time=1.01,fixed=200,proportional=0))[,1],
     tolerance=1.e-5)
   expect_equal(adjust_for_dividends(
     grid_values=nontriv_grid, t=0.9, dt=0.3, r=0, h=0, S=250*(20:28), S0=250*25,
     data.frame(time=1.01,fixed=200,proportional=0))[,2],
     adjust_for_dividends(
       grid_values=nontriv_layer_2, t=0.9, dt=0.3, r=0, h=0, S=250*(20:28), S0=250*25,
-      data.frame(time=1.01,fixed=200,proportional=0)),
+      data.frame(time=1.01,fixed=200,proportional=0))[,1],
     tolerance=1.e-5)
   expect_equal(adjust_for_dividends(
     grid_values=nontriv_grid, t=0.9, dt=0.3, r=0, h=0.006*(20:28), S=250*(20:28), S0=250*25,
     data.frame(time=1.01,fixed=200,proportional=0))[,2],
     adjust_for_dividends(
       grid_values=nontriv_layer_2, t=0.9, dt=0.3, r=0, h=0.006*(20:28), S=250*(20:28), S0=250*25,
-      data.frame(time=1.01,fixed=200,proportional=0)),
+      data.frame(time=1.01,fixed=200,proportional=0))[,1],
     tolerance=1.e-5)
 })
 
@@ -127,22 +127,22 @@ test_that("Multilayer grid, multiple divs", {
   expect_equal(adjust_for_dividends(
     grid_values=nontriv_grid, t=0.9, dt=0.3, r=0, h=0, S=250*(20:28), S0=250*25, mult_divs)[,1],
     adjust_for_dividends(
-      grid_values=nontriv_layer_1, t=0.9, dt=0.3, r=0, h=0, S=250*(20:28), S0=250*25,mult_divs),
+      grid_values=nontriv_layer_1, t=0.9, dt=0.3, r=0, h=0, S=250*(20:28), S0=250*25,mult_divs)[,1],
     tolerance=1.e-5)
   expect_equal(adjust_for_dividends(
     grid_values=nontriv_grid, t=0.9, dt=0.3, r=0, h=0, S=250*(20:28), S0=250*25,mult_divs)[,2],
     adjust_for_dividends(
-      grid_values=nontriv_layer_2, t=0.9, dt=0.3, r=0, h=0, S=250*(20:28), S0=250*25,mult_divs),
+      grid_values=nontriv_layer_2, t=0.9, dt=0.3, r=0, h=0, S=250*(20:28), S0=250*25,mult_divs)[,1],
     tolerance=1.e-5)
   expect_equal(adjust_for_dividends(
     grid_values=nontriv_grid, t=0.9, dt=0.3, r=0, h=0.006*(20:28), S=250*(20:28), S0=250*25,mult_divs)[,2],
     adjust_for_dividends(
-      grid_values=nontriv_layer_2, t=0.9, dt=0.3, r=0, h=0.006*(20:28), S=250*(20:28), S0=250*25,mult_divs),
+      grid_values=nontriv_layer_2, t=0.9, dt=0.3, r=0, h=0.006*(20:28), S=250*(20:28), S0=250*25,mult_divs)[,1],
     tolerance=1.e-5)
 })
 
 test_that("Dividend adjustments working", {
-  expect_equal(adjust_for_dividends(50*(20:28), 0.9, 0.3, 0.05, 0.09, (20:28), 25.5, div_near_1_yr),
+  expect_equal(adjust_for_dividends(50*(20:28), 0.9, 0.3, 0.05, 0.09, (20:28), 25.5, div_near_1_yr)[,1],
                c(979.359595601146, 1028.29833225701, 1077.23349674515, 1126.16507994684,
                  1175.09307272263, 1224.01746591225, 1272.93825033462, 1321.85541678775,
                  1370.76895604874),

@@ -27,7 +27,9 @@ Suggests:
     ggplot2,
     MASS,
     RColorBrewer,
-    RQuantLib
+    RQuantLib,
+    R.cache,
+    Quandl
 License: GPL (>= 2)
 LazyData: TRUE
 VignetteBuilder: knitr

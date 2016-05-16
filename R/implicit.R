@@ -133,6 +133,7 @@ construct_tridiagonals = function(sigma, structure_constant, drift)
 #'   then expected to be equal to \code{fixed + proportional * S / S0}
 take_implicit_timestep = function(t, S, full_discount_factor,
                                   local_discount_factor,
+                                  discount_factor_fcn,
                                   prev_grid_values, survival_probabilities,
                                   tridiag_matrix_entries,
                                   instrument=NULL,
@@ -159,7 +160,9 @@ take_implicit_timestep = function(t, S, full_discount_factor,
   if (is.blank(instrument) || is.blank(instrument$recovery_fcn)) {
     recovery_values = 0.0
   } else {
-    recovery_at_t = instrument$recovery_fcn(v=hold_cond_on_surv/full_discount_factor, S=S, t=t)
+    recovery_at_t = instrument$recovery_fcn(v=hold_cond_on_surv/full_discount_factor,
+                                            S=S, t=t,
+                                            discount_factor_fctn=discount_factor_fcn)
     recovery_values = full_discount_factor * recovery_at_t
   }
   # The overall value of the derivative, assuming both parties want to
@@ -269,6 +272,7 @@ timestep_instruments = function(z, prev_grid_values,
         }
         instr_grid_vals = take_implicit_timestep(t, S, full_discount_factor,
                                                  local_discount_factor,
+                                                 discount_factor_fcn,
                                                  prev_instr_grid_values,
                                                  survival_probabilities,
                                                  matrix_entries,
@@ -493,6 +497,7 @@ iterate_grid_from_timestep = function(starting_time_step, time_pts, z, S0, instr
 #' @param const_default_intensity A constant to use for the instantaneous default intensity in case \code{default_intensity_fcn}
 #'  is not given
 #' @param grid_center A reasonable central value for the grid, defaults to S0 or an instrument strike
+#' @family Equity Dependent Default Intensity
 #'
 #' @export form_present_value_grid
 form_present_value_grid = function(S0, num_time_steps, instruments,
@@ -569,9 +574,14 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
                         variance_cumulation_fcn,
                         dividends=dividends)
   flog.info("Completed PDE integration",
-            name='ragtop.implicit')
-  present_value_grid = cbind(as.matrix(grid[1,,]), matrix(stock_level_fcn(grid_structure$z,0), ncol=1))
-  colnames(present_value_grid) = c(names(instruments), "Underlying")
+            name='ragtop.implicit.form_present_value_grid')
+  present_value_grid = cbind(as.matrix(grid[1,,]),
+                             matrix(stock_level_fcn(grid_structure$z,0), ncol=1))
+  if (is.null(names(instruments))) {
+    colnames(present_value_grid)[length(instruments)+1] = "Underlying"
+  } else {
+    colnames(present_value_grid) = c(names(instruments), "Underlying")
+  }
   present_value_grid
 }
 
@@ -582,8 +592,9 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
 #'  of stock prices.  Once the grid has been created, interpolate to obtain the
 #'  value of each instrument at the present stock price \code{S0}
 #'
-#' @inheritParams timestep_instruments
+#' @inheritParams form_present_value_grid
 #' @return A list of present values, with the same names as \code{instruments}
+#' @family Equity Dependent Default Intensity
 #'
 #' @export find_present_value
 find_present_value = function(S0, num_time_steps, instruments,
@@ -597,6 +608,19 @@ find_present_value = function(S0, num_time_steps, instruments,
                                    structure_constant=2.0,
                                    std_devs_width=3.0)
 {
+  if (is.blank(dividends)) {
+    divs_descr = "NULL"
+  } else {
+    divs_descr = nrow(dividends)
+  }
+  flog.info("find_present_value(S0=%s, num_time_steps=%s, <%s instruments>, <divs: %s>, structure_constant=%s, std_devs_width=%s)",
+            S0, num_time_steps, length(instruments), divs_descr, structure_constant, std_devs_width,
+            name='ragtop.implicit.find_present_value')
+  if (is.null(names(instruments))) {
+    names(instruments) = lapply(instruments,
+                                function(inst) {inst$name})
+    names(instruments)[is.na(names(instruments))] = seq(1,sum(is.na(names(instruments))))
+  }
   present_value_grid = form_present_value_grid(S0=S0, num_time_steps=num_time_steps, instruments=instruments,
                                                const_volatility=const_volatility, const_short_rate=const_short_rate,
                                                const_default_intensity=const_default_intensity, override_Tmax=override_Tmax,

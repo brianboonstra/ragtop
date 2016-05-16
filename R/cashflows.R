@@ -96,7 +96,8 @@ adjust_for_dividends = function(grid_values, t, dt, r, h, S, S0, dividends)
                "must match underlying prices length",num_underlying_vals))
   }
   if (is.blank(dividends)) {
-    flog.info("No discrete dividends to treat", name='ragtop.cashflows.dividends')
+    flog.debug("No discrete dividends to treat",
+               name='ragtop.cashflows.dividends')
   } else {
     # Divs are present. Sum any relevant ones
     div_sum = 0 * S
@@ -104,18 +105,24 @@ adjust_for_dividends = function(grid_values, t, dt, r, h, S, S0, dividends)
     relevant_divs = dividends[included_ix,c('time', 'fixed', 'proportional')]
     if (nrow(relevant_divs) > 0) {
       flog.info("Found %s dividends from t=%s to t+dt=%s",
-                nrow(relevant_divs), t, t + dt)
+                nrow(relevant_divs), t, t + dt,
+                name='ragtop.cashflows.dividends')
       div_sum = time_adj_dividends(relevant_divs, t + dt, r, h, S, S0)
     } else {
       flog.info("No discrete dividends to treat in time interval (%s, %s]",
-                 t, t+dt)
+                 t, t+dt,
+                name='ragtop.cashflows.dividends')
     }
     if (any(div_sum != 0)) {
       if (is.null(dim(grid_values)) || length(dim(grid_values))==1 || dim(grid_values)[2]==1) {
-        flog.info("Grid values for div adjustment have just one dimension: %s",dput(grid_values))
-        grid_values = shift_for_dividends(grid_values, S, div_sum)
+        flog.info("Grid values for div adjustment have just one dimension: length(dim(grid_values))=%s, dim(grid_values)=%s",
+                  length(dim(grid_values)), dim(grid_values),
+                  name='ragtop.cashflows.dividends')
+        grid_values = as.matrix(shift_for_dividends(grid_values, S, div_sum), ncol=1)
       } else {
-        flog.info("Grid values for div adjustment have %s layers", num_layers)
+        flog.info("Grid values for div adjustment have %s layers",
+                  num_layers,
+                  name='ragtop.cashflows.dividends')
         grid_values = apply(grid_values, 2, shift_for_dividends, S, div_sum) # MARGIN=2 means to apply column-wise
       }
     }

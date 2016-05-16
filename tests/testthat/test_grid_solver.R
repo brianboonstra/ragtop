@@ -41,42 +41,42 @@ v_2 = 2*v_1
 v_both = matrix(c(v_1,v_2), ncol=2)
 test_that("Single-instrument timestep", {
   expect_equal(as.vector( # as.vector because get a matrix with 1 column back
-    take_implicit_timestep(1, 1, 1, 1, c(0.95,0.9, 0.8), 1,
+    take_implicit_timestep(1, 1, 1, 1, NULL, c(0.95,0.9, 0.8), 1,
                            list(super=c(0,0), diag=c(1,1,1), sub=c(0,0)))),
     c(0.95, 0.9, 0.8),
     tolerance=1.e-6)
   expect_equal(as.vector( # as.vector because get a matrix with 1 column back
-    take_implicit_timestep(1, 1, 1, 1, c(0.95,0.9, 0.8), 0.8,
+    take_implicit_timestep(1, 1, 1, 1, NULL, c(0.95,0.9, 0.8), 0.8,
                            list(super=c(0,0), diag=c(1,1,1), sub=c(0,0)))),
     c(0.76, 0.72, 0.64),
     tolerance=1.e-6)
   expect_equal(as.vector( # as.vector because get a matrix with 1 column back
-    take_implicit_timestep(1, 0.8, 1, 1, c(0.95,0.9, 0.8), 1,
+    take_implicit_timestep(1, 0.8, 1, 1, NULL, c(0.95,0.9, 0.8), 1,
                            list(super=c(0,0), diag=c(1,1,1), sub=c(0,0)))),
     c(0.95, 0.9, 0.8),
     tolerance=1.e-6)
   expect_equal(as.vector( # as.vector because get a matrix with 1 column back
-    take_implicit_timestep(1, 1, 1, 1, v_1, 1,
+    take_implicit_timestep(1, 1, 1, 1, NULL, v_1, 1,
                            list(super=c(-0.15,0,0), diag=c(1.15,1,1,1.1), sub=c(0,0,-0.1)))),
     c(0.943478260869565, 0.9, 0.8, 0.618181818181818),
     tolerance=1.e-6)
   expect_equal(as.vector( # as.vector because get a matrix with 1 column back
-    take_implicit_timestep(1, 1, 1, 1, v_1, 1,
+    take_implicit_timestep(1, 1, 1, 1, NULL, v_1, 1,
                            list(super=c(-0.15,-0.15,-0.15), diag=c(1.15,1.3,1.3,1.1), sub=c(-0.15,-0.15,-0.1)))),
       c(0.942454838513472, 0.892153761936622, 0.789544431603917, 0.617231311963992),
       tolerance=1.e-6)
   expect_equal(as.vector( # as.vector because get a matrix with 1 column back
-    take_implicit_timestep(1, 1, 1, 1, v_1, 0.8,
+    take_implicit_timestep(1, 1, 1, 1, NULL, v_1, 0.8,
                            list(super=c(-0.15,-0.15,-0.15), diag=c(1.15,1.3,1.3,1.1), sub=c(-0.15,-0.15,-0.1)))),
       c(0.753963870810778, 0.713723009549298, 0.631635545283134, 0.493785049571194),
       tolerance=1.e-6)
   expect_equal(as.vector( # as.vector because get a matrix with 1 column back
-    take_implicit_timestep(1, 1, 1, 1, v_2, 0.8,
+    take_implicit_timestep(1, 1, 1, 1, NULL, v_2, 0.8,
                            list(super=c(-0.15,-0.15,-0.15), diag=c(1.15,1.3,1.3,1.1), sub=c(-0.15,-0.15,-0.1)))),
       2*c(0.753963870810778, 0.713723009549298, 0.631635545283134, 0.493785049571194),
       tolerance=1.e-6)
   expect_equal(
-    take_implicit_timestep(1, 1, 1, 1, v_both, 0.8,
+    take_implicit_timestep(1, 1, 1, 1, NULL, v_both, 0.8,
                            list(super=c(-0.15,-0.15,-0.15), diag=c(1.15,1.3,1.3,1.1), sub=c(-0.15,-0.15,-0.1))),
       structure(c(0.753963870810778, 0.713723009549298, 0.631635545283134,
                   0.493785049571194, 1.50792774162156, 1.4274460190986, 1.26327109056627,

@@ -75,6 +75,13 @@ grid_amer_price = find_present_value(S0=100, instruments=list(amer_put=amer_put)
 test_that("American options correctly priced", {
   expect_equal(amer_put_price_20k_steps, grid_amer_price$amer_put, tolerance=1.e-1)
 })
+cv_amer_price = as.numeric(american(PUT, S0=100, K=amer_put$strike,
+                                    time=amer_put$maturity,
+                                    const_short_rate = 0.06, const_volatility=0.20,
+                                    num_time_steps=200))
+test_that("American options in control variate scheme", {
+  expect_equal(amer_put_price_20k_steps, cv_amer_price, tolerance=2.e-2)
+})
 
 long_term_ITM_put = EuropeanOption(maturity=3.53, strike=200, callput=PUT,
                                   discount_factor_fcn=pct2, name='Put200')

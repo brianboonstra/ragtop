@@ -49,14 +49,16 @@ PUT = -1
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
 #'   then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
-#'   dividends will be converted to proprtional for purposes of this algorithm.
+#'   dividends will be converted to proportional for purposes of this algorithm.
 #' @return A list with elements \describe{
 #'   \item{\code{Price}}{The present value(s)}
 #'   \item{\code{Delta}}{Sensitivity to underlying price}
 #'   \item{\code{Vega}}{Sensitivity to volatility}
 #' }
+#' @family European Options
+#' @family Equity Independent Default Intensity
 #' @examples
-#' blackscholes(callput=-1, S0=100, K=90, r=0.03, default_intensity=0.07, time=1, vola=0.5)
+#' blackscholes(callput=-1, S0=100, K=90, r=0.03, time=1, vola=0.5, default_intensity=0.07)  # -1 is a PUT
 #' @export blackscholes
 blackscholes = function(callput, S0, K, r, time, vola,
                         default_intensity=0, divrate=0, borrow_cost=0,
@@ -65,12 +67,10 @@ blackscholes = function(callput, S0, K, r, time, vola,
   if (!is.blank(dividends)) {
     # Divs are present. Sum any relevant ones and get present value.
     # Form an initial sum of the correct shape.
-    div_sum = 0 * S0 + 0*K + 0*r + 0*time + 0*vola + 0*callput
+    div_sum = 0 * S0 + 0 * K + 0 * r + 0 * time + 0 * vola + 0 * callput
     included_ix = (dividends$time > 0)  & (dividends$time <= time)
     relevant_divs = dividends[included_ix,c('time', 'fixed', 'proportional')]
     if (nrow(relevant_divs) > 0) {
-      flog.info("Found %s dividends",
-                nrow(relevant_divs))
       # Discount without consideration for default intensity.  For options
       #  the absence of dividends in case of default is handled by terminal
       #  likelihood.
@@ -78,11 +78,19 @@ blackscholes = function(callput, S0, K, r, time, vola,
       #  in case of proportional dividends.  For fixed dividends, only a
       #  grid scheme can properly handle it.  We just pretend they are
       #  proportional here.
-      div_sum = div_sum + time_adj_dividends(relevant_divs, 0, r,
-                                             h=0, S=S0, S0=S0)
+      div_amt = time_adj_dividends(relevant_divs, 0, r,
+                                   h=0, S=S0, S0=S0)
+      div_sum = div_sum + div_amt
+      flog.info("Found %s dividends summing to %s in present value",
+                nrow(relevant_divs), div_amt,
+                name="ragtop.blackscholes")
       S0 = S0 - div_sum
     }
   }
+  flog.debug("blackscholes():  callput %s\nS0=%s\n  K=%s\n  r=%s\n  time=%s\n  vola=%s\n  default_intensity=%s\n  divrate=%s\n  borrow_cost=%s",
+             callput, S0, K, r, time, vola,
+             default_intensity, divrate, borrow_cost,
+             name="ragtop.blackscholes")
   sd = vola*sqrt(time)
   q = divrate + borrow_cost - default_intensity
   d1 = log(S0/K)+(r-q)*time+0.5*sd^2
@@ -123,6 +131,19 @@ blackscholes = function(callput, S0, K, r, time, vola,
 #' @param variance_cumulation_fcn A function for computing total stock variance
 #'   occurring during this timestep, with arguments \code{T}, \code{t}.  E.g. with
 #'   a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}.
+#' @family European Options
+#' @family Equity Independent Default Intensity
+#' @examples
+#' black_scholes_on_term_structures(callput=-1, S0=100, K=90, time=1,
+#'                                  discount_factor_fcn = function(T, t, ...) {
+#'                                    exp(-0.03 * (T - t))
+#'                                  },
+#'                                  survival_probability_fcn = function(T, t, ...) {
+#'                                    exp(-0.07 * (T - t))
+#'                                  },
+#'                                  variance_cumulation_fcn = function(T, t) {
+#'                                    0.45 ^ 2 * (T - t)
+#'                                  })
 #' @export black_scholes_on_term_structures
 black_scholes_on_term_structures = function(callput, S0, K, time,
            const_volatility=0.5, const_short_rate=0, const_default_intensity=0,
@@ -139,16 +160,21 @@ black_scholes_on_term_structures = function(callput, S0, K, time,
   if (time<=0) {
     stop("Expiration time must be strictly positive.")
   }
+  flog.debug("black_scholes_on_term_structures():  callput %s\nS0=%s\n  K=%s\n  time=%s\n  divrate=%s\n  borrow_cost=%s",
+             callput, S0, K, time, dividend_rate, borrow_cost,
+             name="ragtop.blackscholes")
   vola = sqrt(variance_cumulation_fcn(time, 0)/time)
   std_time = time
   r = -log(discount_factor_fcn(time,0))/time
   h = -log(survival_probability_fcn(time,0))/time
   flog.debug("black_scholes_on_term_structures() finds constant equivalents r=%s, h=%s and vola=%s",
-             r, h, vola)
+             r, h, vola,
+             name="ragtop.blackscholes")
   bs = blackscholes(callput=callput, S0=S0, K=K, r=r, time=std_time, vola=vola,
                     default_intensity=h, divrate=dividend_rate, borrow_cost=borrow_cost,
                     dividends=dividends)
   flog.debug("black_scholes_on_term_structures() finds P=%s D=%s Vg=%s",
-             bs$Price, bs$Delta, bs$Vega)
+             bs$Price, bs$Delta, bs$Vega,
+             name="ragtop.blackscholes")
   bs
 }
