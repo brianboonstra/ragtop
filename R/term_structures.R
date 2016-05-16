@@ -29,6 +29,7 @@ library(futile.logger)
 #'   as to give negative forward variance)
 #' @return A function taking two time arguments, which returns the cumulated
 #'   variance from the second to the first
+#' @export variance_cumulation_from_vols
 variance_cumulation_from_vols = function(vols_df)
 {
   N = nrow(vols_df)
