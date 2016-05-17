@@ -801,7 +801,7 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
       next_distance = first_distance
       f.lower = next_distance
       flog.info("Beginning search for lower bound vola")
-      while (iter<20 && (next_distance*first_distance>0) && (abs(next_distance)>(brent_tol))) {
+      while ((iter<20) && (next_distance*first_distance>0) && (abs(next_distance)>(brent_tol))) {
         iter = iter + 1
         min_vol = max(min_vol/1.1, sqrt(last_cumul_variance/eq_opt$maturity)*1.02)
         next_distance = distfunc(min_vol)
