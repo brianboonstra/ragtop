@@ -18,7 +18,7 @@
 library(stats)
 library(futile.logger)
 
-#' Implied volatility of european-exercise option
+#' Implied volatility of european-exercise option under Black-Scholes or a jump-process extension
 #'
 #' Find default-free volatility (not necessarily just Black-Scholes) based on
 #'  known interest rates and hazard rates, using a given option price.
@@ -38,8 +38,10 @@ library(futile.logger)
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
 #'   then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
-#'   dividends will be converted to proprtional for purposes of this algorithm.
+#'   dividends will be converted to proportional for purposes of this algorithm.  To handle
+#'   truly fixed dividends, see \code{\link{implied_jump_process_volatility}}
 #' @return A scalar volatility
+#' @keywords Black-Scholes
 #' @family Implied Volatilities
 #' @family Equity Independent Default Intensity
 #' @family European Options
@@ -119,7 +121,7 @@ implied_volatility = function(option_price, callput, S0, K, r, time,
   vola
 }
 
-#' Implied volatilities of european-exercise options
+#' Implied volatilities of european-exercise options under Black-Scholes or a jump-process extension
 #'
 #' Find default-free volatilities based on known interest rates and hazard rates, using
 #'   a given option price.
@@ -144,13 +146,13 @@ implied_volatility = function(option_price, callput, S0, K, r, time,
 #' @export implied_volatilities
 implied_volatilities = Vectorize(implied_volatility)
 
-#' Find volatility assuming given default risk from volatility where default risk was presumed zero
+#' Find jump process volatility with a given default risk from a straight Black-Scholes volatility
 #'
 #' Find default-free volatility (i.e. volatility of a Wiener process with a
 #'   companion jump process to default) based on known interest rates and hazard rates, using
 #'   and at-the-money put option at the given tenor to set the standard price.
 #'
-#' @param default_free_vola BlackScholes volatility of an option with no default assumption
+#' @param bs_vola BlackScholes volatility of an option with no default assumption
 #' @param time Time to expiration of associated option contracts
 #' @param const_short_rate A constant to use for the instantaneous interest rate in case \code{discount_factor_fcn}
 #'  is not given
@@ -161,8 +163,8 @@ implied_volatilities = Vectorize(implied_volatility)
 #' @return A scalar volatility
 #' @family Implied Volatilities
 #' @family Equity Independent Default Intensity
-#' @export calibrate_defaultable_volatility
-calibrate_defaultable_volatility = function(default_free_vola, time,
+#' @export equivalent_jump_vola_to_bs
+equivalent_jump_vola_to_bs = function(bs_vola, time,
                                           const_short_rate=0, const_default_intensity=0,
                                           discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
                                           survival_probability_fcn = function(T, t, ...){exp(-const_default_intensity*(T-t))},
@@ -173,7 +175,7 @@ calibrate_defaultable_volatility = function(default_free_vola, time,
                                           max.iter=100)
 {
   default_free_price = black_scholes_on_term_structures(-1, 1, 1, time,
-                                                        const_volatility=default_free_vola,
+                                                        const_volatility=bs_vola,
                                                         discount_factor_fcn = discount_factor_fcn,
                                                         survival_probability_fcn = function(T,t){1},
                                                         dividends=dividends,
@@ -191,7 +193,7 @@ calibrate_defaultable_volatility = function(default_free_vola, time,
     return(NA)
   } else {
     flog.debug("Default free price %s exceeds the minimum price %s so a solution exists",
-               default_free_price, min_value)
+               default_free_price, min_value, name='ragtop.calibration.equivalent_jump_vola_to_bs')
   }
   vola = 0.9*default_free_vola  # Reasonable starting guess without doing much math
   bs_vals = black_scholes_on_term_structures(-1, 1, 1, time,
@@ -203,7 +205,7 @@ calibrate_defaultable_volatility = function(default_free_vola, time,
                                                        dividend_rate=dividend_rate)
   flog.debug("Defaultable volatility black_scholes_on_term_structures() initially testing %s against %s at err %s vega %s",
              vola, default_free_price, bs_vals$Price - default_free_price, bs_vals$Vega,
-             name='ragtop.calibration.calibrate_defaultable_volatility')
+             name='ragtop.calibration.equivalent_jump_vola_to_bs')
   iter = 0
   while ((abs(bs_vals$Price/default_free_price-1.0)>relative_tolerance) && (iter<max.iter)) {
     vola_adj = -(bs_vals$Price-default_free_price)/bs_vals$Vega  # Newton's method
@@ -221,19 +223,19 @@ calibrate_defaultable_volatility = function(default_free_vola, time,
                                                dividend_rate=dividend_rate)
     flog.debug("Defaultable volatility testing black_scholes_on_term_structures(PUT,...) %s at err %s vega %s",
                vola, bs_vals$Price - default_free_price, bs_vals$Vega,
-               name='ragtop.calibration.calibrate_defaultable_volatility')
+               name='ragtop.calibration.equivalent_jump_vola_to_bs')
     iter = iter + 1
   }
   vola
 }
 
-#' Find volatility where default risk is presumed zero from volatility assuming given default risk
+#' Find straight Black-Scholes volatility equivalent to jump process with a given default risk
 #'
-#' Find defaultable Black-Scholes volatility based on known
+#' Find Black-Scholes volatility based on known
 #'   interest rates and hazard rates, using
 #'   an at-the-money put option at the given tenor to set the standard price.
 #'
-#' @param defaultable_volatility Volatility of default-free process
+#' @param jump_process_vola Volatility of default-free process
 #' @param time Time to expiration of associated option contracts
 #' @param const_short_rate A constant to use for the instantaneous interest rate in case \code{discount_factor_fcn}
 #'  is not given
@@ -244,8 +246,8 @@ calibrate_defaultable_volatility = function(default_free_vola, time,
 #' @return A scalar defaultable volatility of an option
 #' @family Implied Volatilities
 #' @family Equity Independent Default Intensity
-#' @export equivalent_bs_vola_to_defaultable
-equivalent_bs_vola_to_defaultable = function(defaultable_volatility, time,
+#' @export equivalent_bs_vola_to_jump
+equivalent_bs_vola_to_jump = function(jump_process_vola, time,
                                             const_short_rate=0, const_default_intensity=0,
                                             discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
                                             survival_probability_fcn = function(T, t, ...){exp(-const_default_intensity*(T-t))},
@@ -256,7 +258,7 @@ equivalent_bs_vola_to_defaultable = function(defaultable_volatility, time,
                                             max.iter=100)
 {
   defaultable_price = black_scholes_on_term_structures(-1, 1, 1, time,
-                                                        const_volatility=defaultable_volatility,
+                                                        const_volatility=jump_process_vola,
                                                         discount_factor_fcn = discount_factor_fcn,
                                                         survival_probability_fcn = survival_probability_fcn,
                                                         dividends=dividends,
@@ -272,7 +274,7 @@ equivalent_bs_vola_to_defaultable = function(defaultable_volatility, time,
                                              dividend_rate=dividend_rate)
   flog.debug("Equiv BS  volatility black_scholes_on_term_structures() testing %s against %s at err %s vega %s",
              vola, default_free_price, bs_vals$Price - defaultable_price, bs_vals$Vega,
-             name='ragtop.calibration.equivalent_bs_vola_to_defaultable')
+             name='ragtop.calibration.equivalent_bs_vola_to_jump')
   iter = 0
   while ((abs(bs_vals$Price/defaultable_price-1.0)>relative_tolerance) && (iter<max.iter)) {
     vola_adj = -(bs_vals$Price-defaultable_price)/bs_vals$Vega  # Newton's method
@@ -286,7 +288,7 @@ equivalent_bs_vola_to_defaultable = function(defaultable_volatility, time,
                                                dividend_rate=dividend_rate)
     flog.debug("Equiv BS volatility testing black_scholes_on_term_structures(PUT,...) %s at err %s vega %s",
                vola, bs_vals$Price - default_free_price, bs_vals$Vega,
-               name='ragtop.calibration.equivalent_bs_vola_to_defaultable')
+               name='ragtop.calibration.equivalent_bs_vola_to_jump')
     iter = iter + 1
   }
   vola
@@ -565,10 +567,10 @@ american_implied_volatility = function(option_price, callput, S0, K, time,
 #' @family Implied Volatilities
 #' @family Equity Dependent Default Intensity
 #' @examples
-#' instrument_implied_volatility(25, AmericanOption(maturity=1.1, strike=100, callput=-1), S0=100, num_time_steps=50, relative_tolerance=1.e-3)
+#' implied_jump_process_volatility(25, AmericanOption(maturity=1.1, strike=100, callput=-1), S0=100, num_time_steps=50, relative_tolerance=1.e-3)
 #'
-#' @export instrument_implied_volatility
-instrument_implied_volatility = function(instrument_price, instrument, variance_cumulation_fcn=NULL,
+#' @export implied_jump_process_volatility
+implied_jump_process_volatility = function(instrument_price, instrument, variance_cumulation_fcn=NULL,
                                          ...,
                                          starting_volatility_estimate=0.85,
                                          relative_tolerance=5.e-3,
@@ -587,28 +589,28 @@ instrument_implied_volatility = function(instrument_price, instrument, variance_
   if (instrument_price<min_value) {
     flog.warn("The provided instrument price %s is so low that no positive volatility can explain it.  Minimum values would be %s",
               instrument_price, min_value,
-              name='ragtop.calibration.instrument_implied_volatility')
+              name='ragtop.calibration.implied_jump_process_volatility')
     return(NA)
   } else {
     flog.debug("Instrument price price %s exceeds the minimum price %s so a solution exists",
                instrument_price, min_value,
-               name='ragtop.calibration.instrument_implied_volatility')
+               name='ragtop.calibration.implied_jump_process_volatility')
   }
   if (instrument_price>max_value) {
     flog.warn("The provided option price %s is so high that it exceeds the maximum volatility specified %s, at which the price is %s",
               instrument_price, max_vola, max_value,
-              name='ragtop.calibration.instrument_implied_volatility')
+              name='ragtop.calibration.implied_jump_process_volatility')
     return(NA)
   } else {
     flog.debug("Option price price %s less than the maximum price %s so a solution exists",
                instrument_price, max_value,
-               name='ragtop.calibration.instrument_implied_volatility')
+               name='ragtop.calibration.implied_jump_process_volatility')
   }
   vola = starting_volatility_estimate
   grid_val = compute_price(vola)
   flog.debug("Defaultable volatility initial test used %s against %s at err %s",
              vola, instrument_price, grid_val - instrument_price,
-             name='ragtop.calibration.instrument_implied_volatility')
+             name='ragtop.calibration.implied_jump_process_volatility')
   if (grid_val > instrument_price) {
     max_vola = vola
   } else if (grid_val < instrument_price) {
@@ -627,9 +629,222 @@ instrument_implied_volatility = function(instrument_price, instrument, variance_
     }
     flog.debug("Defaultable volatility testing %s at err %s ",
                vola, grid_val - instrument_price,
-               name='ragtop.calibration.instrument_implied_volatility')
+               name='ragtop.calibration.implied_jump_process_volatility')
     iter = iter + 1
   }
   ## TODO: Return min_vola or max_vola if one of them was closer
   vola
+}
+
+#' Fit piecewise constant volatilities to a set of equity options
+#'
+#' Given a set of equity options with increasing tenors, along with
+#' target prices for those options, and a set of equity-lined default
+#' SDE parameters, fit a vector of piecewise constant
+#' volatilities and an associated cumulative variance function
+#' to them.
+#'
+#' By default, the fitting happens in implied Black-Scholes volatility
+#' space for better normalization.  That is to say, the fitting does pricing
+#' using the \emph{full} SDE and PDE solver via \code{\link{find_present_value}}, but
+#' judges fit quality on the basis of running resulting prices through a
+#' nonlinear transformation that just
+#' happens to come from the straight Black-Scholes model.
+#'
+#' @inheritParams find_present_value
+#' @param eq_options A list of options to find prices for.  Each must have fields \code{callput},
+#'                   \code{maturity}, and \code{strike}.  This list must be in strictly increasing order of maturity.
+#' @param mid_prices Prices to match
+#' @param relative_spread_tolerance Tolerance multiplier on bid-ask spreads taken from vol normalization
+#' @param initial_vols_guess Initial set of volatilities to try in the root finder
+#' @param spreads Spreads within which any match is tolerable
+#' @param survival_probability_fcn A function for probability of survival, with
+#'   arguments \code{T}, \code{t} and \code{T>t}.  E.g. with
+#'   a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}.  This argument is
+#'   only used in normalization of prices to vols for root finder tolerance, and
+#'   is therefore entirely optional
+#' @param force_same_grid Price all options on the same grid, rather than having smaller timestep sizes for earlier maturities
+#' @param use_impvol Judge fit quality on implied vol distance rather than price distance
+#' @param ... Futher arguments to \code{\link{find_present_value}}
+#' @return A list with two elements, \code{volatilities} and \code{cumulation_function}.  The \code{cumulation_function} will
+#'   be a 2-parameter function giving cumulated variances, as created by code{\link{variance_cumulation_from_vols}}
+#' @keywords calibration
+#' @keywords Black-Scholes
+#' @concept implied volatility
+#' @family Implied Volatilities
+#' @family Equity Dependent Default Intensity
+#'
+#' @export fit_variance_cumulation
+fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
+                                   initial_vols_guess=0.55 + 0*mid_prices,
+                                   use_impvol=TRUE,
+                                   relative_spread_tolerance=0.01,
+                                   force_same_grid=FALSE,
+                                   num_time_steps=100,
+                                   const_short_rate=0, const_default_intensity=0,
+                                   discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
+                                   survival_probability_fcn = function(T, t, ...){exp(-const_default_intensity*(T-t))},
+                                   default_intensity_fcn = function(t, S, ...){const_default_intensity+0.0*S},
+                                   dividends=NULL,
+                                   borrow_cost=0.0,
+                                   dividend_rate=0.0,
+                                   ...)
+{
+  N = length(eq_options)
+  if (N != length(mid_prices) || (0==N)) {
+    stop("Number of prices to match must agree with number of options (",N,") in the calibration of variance")
+  } else {
+    flog.info("fit_variance_cumulation on %s options...", N,
+              name='ragtop.calibration.fit_variance_cumulation')
+  }
+  maturities = as.numeric(lapply(eq_options, function(x){x$maturity}))
+  compute_var_cum_f = function(vs) {
+    variance_cumulation_from_vols(data.frame(volatility=as.numeric(vs), time=maturities))
+  }
+  compute_bsimpvol = function(eq_opt, tgt) {
+    iv = implied_volatility_with_term_struct(tgt, callput=eq_opt$callput,
+                                        S0=S0, K=eq_opt$strike, time=eq_opt$maturity,
+                                        discount_factor_fcn=discount_factor_fcn,
+                                        survival_probability_fcn=survival_probability_fcn,
+                                        dividends=dividends, borrow_cost=borrow_cost,
+                                        dividend_rate=dividend_rate)
+    flog.debug("BS impvol of %s maturity %s at price %s is %s",
+               eq_opt$name, eq_opt$maturity, tgt, iv,
+               name='ragtop.calibration.fit_variance_cumulation')
+    iv
+  }
+  override_Tmax = NA
+  solver_tolerance = max(0.005, 0.005 * abs(mid_prices))
+  vols = as.numeric(initial_vols_guess)
+  if (force_same_grid) {
+    override_Tmax = eq_options[[length(eq_options)]]$maturity
+  }
+  impvols = NA * mid_prices
+  if (use_impvol) {
+    for (i in 1:N) {
+      eq_opt = eq_options[[i]]
+      impvols[i] = compute_bsimpvol(eq_opt, mid_prices[[i]])
+      flog.info("Normalized t=%s price %s to BS impvol %s",
+                eq_opt$maturity, mid_prices[[i]], impvols[i],
+                name='ragtop.calibration.fit_variance_cumulation')
+    }
+    if (is.blank(spreads)) {
+      solver_tolerance = max(0.0001, 0.03 * abs(impvols))
+      flog.info("No spreads to set tolerances in impvol terms, just chose values ranging from %s to %s",
+                min(solver_tolerance), max(solver_tolerance),
+                name='ragtop.calibration.fit_variance_cumulation')
+    } else {
+      for (i in 1:N) {
+        bidvol = NA
+        askvol = NA
+        bidvol = try(compute_bsimpvol(eq_opt, mid_prices[[i]] - 0.5*spreads[[i]]), silent=TRUE)
+        askvol = try(compute_bsimpvol(eq_opt, mid_prices[[i]] + 0.5*spreads[[i]]), silent=TRUE)
+        if (is.blank(bidvol) || is.blank(askvol)) {
+          flog.info("Either bid vol %s or ask vol %s was not computable from %s and %s",
+                    bidvol, askvol, mid_prices[[i]] - 0.5*spreads[[i]], mid_prices[[i]] + 0.5*spreads[[i]],
+                    name='ragtop.calibration.fit_variance_cumulation')
+        } else {
+          solver_tolerance[i] = relative_spread_tolerance * (askvol-bidvol)
+        }
+      }
+      flog.info("Using spreads to set tolerances in impvol terms, ranging from %s to %s",
+                min(solver_tolerance), max(solver_tolerance),
+                name='ragtop.calibration.fit_variance_cumulation')
+    }
+  } else if (!(is.blank(spreads))) {
+    solver_tolerance = pmax(0.005 * abs(mid_prices), spreads)
+    flog.info("Using spreads to set tolerances, ranging from %s to %s",
+              min(solver_tolerance), max(solver_tolerance),
+              name='ragtop.calibration.fit_variance_cumulation')
+  }
+  last_cumul_variance = 0
+  for (i in 1:N) {
+    eq_opt = eq_options[[i]]
+    flog.info("Using instrument %s to fit vol at t=%s",
+              eq_opt$name, eq_opt$maturity,
+              name='ragtop.calibration.fit_variance_cumulation')
+    distfunc = function(v) {
+      vols[i] = v
+      cumul_func = compute_var_cum_f(vols)
+      flog.debug("Term struct solver for instrument %s will test vola %s giving cumulative variance %s",
+                i, v, cumul_func(eq_opt$maturity),
+                name='ragtop.calibration.fit_variance_cumulation')
+      computed_price = find_present_value(S0=S0, num_time_steps=num_time_steps,
+                                          override_Tmax=override_Tmax,
+                                          instruments=list(tsopt=eq_opt),
+                                          variance_cumulation_fcn=cumul_func,
+                                          ...)$tsopt
+      if (use_impvol) {
+        civ = compute_bsimpvol(eq_opt, computed_price)
+        distance = civ - impvols[[i]]
+        flog.info("Term struct solver for instrument %s tested vola %s and found price %s for an impvol of %s which is distance %s from %s",
+                  i, v, computed_price, civ, distance, impvols[[i]],
+                  name='ragtop.calibration.fit_variance_cumulation')
+      } else {
+        distance = computed_price - mid_prices[[i]]
+        flog.info("Term struct solver for instrument %s tested vola %s and found price %s which is distance %s from %s",
+                  i, v, computed_price, civ, distance, mid_prices[[i]],
+                  name='ragtop.calibration.fit_variance_cumulation')
+      }
+      distance
+    }
+    brent_tol = solver_tolerance[[i]]
+    done = FALSE
+    # uniroot interval extension fails.  Extend ourselves
+    test_vol = max(sqrt(last_cumul_variance/eq_opt$maturity)*1.02, initial_vols_guess[[i]])
+    first_distance = distfunc(test_vol)
+    if (first_distance>0) {
+      max_vol = test_vol
+      min_vol = max_vol
+      iter = 0
+      next_distance = first_distance
+      while (iter<20 && next_distance*first_distance>0 && abs(next_distance)>brent_tol) {
+        iter = iter + 1
+        min_vol = max(min_vol/1.1, sqrt(last_cumul_variance/eq_opt$maturity)*1.02)
+        next_distance = distfunc(min_vol)
+      }
+      if (abs(next_distance)<=brent_tol) {
+        found_v = min_vol
+        done = TRUE
+      }
+      if (iter==20) {
+        stop("Could not fit term structure for t=",eq_opt$maturity,", number ",i,". Could not find min")
+      }
+    } else {
+      min_vol = test_vol
+      max_vol = min_vol
+      iter = 0
+      next_distance = first_distance
+      while (iter<20 && next_distance*first_distance>0) {
+        iter = iter + 1
+        max_vol = max_vol * 1.1
+        next_distance = distfunc(max_vol)
+      }
+      if (abs(next_distance)<=brent_tol) {
+        found_v = max_vol
+        done = TRUE
+      }
+      if (iter==20) {
+        stop("Could not fit term structure for t=",eq_opt$maturity,", number ",i,". Could not find max")
+      }
+    }
+    if (!done) {
+      # Run Brent's method
+      flog.info("Min possible volatility allowed for %s is %s, max is %s.  Will search with tolerance %s",
+                 eq_opt$maturity, min_vol, max_vol, brent_tol,
+                 name='ragtop.calibration.fit_variance_cumulation')
+      orig_search_interval = c(min_vol, max_vol)
+      solv = uniroot(distfunc, interval=orig_search_interval, extendInt="no",
+                     tol=brent_tol, maxiter=20)
+      found_v = unlist(solv['root'])[[1]]
+      done = TRUE
+    }
+    vols[i] = found_v
+    flog.info("Term struct solver for instrument %s concluded with vola %s",
+              i, vols[i],
+              name='ragtop.calibration.fit_variance_cumulation')
+    last_cumul_variance = vols[i]^2 * eq_opt$maturity
+  }
+  cfunc = compute_var_cum_f(vols)
+  list(volatilities=vols, cumulation_function=cfunc)
 }

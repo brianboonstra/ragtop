@@ -30,6 +30,18 @@ Pricing in the standard Black-Scholes model is a special case with default
  in the standard Black-Scholes model, while still allowing risk-free rates and volatilites
  have nontrivial term structures.
 }
+\section{Important Features}{
+
+
+\itemize {
+ \item{\emph{Black-Scholes}: }{The standard model is automatically supported as a special case, but also has optimized routines}
+ \item{\emph{Term Structures}: }{The package allows for any kind of instrument to be priced with time-varying rates, volatility and default intensity}
+ \item{\emph{Dividends}: }{Allows for discrete dividends in an arbitrary combination of fixed and proportional amounts.  The difference between fixed and proprtional can be up to 10 percent in implied volatility terms.}
+ \item{\emph{Calibration}: }{Model calibration routines are included}
+ \item{\emph{Bankruptcy Realism}: }{A parsimonious deterministic model of default intensity gives rich behavior and conforms reasonably well to observed market data}
+ \item{\emph{Algorithm Parameters}: }{Default parameters for the algorithm work well for a very wide variety of pricing and implied volatility scenarios}
+ }
+}
 \examples{
 ## Vanilla European exercise
 blackscholes(callput=-1, S0=100, K=90, r=0.03, time=1, vola=0.5)
@@ -67,6 +79,12 @@ find_present_value(S0=S0, instruments=list(Convertible=cb), num_time_steps=250,
                    default_intensity_fcn=h_fcn,
                    const_volatility = 0.4, discount_factor_fcn=pct4,
                    std_devs_width=5)
+
+## Fitting Term Structure of Volatility
+opts = list(m1=AmericanOption(callput=-1, strike=9.9, maturity=1/12, name="m1"),
+            m2=AmericanOption(callput=-1, strike=9.8, maturity=1/6, name="m2"))
+vfit = fit_variance_cumulation(S0, opts, c(0.6, 0.8), default_intensity_fcn=h_fcn)
+print(vfit$volatilities)
 
 }
 

@@ -104,8 +104,9 @@ construct_tridiagonals = function(sigma, structure_constant, drift)
   subdiag[Nm1] = -neumann_drift_high
   bad_ix = (abs(diag[2:Nm1])-abs(subdiag[1:(Nm1 - 1)])-abs(superdiag[2:Nm1])<0)
   if (any(bad_ix)) {
-    warning(paste0("Implicit routine encountered potentially noninvertible matrix.  Bad indexes: ",
-                   toString(which(bad_ix))))
+    flog.warn("Implicit routine encountered potentially noninvertible matrix.  Bad indexes: %s",
+              toString(which(bad_ix)),
+              name='ragtop.implicit.timestep.construct_tridiagonals')
   }
   list(super = superdiag, diag = diag, sub = subdiag)
 }
@@ -188,7 +189,9 @@ take_implicit_timestep = function(t, S, full_discount_factor,
   if (is.blank(instrument) || is.blank(instrument$optionality_fcn)) {
     new_value = hold_value
   } else {
-    new_value = full_discount_factor * instrument$optionality_fcn(hold_value/full_discount_factor, S, t)
+    undiscounted_value = instrument$optionality_fcn(hold_value/full_discount_factor, S, t,
+                                                    discount_factor_fctn=discount_factor_fcn)
+    new_value = full_discount_factor * undiscounted_value
   }
   new_value
 }
@@ -413,6 +416,7 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
                 name='ragtop.implicit.setup')
       grid[num_time_pts,,k] = NA
     }
+    instrument$last_computed_grid = NA * S_final
   }
   grid = iterate_grid_from_timestep(num_time_steps, time_pts, z, S0, instruments,
                              stock_level_fcn=stock_level_fcn,

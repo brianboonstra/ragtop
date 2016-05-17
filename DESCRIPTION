@@ -1,8 +1,8 @@
 Package: ragtop
 Type: Package
 Title: Pricing convertible bonds
-Version: 0.1
-Date: 2016-01-20
+Version: 0.5
+Date: 2016-05-16
 Author: Brian K. Boonstra
 Maintainer: Brian K. Boonstra <ragtop@boonstra.org>
 Description: This package prices convertible bonds and a

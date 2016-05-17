@@ -388,7 +388,7 @@ ConvertibleBond = setRefClass(
     },
     update_cashflows = function(small_t, big_t, discount_factor_fctn=discount_factor_fcn, ...) {
       exercise_free_cashflows = callSuper(small_t, big_t, discount_factor_fctn=discount_factor_fctn, include_notional=FALSE, ...)
-      if (is.blank(last_computed_exercise_decision) || is.blank(last_computed_grid)) {
+      if (is.blank(last_computed_grid) || is.blank(last_computed_exercise_decision) ) {
         cashflows = exercise_free_cashflows
         flog.info("Since our last computed %s exercise decision or grid was blank, setting cashflows from %s to %s the same as a straight bond, to %s",
                   name, small_t, big_t, exercise_free_cashflows,
@@ -435,6 +435,8 @@ ConvertibleBond = setRefClass(
                   name, notional, accumulated_past_coupons, notional + accumulated_past_coupons,
                   name="ragtop.instruments.exercise.convertible")
       }
+      last_used_S <<- S
+      last_used_t <<- t
       terminal
     }
   )

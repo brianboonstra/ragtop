@@ -35,29 +35,44 @@ variance_cumulation_from_vols = function(vols_df)
   N = nrow(vols_df)
   cumulated_variances = c(0, vols_df$volatility^2 * vols_df$time)
   if (any(cumulated_variances<0)) {
+    stop("Nonsensical variance")
+  }
+  fwd_variances = diff(cumulated_variances)
+  if (any(fwd_variances<0)) {
     stop("Nonsensical negative forward variance")
   }
   augmented_t = c(0, vols_df$time)
   time_diffs = diff(augmented_t)
   max_t = max(vols_df$time)
   last_vol = vols_df$volatility[[N]]
-  fwd_variances = diff(cumulated_variances)/time_diffs
+  vols_df$fwd_vols = sqrt(fwd_variances/time_diffs)
   cumul_var_0 = function(x) {
     if (x==0) {
       cmvar = 0
-    } else if (x>max_t) {
-      cmvar = cumulated_variances[[N]] + fwd_variances[[N]] * (x-max_t)
+    } else if (x>=max_t) {
+      cmvar = cumulated_variances[[N+1]] + vols_df$fwd_vols[[N]]^2 * (x-max_t)
+      flog.debug("Found %s was beyond max_t %s, N=%s, using time diff %s from last anchor time max_t=%s applied to fwd vol %s and prev var %s",
+                 x, max_t, N, (x-max_t), max_t, vols_df$fwd_vols[[N]], cumulated_variances[[N]],
+                 name='ragtop.term_structures.variance_cumulation_from_vols')
     } else {
-      k = findInterval(x,augmented_t)  # Will not be larger than N
-      dt = (x-augmented_t[[k]])
-      cmvar = cumulated_variances[[k]] + fwd_variances[[k]] * dt
-      flog.debug("Found k=%s, using dt=%s applied to fwd variance %s and prev var %s",
-                 k, dt, fwd_variances[[k]], cumulated_variances[[k]])
+      k = findInterval(x, augmented_t)  # Will not be larger than N
+      dt = x - augmented_t[[k]]
+      if (dt<0) {
+        stop("Negative time interval after call to findInterval() in variance_cumulation_from_vols()")
+      }
+      cmvar = cumulated_variances[[k]] + vols_df$fwd_vols[[k]]^2 * dt
+      flog.debug("Found k=%s, using time diff %s from prev anchor time %s applied to fwd vol %s and prev var %s",
+                 k, dt, augmented_t[[k]], vols_df$fwd_vols[[k]], cumulated_variances[[k]],
+                 name='ragtop.term_structures.variance_cumulation_from_vols')
     }
     cmvar
   }
   cumul_var = function(T,t=0) {
-    cumul_var_0(T) - cumul_var_0(t)
+    cv = cumul_var_0(T) - cumul_var_0(t)
+    if ((T>t) && (cv<=0)) {
+      stop("Nonsensical cumulative variance ", cv, " from t=", t, " to T=", T)
+    }
+    cv
   }
   cumul_var
 }
