@@ -727,14 +727,13 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
       flog.info("Normalized t=%s price %s to BS impvol %s",
                 eq_opt$maturity, mid_prices[[i]], impvols[i],
                 name='ragtop.calibration.fit_variance_cumulation')
-    }
-    if (is.blank(spreads)) {
-      solver_tolerance = pmax(0.0001, 0.03 * abs(impvols))
-      flog.info("No spreads to set tolerances in impvol terms, just chose values ranging from %s to %s",
-                min(solver_tolerance), max(solver_tolerance),
-                name='ragtop.calibration.fit_variance_cumulation')
-    } else {
-      for (i in 1:N) {
+
+      if (is.blank(spreads)) {
+        solver_tolerance[i] = pmax(0.0001, 0.03 * abs(impvols[[i]]))
+        flog.info("No spreads to set tolerances in impvol terms, just chose value  %s",
+                  solver_tolerance[[i]],
+                  name='ragtop.calibration.fit_variance_cumulation')
+      } else {
         bidvol = NA
         askvol = NA
         bidvol = try(compute_bsimpvol(eq_opt, mid_prices[[i]] - 0.5*spreads[[i]]), silent=TRUE)
@@ -745,11 +744,11 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
                     name='ragtop.calibration.fit_variance_cumulation')
         } else {
           solver_tolerance[i] = relative_spread_tolerance * (askvol-bidvol)
+          flog.info("Used spreads to set tolerances in impvol terms,  to %s",
+                    solver_tolerance[[i]],
+                    name='ragtop.calibration.fit_variance_cumulation')
         }
       }
-      flog.info("Using spreads to set tolerances in impvol terms, ranging from %s to %s",
-                min(solver_tolerance), max(solver_tolerance),
-                name='ragtop.calibration.fit_variance_cumulation')
     }
   } else if (!(is.blank(spreads))) {
     solver_tolerance = pmax(0.005 * abs(mid_prices), spreads)
