@@ -94,10 +94,16 @@ spot_to_df_fcn = function(yield_curve) {
   yield_curve$fwd_rate = fwd_rates[[length(fwd_rates)]]
   yield_curve$fwd_rate[1:(length(yield_curve$fwd_rate)-1)] = fwd_rates
   ycdf = function(x) {
-    n = findInterval(x,yield_curve$time)
-    dt = (x-yield_curve$time[[n]])
-    yield_curve$dfs[[n]] * exp(-yield_curve$fwd_rate[[n]]*dt)
+    loc_df = NA
+    n = findInterval(x, yield_curve$time)
+    if (n>0) {
+      dt = (x-yield_curve$time[[n]])
+      loc_df = yield_curve$dfs[[n]] * exp(-yield_curve$fwd_rate[[n]]*dt)
+    } else {
+      loc_df = exp(-yield_curve$rate[[1]]*x)
     }
+    loc_df
+  }
   treasury_df_fcn = function(T,t=0,...) {ycdf(T)/ycdf(t)}
   treasury_df_fcn
 }

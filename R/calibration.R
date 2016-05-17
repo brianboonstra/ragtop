@@ -729,7 +729,7 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
                 name='ragtop.calibration.fit_variance_cumulation')
     }
     if (is.blank(spreads)) {
-      solver_tolerance = max(0.0001, 0.03 * abs(impvols))
+      solver_tolerance = pmax(0.0001, 0.03 * abs(impvols))
       flog.info("No spreads to set tolerances in impvol terms, just chose values ranging from %s to %s",
                 min(solver_tolerance), max(solver_tolerance),
                 name='ragtop.calibration.fit_variance_cumulation')
@@ -795,13 +795,16 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
     first_distance = distfunc(test_vol)
     if (first_distance>0) {
       max_vol = test_vol
+      f.upper = first_distance
       min_vol = max_vol
       iter = 0
       next_distance = first_distance
+      f.lower = next_distance
       while (iter<20 && next_distance*first_distance>0 && abs(next_distance)>brent_tol) {
         iter = iter + 1
         min_vol = max(min_vol/1.1, sqrt(last_cumul_variance/eq_opt$maturity)*1.02)
         next_distance = distfunc(min_vol)
+        f.lower = next_distance
       }
       if (abs(next_distance)<=brent_tol) {
         found_v = min_vol
@@ -812,13 +815,16 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
       }
     } else {
       min_vol = test_vol
+      f.lower = first_distance
       max_vol = min_vol
       iter = 0
       next_distance = first_distance
+      f.upper = next_distance
       while (iter<20 && next_distance*first_distance>0) {
         iter = iter + 1
         max_vol = max_vol * 1.1
         next_distance = distfunc(max_vol)
+        f.upper = next_distance
       }
       if (abs(next_distance)<=brent_tol) {
         found_v = max_vol
@@ -835,6 +841,7 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
                  name='ragtop.calibration.fit_variance_cumulation')
       orig_search_interval = c(min_vol, max_vol)
       solv = uniroot(distfunc, interval=orig_search_interval, extendInt="no",
+                     f.lower=f.lower, f.upper=f.upper,
                      tol=brent_tol, maxiter=20)
       found_v = unlist(solv['root'])[[1]]
       done = TRUE
