@@ -1,6 +1,6 @@
 Package: ragtop
 Type: Package
-Title: Pricing convertible bonds
+Title: Pricing equity derivatives with extensions of Black-Scholes
 Version: 0.5
 Date: 2016-05-16
 Author: Brian K. Boonstra
