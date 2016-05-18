@@ -7,7 +7,7 @@
 fit_variance_cumulation(S0, eq_options, mid_prices, spreads = NULL,
   initial_vols_guess = 0.55 + 0 * mid_prices, use_impvol = TRUE,
   relative_spread_tolerance = 0.01, force_same_grid = FALSE,
-  num_time_steps = 100, const_short_rate = 0, const_default_intensity = 0,
+  num_time_steps = 40, const_short_rate = 0, const_default_intensity = 0,
   discount_factor_fcn = function(T, t, ...) {     exp(-const_short_rate * (T -
   t)) }, survival_probability_fcn = function(T, t, ...) {    
   exp(-const_default_intensity * (T - t)) },
@@ -66,6 +66,7 @@ Other Implied Volatilities: \code{\link{american_implied_volatility}},
   \code{\link{equivalent_bs_vola_to_jump}},
   \code{\link{equivalent_jump_vola_to_bs}},
   \code{\link{implied_jump_process_volatility}},
+  \code{\link{implied_volatilities_with_rates_struct}},
   \code{\link{implied_volatilities}},
   \code{\link{implied_volatility_with_term_struct}},
   \code{\link{implied_volatility}}

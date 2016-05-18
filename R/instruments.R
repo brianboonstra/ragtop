@@ -205,22 +205,30 @@ CouponBond = setRefClass(
   methods = list(
     accumulate_coupon_values_before = function(t, discount_factor_fctn=discount_factor_fcn) {
       "Compute the sum of coupon present values as of {t} according to {discount_factor_fctn}"
+      ac = 0
       paid_coupon_ix = (coupons$payment_time<=t+maturity*TIME_RESOLUTION_FACTOR)
-      paid_coupons = coupons[paid_coupon_ix,]
-      accumulation_proportions = discount_factor_fctn(t, paid_coupons$payment_time)
-      ac = sum(paid_coupons$payment_size/accumulation_proportions)
-      flog.info("Accumulated coupon values at %s are: %s", t, ac,
-                name="ragtop.instruments.cashflows.bond")
+      if (sum(paid_coupon_ix) >= 1) {
+        paid_coupons = coupons[paid_coupon_ix,]
+        accumulation_proportions = sapply(paid_coupons$payment_time,
+                                          function(ct) discount_factor_fctn(t, ct))
+        ac = sum(paid_coupons$payment_size/accumulation_proportions)
+        flog.info("Accumulated coupon values at %s are: %s", t, ac,
+                  name="ragtop.instruments.cashflows.bond")
+      }
       ac
     },
     total_coupon_values_between = function(small_t, big_t, discount_factor_fctn=discount_factor_fcn) {
       "Compute the sum (as of {big_t}) of present values of coupons paid between small_t and big_t"
+      ac = 0
       paid_coupon_ix = ( coupons$payment_time>small_t & coupons$payment_time<=big_t )
-      paid_coupons = coupons[paid_coupon_ix,]
-      accumulation_proportions = discount_factor_fctn(big_t,paid_coupons$payment_time)
-      ac = sum(accumulation_proportions*paid_coupons$payment_size)
-      flog.info("Totaled coupon present values in interval (%s,%s] are: %s", small_t, big_t, ac,
-                name="ragtop.instruments.cashflows.bond")
+      if (sum(paid_coupon_ix) >= 1) {
+        paid_coupons = coupons[paid_coupon_ix,]
+        accumulation_proportions = sapply(paid_coupons$payment_time,
+                                          function(ct) discount_factor_fctn(big_t, ct))
+        ac = sum(accumulation_proportions*paid_coupons$payment_size)
+        flog.info("Totaled coupon present values in interval (%s,%s] are: %s", small_t, big_t, ac,
+                  name="ragtop.instruments.cashflows.bond")
+      }
       ac
     },
     critical_times = function() {

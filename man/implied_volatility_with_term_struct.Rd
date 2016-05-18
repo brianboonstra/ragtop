@@ -48,12 +48,13 @@ Use the Black-Scholes formula to generate European option values and run them
 }
 \details{
 Differs from \code{implied_volatility} by calling \code{black_scholes_on_term_structures} for
-  pricing, thereby allowing term structures of rates nontrivial \code{survival_probability_fcn}
+  pricing, thereby allowing term structures of rates, and a nontrivial \code{survival_probability_fcn}
 }
 \seealso{
 \code{\link{implied_volatility}} for simpler cases with constant
   parameters, \code{\link{black_scholes_on_term_structures}} for the underlying
-  pricing algorithm
+  pricing algorithm, \code{\link{implied_volatilities_with_rates_struct}} when
+  neither volatilities nor survival probabilities have a nontrivial term structure
 
 Other Equity Independent Default Intensity: \code{\link{american_implied_volatility}},
   \code{\link{american}},
@@ -61,11 +62,13 @@ Other Equity Independent Default Intensity: \code{\link{american_implied_volatil
   \code{\link{blackscholes}},
   \code{\link{equivalent_bs_vola_to_jump}},
   \code{\link{equivalent_jump_vola_to_bs}},
+  \code{\link{implied_volatilities_with_rates_struct}},
   \code{\link{implied_volatilities}},
   \code{\link{implied_volatility}}
 
 Other European Options: \code{\link{black_scholes_on_term_structures}},
   \code{\link{blackscholes}},
+  \code{\link{implied_volatilities_with_rates_struct}},
   \code{\link{implied_volatilities}},
   \code{\link{implied_volatility}}
 
@@ -74,6 +77,7 @@ Other Implied Volatilities: \code{\link{american_implied_volatility}},
   \code{\link{equivalent_jump_vola_to_bs}},
   \code{\link{fit_variance_cumulation}},
   \code{\link{implied_jump_process_volatility}},
+  \code{\link{implied_volatilities_with_rates_struct}},
   \code{\link{implied_volatilities}},
   \code{\link{implied_volatility}}
 }

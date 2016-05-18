@@ -65,7 +65,7 @@ implied_volatility = function(option_price, callput, S0, K, r, time,
   if (option_price<min_value) {
     flog.warn("The provided option price %s is so low that no positive volatility can explain it.  Minimum values would be %s",
               option_price, min_value,
-              name='ragtop.calibration.implied_volatility')
+              name='ragtop.calibration.implied_volatility.lowprice')
     return(NA)
   } else {
     flog.debug("Option price price %s exceeds the minimum price %s so a solution exists",
@@ -75,7 +75,7 @@ implied_volatility = function(option_price, callput, S0, K, r, time,
   if (option_price>max_value) {
     flog.warn("The provided option price %s is so high that it exceeds the maximum volatility specified %s, at which the price is %s",
               option_price, max_vola, max_value,
-              name='ragtop.calibration.implied_volatility')
+              name='ragtop.calibration.implied_volatility.highprice')
     return(NA)
   } else {
     flog.debug("Option price price %s less than the maximum price %s so a solution exists",
@@ -294,6 +294,76 @@ equivalent_bs_vola_to_jump = function(jump_process_vola, time,
   vola
 }
 
+#' Find the implied volatility of european-exercise options with a term structure of interest rates
+#'
+#' Use the provided discount factor function to infer constant short rates applicable to each
+#'   expiration time, then use the Black-Scholes formula to generate European option values and run them
+#'   through Newton's method until a constant volatility matching each provided
+#'   option price has been found.
+#'
+#' Differs from \code{implied_volatility_with_term_struct} by first computing constant interest rates
+#' for each option, and then calling \code{implied_volatilities}
+#'
+#' @seealso \code{\link{implied_volatility}} for simpler cases with constant
+#'   parameters, \code{\link{implied_volatilities}} for the underlying
+#'   algorithm with constant rates, \code{\link{implied_volatility_with_term_struct}} when
+#'   volatilities or survival probabilities also have a nontrivial term structure
+#' @param option_price Present option values (may be a vector)
+#' @param callput 1 for calls, -1 for puts (may be a vector)
+#' @param S0 initial underlying prices (may be a vector)
+#' @param K strikes (may be a vector)
+#' @param discount_factor_fcn A function for computing present values to
+#'   time \code{t}, with arguments \code{T}, \code{t}
+#' @param time Time from \code{0} until expirations (may be a vector)
+#' @param default_intensity hazard rates of underlying default  (may be a vector)
+#' @param divrate A continuous rate for dividends and other cashflows such as foreign interest rates  (may be a vector)
+#' @param borrow_cost A continuous rate for stock borrow costs  (may be a vector)
+#' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
+#'   and \code{proportional}.  Dividend size at the given \code{time} is
+#'   then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
+#'   dividends will be converted to proprtional for purposes of this algorithm.
+#' @examples
+#'   d_fcn = function(T,t) {exp(-0.03*(T-t))}
+#'   implied_volatilities_with_rates_struct(c(23,24,25), c(-1,1,1), 100, 100, discount_factor_fcn=d_fcn, time=c(4,4,5))
+#'
+#' @return Scalar volatilities
+#' @family Implied Volatilities
+#' @family European Options
+#' @family Equity Independent Default Intensity
+#' @export implied_volatilities_with_rates_struct
+implied_volatilities_with_rates_struct = function(option_price, callput, S0, K, discount_factor_fcn, time,
+                                                  const_default_intensity=0, divrate=0, borrow_cost=0,
+                                                  dividends=NULL,
+                                                  relative_tolerance=1.e-6,
+                                                  max.iter=100,
+                                                  max_vola=4.00)
+{
+  get_r = function(tm) {
+    r = -log(discount_factor_fcn(tm,0))/tm
+    r
+  }
+  r = sapply(time, get_r)
+  flog.info("Calculated %s short rates for getting impvols", length(r),
+            name='ragtop.calibration.implied_volatilities_with_rates_struct')
+  df = data.frame(option_price=option_price, callput=callput, S0=S0, K=K, r=r, time=time,
+                  const_default_intensity=const_default_intensity,
+                  divrate=divrate, borrow_cost=divrate,
+                  relative_tolerance=relative_tolerance,
+                  max.iter=max.iter,
+                  max_vola=max_vola)
+  findvol = function(x) {
+    implied_volatility(option_price=x['option_price'], callput=x['callput'],
+                       S0=x['S0'], K=x['K'], r=x['r'], time=x['time'],
+                       const_default_intensity=x['const_default_intensity'],
+                       divrate=x['divrate'], borrow_cost=x['borrow_cost'],
+                       dividends=dividends,
+                       relative_tolerance=relative_tolerance,
+                       max.iter=max.iter,
+                       max_vola=max_vola)
+  }
+  vols = apply(df, 1, findvol)
+  vols
+}
 
 
 #' Find the implied volatility of a european-exercise option with term structures
@@ -303,11 +373,12 @@ equivalent_bs_vola_to_jump = function(jump_process_vola, time,
 #'   option price has been found.
 #'
 #' Differs from \code{implied_volatility} by calling \code{black_scholes_on_term_structures} for
-#'   pricing, thereby allowing term structures of rates nontrivial \code{survival_probability_fcn}
+#'   pricing, thereby allowing term structures of rates, and a nontrivial \code{survival_probability_fcn}
 #'
 #' @seealso \code{\link{implied_volatility}} for simpler cases with constant
 #'   parameters, \code{\link{black_scholes_on_term_structures}} for the underlying
-#'   pricing algorithm
+#'   pricing algorithm, \code{\link{implied_volatilities_with_rates_struct}} when
+#'   neither volatilities nor survival probabilities have a nontrivial term structure
 #' @inheritParams form_present_value_grid
 #' @param option_price Option price to match
 #' @param callput 1 for calls, -1 for puts
@@ -332,11 +403,11 @@ equivalent_bs_vola_to_jump = function(jump_process_vola, time,
 #' @family European Options
 #' @export implied_volatility_with_term_struct
 implied_volatility_with_term_struct = function(option_price, callput, S0, K, time,
-                                       ...,
-                                       starting_volatility_estimate=0.5,
-                                       relative_tolerance=1.e-6,
-                                       max.iter=100,
-                                       max_vola=4.00)
+                                               ...,
+                                               starting_volatility_estimate=0.5,
+                                               relative_tolerance=1.e-6,
+                                               max.iter=100,
+                                               max_vola=4.00)
 {
   compute_price = function(v) {
     black_scholes_on_term_structures(callput, S0, K, time,
@@ -680,7 +751,7 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
                                    use_impvol=TRUE,
                                    relative_spread_tolerance=0.01,
                                    force_same_grid=FALSE,
-                                   num_time_steps=100,
+                                   num_time_steps=40,
                                    const_short_rate=0, const_default_intensity=0,
                                    discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
                                    survival_probability_fcn = function(T, t, ...){exp(-const_default_intensity*(T-t))},
@@ -767,10 +838,12 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
       cumul_func = compute_var_cum_f(vols)
       flog.debug("Term struct solver for instrument %s will test vola %s giving cumulative variance %s",
                 i, v, cumul_func(eq_opt$maturity),
-                name='ragtop.calibration.fit_variance_cumulation')
+                name='ragtop.calibration.fit_variance_cumulation.distance')
       computed_price = find_present_value(S0=S0, num_time_steps=num_time_steps,
                                           override_Tmax=override_Tmax,
                                           instruments=list(tsopt=eq_opt),
+                                          discount_factor_fcn=discount_factor_fcn,
+                                          default_intensity_fcn=default_intensity_fcn,
                                           variance_cumulation_fcn=cumul_func,
                                           ...)$tsopt
       if (use_impvol) {
@@ -778,12 +851,12 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
         distance = civ - impvols[[i]]
         flog.info("Term struct solver for instrument %s tested vola %s and found price %s for an impvol of %s which is distance %s from %s",
                   i, v, computed_price, civ, distance, impvols[[i]],
-                  name='ragtop.calibration.fit_variance_cumulation')
+                  name='ragtop.calibration.fit_variance_cumulation.distance')
       } else {
         distance = computed_price - mid_prices[[i]]
         flog.info("Term struct solver for instrument %s tested vola %s and found price %s which is distance %s from %s",
                   i, v, computed_price, civ, distance, mid_prices[[i]],
-                  name='ragtop.calibration.fit_variance_cumulation')
+                  name='ragtop.calibration.fit_variance_cumulation.distance')
       }
       distance
     }
@@ -799,7 +872,8 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
       iter = 0
       next_distance = first_distance
       f.lower = next_distance
-      flog.info("Beginning search for lower bound vola")
+      flog.debug("Beginning search for lower bound vola",
+                 name='ragtop.calibration.fit_variance_cumulation')
       while ((iter<20) && (next_distance*first_distance>0) && (abs(next_distance)>(brent_tol))) {
         iter = iter + 1
         min_vol = max(min_vol/1.1, sqrt(last_cumul_variance/eq_opt$maturity)*1.02)
@@ -820,7 +894,8 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
       iter = 0
       next_distance = first_distance
       f.upper = next_distance
-      flog.info("Beginning search for upper bound vola")
+      flog.debug("Beginning search for upper bound vola",
+                name='ragtop.calibration.fit_variance_cumulation')
       while ((iter<20) && next_distance*first_distance>0 && (abs(next_distance)>(brent_tol))) {
         iter = iter + 1
         max_vol = max_vol * 1.1
@@ -855,4 +930,196 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
   }
   cfunc = compute_var_cum_f(vols)
   list(volatilities=vols, cumulation_function=cfunc)
+}
+
+
+#' Helper function (instrument pricing) for calibration of equity-linked default intensity
+#'
+#' @export price_with_intensity_link
+price_with_intensity_link = function(p, s, h,
+                                     variance_instruments,
+                                     variance_instrument_prices,
+                                     variance_instrument_spreads,
+                                     fit_instruments,
+                                     S0, num_time_steps=30,
+                                     ...,
+                                     relative_spread_tolerance=0.15,
+                                     num_variance_time_steps=30) {
+  def_intens_f = function(t,S,...) {h * (s + (1-s) * (S0/S)^p)}
+  varnce = fit_variance_cumulation(S0, variance_instruments,
+                                   variance_instrument_prices,
+                                   spreads=variance_instrument_spreads,
+                                   use_impvol=TRUE,
+                                   relative_spread_tolerance=relative_spread_tolerance,
+                                   default_intensity_fcn = def_intens_f,
+                                   num_time_steps=num_variance_time_steps,
+                                   ...)
+  pvs = find_present_value(S0=S0, num_time_steps=num_time_steps, instruments=fit_instruments,
+                           default_intensity_fcn=def_intens_f,
+                           variance_cumulation_fcn=varnce$cumulation_function,
+                           ...)
+  list(present_values=pvs, variance_fit=varnce)
+}
+
+
+#' Helper function (volatility-normalized pricing error) for calibration of equity-linked default intensity
+#'
+#' @export penalty_with_intensity_link
+penalty_with_intensity_link = function(p, s, h,
+                                       variance_instruments,
+                                       variance_instrument_prices,
+                                       variance_instrument_spreads,
+                                       fit_instruments,
+                                       fit_instrument_prices,
+                                       fit_instrument_spreads,
+                                       fit_instrument_weights,
+                                       S0, num_time_steps=30, const_short_rate=0,
+                                       discount_factor_fcn = function(T, t){exp(-const_short_rate*(T-t))},
+                                       ...,
+                                       relative_spread_tolerance=0.15,
+                                       num_variance_time_steps=30) {
+  start_comp = Sys.time()
+  pvs = price_with_intensity_link(p=p, s=s, h=h,
+                                  variance_instruments=variance_instruments,
+                                  variance_instrument_prices=variance_instrument_prices,
+                                  variance_instrument_spreads=variance_instrument_spreads,
+                                  fit_instruments=fit_instruments,
+                                  S0=S0, num_time_steps=num_time_steps, num_variance_time_steps=num_variance_time_steps,
+                                  relative_spread_tolerance=relative_spread_tolerance,
+                                  discount_factor_fcn=discount_factor_fcn,
+                                  ...)
+  num_pvs = as.numeric(pvs$present_values)
+  start_IVs = Sys.time()
+  get_field = function(fname) {
+    as.numeric(lapply(fit_instruments, function(x) x$field(name=fname)))
+  }
+  modelvols = implied_volatilities_with_rates_struct(num_pvs, get_field('callput'), S0,
+                                                     get_field('strike'),
+                                                     discount_factor_fcn=disc_fcn,
+                                                     get_field('maturity'))
+  midvols = implied_volatilities_with_rates_struct(fit_instrument_prices,
+                                                   get_field('callput'), S0,
+                                                   get_field('strike'),
+                                                   discount_factor_fcn=disc_fcn,
+                                                   get_field('maturity'))
+  bidvols = implied_volatilities_with_rates_struct(fit_instrument_prices-0.5*fit_instrument_spreads,
+                                                   get_field('callput'), S0,
+                                                   get_field('strike'),
+                                                   discount_factor_fcn=disc_fcn,
+                                                   get_field('maturity'))
+  askvols = implied_volatilities_with_rates_struct(fit_instrument_prices+0.5*fit_instrument_spreads,
+                                                   get_field('callput'), S0,
+                                                   get_field('strike'),
+                                                   discount_factor_fcn=disc_fcn,
+                                                   get_field('maturity'))
+  volspreads = askvols - bidvols
+  pen_components =  ((modelvols-midvols)/(0.5*volspreads) )^2
+  valid_ix = !is.na(pen_components)
+  pen = sum(fit_instrument_weights[valid_ix] * pen_components[valid_ix]) / sum(fit_instrument_weights[valid_ix])
+  flog.info("Penalty %s for %s of %s instruments, h=%s, s=%s, p=%s\nTimings:\n  Grid %s\n  BS impvos: %s",
+            pen, sum(valid_ix), length(fit_instruments), h, s, p, start_IVs-start_comp, Sys.time() - start_IVs,
+            name='ragtop.calibration.penalty_with_intensity_link')
+  pen
+}
+
+
+#' Calibrate volatilities and equity-linked default intensity
+#'
+#' @export fit_to_option_market
+fit_to_option_market = function(variance_instruments,
+                                variance_instrument_prices,
+                                variance_instrument_spreads,
+                                fit_instruments,
+                                fit_instrument_prices,
+                                fit_instrument_spreads,
+                                fit_instrument_weights,
+                                S0,
+                                num_time_steps=30, const_short_rate=0,
+                                discount_factor_fcn = function(T, t){exp(-const_short_rate*(T-t))},
+                                ...,
+                                base_default_intensity=0.05,
+                                relative_spread_tolerance=0.15,
+                                num_variance_time_steps=30)
+{
+  #TODO: Allow NULL weights and choose something smart
+  #TODO: Allow NULL spreads and choose something smart
+  h = base_default_intensity
+  ss = c(1/26, 1/13, 2/13, 6/13, 11/13)
+  test_p = seq(1.1/7, 4.4, by=0.43)
+  pens_found = data.frame(s=rep(ss, times=length(test_p)),
+                          p=rep(test_p, each=length(ss)),
+                          penalty=rep(NA, length(ss)*length(test_p)))
+  flog.info("Will populate penalties table:\n%s",
+            paste(capture.output(pens_found), "\n", sep=""),
+            name='ragtop.calibration.fit_to_option_market')
+  for (ix_s in (1:length(ss))) {
+    s = ss[[ix_s]]
+    pen = function(p) {
+      flog.info("About to compute penalty with p=%s, s=%s, h=%s, ix_s=%s",
+                p,s,h,ix_s,
+                name='ragtop.calibration.fit_to_option_market.compute')
+      pen_result = tryCatch(penalty_with_intensity_link(p, s, h,
+                                                        variance_instruments,
+                                                        variance_instrument_prices,
+                                                        variance_instrument_spreads,
+                                                        fit_instruments,
+                                                        fit_instrument_prices,
+                                                        fit_instrument_spreads,
+                                                        fit_instrument_weights,
+                                                        S0=S0, num_time_steps=num_time_steps,
+                                                        discount_factor_fcn = discount_factor_fcn,
+                                                        ...,
+                                                        relative_spread_tolerance=relative_spread_tolerance,
+                                                        num_variance_time_steps=num_variance_time_steps),
+                            error = function(errmsg) {
+                              flog.warn("Could not compute penalty with p=%s, s=%s, h=%s, returning NA.  Message was \n%s",
+                                        p,s,h,errmsg,
+                                        name='ragtop.calibration.fit_to_option_market.compute')
+                              return(NA)
+                            },finally={
+                              flog.info("Computed penalty with p=%s, s=%s, h=%s, ix_s=%s",
+                                        p,s,h,ix_s,
+                                        name='ragtop.calibration.fit_to_option_market.compute')
+                            })
+      flog.info("Using penalty %s with p=%s, s=%s, h=%s, ix_s=%s",
+                pen_result, p,s,h,ix_s,
+                name='ragtop.calibration.fit_to_option_market')
+      flog.info("Found penalties are now:\n%s",
+                paste(capture.output(pens_found), "\n", sep=""),
+                name='ragtop.calibration.fit_to_option_market.compute')
+      pen_result
+    }
+    for (ix_p in (1:length(test_p))) {
+      p = test_p[[ix_p]]
+      pen_s_p = pen(p)
+      pens_found$penalty[pens_found$s==ss[[ix_s]] & pens_found$p==p] = pen_s_p
+    }
+    flog.info("Tested multiple powers p for s=%s",
+              s,
+              name='ragtop.calibration.fit_to_option_market.apply')
+  }
+  best = pens_found[pens_found$penalty<=1.01*min(pens_found$penalty, na.rm=T),][1,]
+  # TODO: Use some GP Kriging
+  best_p = best['p'][[1]]
+  best_s = best['s'][[1]]
+  flog.info("Best found s=%s p=%s",
+            best_s, best_p,
+            name='ragtop.calibration.fit_to_option_market')
+  def_intens_f = function(t,X,...) { h * (best_s + (1-best_s) * (S0/as.numeric(X))^best_p) }
+  varnce = tryCatch(fit_variance_cumulation(S0, variance_instruments,
+                                   variance_instrument_prices,
+                                   spreads=variance_instrument_spreads,
+                                   use_impvol=TRUE,
+                                   relative_spread_tolerance=relative_spread_tolerance,
+                                   default_intensity_fcn = def_intens_f,
+                                   num_time_steps=num_variance_time_steps,
+                                   ...),
+                    error = function(errmsg) {
+                      flog.error("Unable to use s=%s p=%s to form variance, even though we calibrated:\n%s",
+                                s,p,errmsg,
+                                name='ragtop.calibration.fit_to_option_market')
+                      return(NA)
+                    }
+  )
+  list(h=h, s=best_s, p=best_p, default_intensity_fcn=def_intens_f, variance=varnce, penalties_found=pens_found)
 }

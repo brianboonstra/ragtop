@@ -69,6 +69,7 @@ Other Equity Independent Default Intensity: \code{\link{american_implied_volatil
   \code{\link{blackscholes}},
   \code{\link{equivalent_bs_vola_to_jump}},
   \code{\link{equivalent_jump_vola_to_bs}},
+  \code{\link{implied_volatilities_with_rates_struct}},
   \code{\link{implied_volatilities}},
   \code{\link{implied_volatility_with_term_struct}},
   \code{\link{implied_volatility}}

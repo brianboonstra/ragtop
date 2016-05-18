@@ -47,11 +47,13 @@ Other Equity Independent Default Intensity: \code{\link{american_implied_volatil
   \code{\link{blackscholes}},
   \code{\link{equivalent_bs_vola_to_jump}},
   \code{\link{equivalent_jump_vola_to_bs}},
+  \code{\link{implied_volatilities_with_rates_struct}},
   \code{\link{implied_volatility_with_term_struct}},
   \code{\link{implied_volatility}}
 
 Other European Options: \code{\link{black_scholes_on_term_structures}},
   \code{\link{blackscholes}},
+  \code{\link{implied_volatilities_with_rates_struct}},
   \code{\link{implied_volatility_with_term_struct}},
   \code{\link{implied_volatility}}
 
@@ -60,6 +62,7 @@ Other Implied Volatilities: \code{\link{american_implied_volatility}},
   \code{\link{equivalent_jump_vola_to_bs}},
   \code{\link{fit_variance_cumulation}},
   \code{\link{implied_jump_process_volatility}},
+  \code{\link{implied_volatilities_with_rates_struct}},
   \code{\link{implied_volatility_with_term_struct}},
   \code{\link{implied_volatility}}
 }
