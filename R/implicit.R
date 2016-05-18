@@ -104,7 +104,7 @@ construct_tridiagonals = function(sigma, structure_constant, drift)
   subdiag[Nm1] = -neumann_drift_high
   bad_ix = (abs(diag[2:Nm1])-abs(subdiag[1:(Nm1 - 1)])-abs(superdiag[2:Nm1])<0)
   if (any(bad_ix)) {
-    flog.warn("Implicit routine encountered potentially noninvertible matrix.  Bad indexes: %s",
+    flog.info("Implicit routine encountered potentially noninvertible matrix.  Bad indexes: %s",
               toString(which(bad_ix)),
               name='ragtop.implicit.timestep.construct_tridiagonals')
   }
