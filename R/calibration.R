@@ -967,6 +967,20 @@ price_with_intensity_link = function(p, s, h,
 
 #' Helper function (volatility-normalized pricing error) for calibration of equity-linked default intensity
 #'
+#' Given a set SDE parameters, form a volatility term structure that fairly precisely matches
+#'   the supplied prices of the \code{variance_instruments}.  Then use that term structure and
+#'   the default intensity to price all the \code{fit_instruments}, and compare them to the
+#'   \code{fit_instrument_prices}.
+#'
+#' @details
+#'  Forms implied Black-Scholes volatilities from all supplied mid prices, and their
+#'    implied bid and offer prices, as well as from the prices computed by the grid solver. Each
+#'    instrument is then assigned an error term component in proportion to its weight
+#'    and the pricing error (in implied vol terms) divided by the spread (also in implied
+#'    vol terms).
+#'
+#' @inheritParams fit_to_option_market
+#' @seealso \code{\link{price_with_intensity_link}} for the pricing function
 #' @export penalty_with_intensity_link
 penalty_with_intensity_link = function(p, s, h,
                                        variance_instruments,
@@ -1028,6 +1042,38 @@ penalty_with_intensity_link = function(p, s, h,
 
 #' Calibrate volatilities and equity-linked default intensity
 #'
+#' Given derivative instruments (subclasses of
+#'   GridPricedInstrument, though typically either \code{\link{AmericanOption}}
+#'   or \code{\link{EuropeanOption}} objects), along with their prices and spreads, calibrate
+#'   variance cumulation (the
+#'  at-the-money volatility of the continuous process) and equity linked default
+#'  intensity of the form $h(s + (1-s)(S0/S_t)^p)$.
+#'
+#'
+#' @details
+#'  In its present form, this function uses a brain-dead grid search.
+#'
+#' @param S0 Current underlying price
+#' @param variance_instruments A list of instruments in strictly increasing order
+#'  of maturity, from which the volatility term structure will be inferred.  Once the
+#'  calibration is finished, the chosen parameters will reproduce the prices of
+#'  these instruments with fairly high precision.
+#' @param fit_instruments A list of instruments in any order, from which the
+#'  mispricing penalties used for judging fit quality will be computed
+#' @param variance_instrument_prices Central price targets for the variance instruments
+#' @param fit_instrument_prices Central price targets for the variance instruments
+#' @param variance_instrument_spreads Bid-offer spreads used to normalize errors
+#'   in variance instrument prices during term structure fitting
+#' @param fit_instrument_spreads Bid-offer spreads used to normalize errors
+#'   in fit instrument prices during default intensity
+#' @param fit_instrument_spreads Bid-offer spreads used to normalize errors
+#'   in fit instrument prices during default intensity
+#' @param base_default_intensity Overall default intensity (in natural units)
+#' @param discount_factor_fcn A function for computing present values to
+#'   time \code{t} of various cashflows occurring during this timestep, with
+#'   arguments \code{T}, \code{t}
+#' @seealso \code{\link{penalty_with_intensity_link}} for the penalty function used
+#'   as an optimization target
 #' @export fit_to_option_market
 fit_to_option_market = function(variance_instruments,
                                 variance_instrument_prices,
@@ -1123,13 +1169,32 @@ fit_to_option_market = function(variance_instruments,
                       return(NA)
                     }
   )
-  list(h=h, s=best_s, p=best_p, default_intensity_fcn=def_intens_f, variance=varnce, penalties_found=pens_found)
+  list(h=h, s=best_s, p=best_p, default_intensity_fcn=def_intens_f,
+       variance=varnce, penalties_found=pens_found)
 }
 
 
 
 #' Calibrate volatilities and equity-linked default intensity making many assumptions
 #'
+#' This is a convenience function for calibrating variance cumulation (the
+#'  at-the-money volatility of the continuous process) and equity linked default
+#'  intensity of the form $h(s + (1-s)(S0/S_t)^p)$, using a \code{data.frame} of
+#'  option market data.
+#'
+#' @param S0 Current underlying price
+#' @param base_default_intensity Overall default intensity (in natural units)
+#' @param min_maturity Minimum option maturity to allow in calibration
+#' @param min_moneyness Maximum option strike as a proportion of S0 to allow in calibration
+#' @param max_moneyness Maximum option strike as a proportion of S0  to allow in calibration
+#' @param options_df A data frame of American option details.  It should
+#' have columns \code{callput}, \code{K}, \code{time},
+#' \code{mid}, \code{bid}, and \code{ask},
+#' @param discount_factor_fcn A function for computing present values to
+#'   time \code{t} of various cashflows occurring during this timestep, with
+#'   arguments \code{T}, \code{t}
+#' @family Equity Dependent Default Intensity
+#' @seealso \code{\link{fit_to_option_market}} the underlying fit algorithm
 #' @export fit_to_option_market_df
 fit_to_option_market_df = function(
   S0 = TSLAMarket$S0,

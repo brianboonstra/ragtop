@@ -119,11 +119,11 @@ knitr::kable(TSLAMarket$options[c(200,300,400,500,600, 800),], digits=3, row.nam
 Tesla does not pay any dividends, so we can evaluate calls using the Black Scholes model
 
 ```{r blackscholes, echo=TRUE}
-blackscholes(TSLAMarket$options[400,'callput'], 
+blackscholes(TSLAMarket$options[500,'callput'], 
              TSLAMarket$S0, 
-             TSLAMarket$options[400,'K'], 
+             TSLAMarket$options[500,'K'], 
              0.005, 
-             TSLAMarket$options[400,'time'], 
+             TSLAMarket$options[500,'time'], 
              0.50)
 ```
 
@@ -140,10 +140,10 @@ implied_volatility(option_price = TSLAMarket$options[400,'ask'],
 
 For puts, we need to use a pricing algorithm that accounts for early exercise.  \code{ragtop} uses a control variate scheme on top of an implicity PDE solver to achieve reasonable performance
 
-```{r implied_volatility, echo=TRUE}
-american_implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
-       S0 = TSLAMarket$S0, 
+```{r amer, echo=TRUE}
+american(
        callput = TSLAMarket$options[400,'callput'], 
+       S0 = TSLAMarket$S0, 
        K=TSLAMarket$options[400,'K'], 
        const_short_rate = 0.005, 
        time = TSLAMarket$options[400,'time'])
@@ -165,7 +165,7 @@ american_implied_volatility(option_price = TSLAMarket$options[400,'ask'],
 
 We can correct for constant intensities of default with parameters of convenience
 
-```{r implied_volatility, echo=TRUE}
+```{r implied_volatility_def, echo=TRUE}
 implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
                    S0 = TSLAMarket$S0, 
                    callput = TSLAMarket$options[400,'callput'], 
@@ -175,7 +175,7 @@ implied_volatility(option_price = TSLAMarket$options[400,'ask'],
                    const_default_intensity = 0.03)
 ```
 
-```{r american_implied_volatility, echo=TRUE}
+```{r american_implied_volatility_def, echo=TRUE}
 american_implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
      S0 = TSLAMarket$S0, 
      callput = TSLAMarket$options[400,'callput'], 
