@@ -69,6 +69,12 @@ divs = data.frame(time=seq(from=0.11, to=2, by=0.25),
 american(callput=-1, S0=100, K=90, time=1, const_short_rate=0.025,
          const_volatility=0.20, dividends=divs)
 
+## American Exercise Implied Volatility
+american_implied_volatility(25,CALL,S0=100,K=100,time=2.2, const_short_rate=0.03)
+df250 =  function(t) ( exp(-0.02*t)*exp(-0.03*max(0,t-1.0))) # Simple term structure
+df25 = function(T,t){df250(T)/df250(t)} # Relative discount factors
+american_implied_volatility(25,-1,100,100,2.2,discount_factor_fcn=df25)
+
 ## Convertible Bond
 pct4 = function(T,t=0) { exp(-0.04*(T-t)) }
 cb = ConvertibleBond(conversion_ratio=3.5, maturity=1.5, notional=100,

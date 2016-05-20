@@ -20,6 +20,11 @@ library(reshape2)
 library(stringr)
 library(MASS)
 flog.threshold(ERROR)
+flog.threshold(ERROR, name='ragtop.implicit.timestep.construct_tridiagonals')
+flog.threshold(ERROR, name='ragtop.calibration.implied_volatility.lowprice')
+flog.threshold(ERROR, name='ragtop.calibration.implied_volatility_with_term_struct')
+flog.threshold(ERROR, name='ragtop.implicit.setup.width')
+
 knitr::opts_chunk$set(fig.width=6.5, fig.height=4, fig.path='Figs/',
                       echo=FALSE, warning=FALSE, message=FALSE, comment=FALSE)
 # PALETTES: see http://www.r-bloggers.com/the-paul-tol-21-color-salute/
@@ -139,8 +144,8 @@ We generally think of stock volatility in terms of equity option markets.  For t
 ```{r plot_defaultfree_vola, fig.width=6, fig.height=4}
 h = seq(0,17,l=100)
 s = sapply(h, function(x){
-    calibrate_defaultable_volatility(
-      default_free_vola=0.44, 
+    equivalent_jump_vola_to_bs(
+      bs_vola=0.44, 
       time=1.5, 
       const_short_rate=0.02,
       const_default_intensity=x/100)
@@ -158,7 +163,7 @@ It is well-known that $\sigma^{\text{impl}}_{\text{BS}}$ exhibits *skew*, in the
 ```{r plot_vrx_skew_curves, cache=TRUE, fig.width=6, fig.height=4}
 vrx_stock = 33.38
 libor = 0.53
-trading_days = 44; calendar_years = 2/12;
+trading_days = 44; calendar_years = 2/12
 def_probs=c(0,0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2)
 vrx_put_bids = c(0.02, 0.06, 0.11, 0.20, 0.34, 0.52, 0.84, 1.30, 1.80, 2.46, 3.25, 4.20, 5.45, 6.60, 8.25, 9.85)
 vrx_put_asks = c(0.04, 0.09, 0.19, 0.21, 0.41, 0.63, 0.95, 1.39, 1.86, 2.50, 3.40, 4.35, 5.60, 7.30, 8.95, 10.90)
@@ -294,7 +299,7 @@ $$
 
 #### Dividend Protection
 
-Dividend protection terms alter the conversion ratio in proportion to dividend sizes exceeding some contractual mechanism, and are fairly common.   It is easy to demonstrate that  dividend protected bonds can be priced accurately using our usual approach, with dividends respecified never to exceed the protection level.  Note however, that this trick would affect all securities priced on the grid, even ones without dividend protection, so we must be sure to restrict our application of the ceiling only to protected instruments.
+Dividend protection terms alter the conversion ratio in proportion to dividend sizes exceeding some contractual mechanism, and are fairly common.   It is easy to demonstrate that dividend protected bonds can be priced accurately using our usual approach, with dividends respecified never to exceed the protection level.  Note however, that this trick would affect all securities priced on the grid, even ones without dividend protection, so we must be sure to restrict our application of the ceiling only to protected instruments.
 
 
 
@@ -517,9 +522,53 @@ Using our change of variable above we can then find $z_{\text{max}} = z\left(S_{
 Coupons, put dates, call dates and dividends occur on dates known in advance.  These are sufficiently sparse that it is easier to force "extra" timesteps into our $\tau^{(m)}$ grid than it is to discount them to timestep boundaries in a manner consistent with the rest of the model.
 Once we have set our dividend date at a timestep boundary, we deal with dividends on the grid using the interpolation scheme described above.
 
-## Examples
 
-(forthcoming)
+## Calibration
+
+Although in principle we could guess at a reasonable form for equity-linked default intensity, it makes more sense to allow the derivatives markets themselves to give us a hint.  In particular, at any given time there are several hundred actively quoted options on TSLA.  We take a snapshot of these, along with a risk-free yield curve, and attempt to calibrate our model.
+
+#### Fitting Continuous Process Volatilities
+
+To begin with, we probably want our model to provide a very tight match to at-the-money (ATM) volatilities.  Let's say we have decided that we must precisely replicate $K$ such volatilities, or equivalently the prices of $K$ options $O_k, k=1,\dots,K$, in order of (strictly increasing) tenor $T_k$.  Assume we have chosen a default intensity function $h(S_t,t)$.  We can set the volatility $\sigma(t)$ of our continuous process to be constant $\sigma_1$ from time zero to $T_1$ by applying a root-finder to the pricing algorithm.
+
+Once we have established continuous process volatilities to tenor $T_k$, we can extend to $T_{k+1}$ by applying the root finder to the pricing algorithm versus the constant volatility $\sigma_{k+1}$ between $T_k$ and $T_{k+1}$.  Overall, we are able to bootstrap our way into a full *variance accumulation function* for the continuous process whose associated volatilities are piecewise constant.
+
+#### Fitting Linked Default Intensity
+
+Now let us choose a functional form for the default intensity function $h(S_t,t)$, with $M$ parameters $\mu_m,m=1,\dots,M$.  We run a nonlinear optimizer on them, with an objective function that first fits the variance accumulation function for the continuous process given our particular choice of the $\mu_m$, and then prices all the available market options via our pricing algorithm.  Once we have those prices, it is a simple matter to construct a weighted average pricing error as our objective function value.
+
+For best stability and fit quality, it is best to *volatility space*.  That is, we convert every price our algorithm generates into a straight Black-Scholes implied volatility.  This helps the optimization algorithm deal with what would otherwise be tricky variations of scale in the objective function components.  Note that the conversion to Black-Scholes volatilities is, for these purposes, simply an anonymous nonlinear transform of the prices into a space more amenable to fitting.
+
+#### Calibration Results
+
+Our optimizer yields a set of parameters with the best available weighted average price error, along with a variance cumulation function that precisely replicates the ATM volatilities.  We can then use it for analyzing other instruments, or for finding interesting apparent anomalies in the set of options used for calibration.
+
+## Example
+
+Consider the problem of pricing a convertible bond *de novo*.  For concreteness, we take the case of Tesla Motor (TSLA), which issued a 0.25% bond expiring in 2019, and assume we would like to price it.  We have a set of option prices, including
+
+```{r, results='asis'}
+knitr::kable(TSLAMarket$options[c(200,300,400,500,600, 800),], digits=3)
+```
+
+
+Running a crude optimization algorithm yields a term structure of continuous process volatilities
+
+```{r, results='asis'}
+cont_proc_vols = data.frame(tenor=c(0.126598173515982, 0.375913242009132, 0.625228310502283, 
+                                    0.721118721461187, 1.71837899543379), 
+                            volatility=c(0.475587493104041, 0.445656338069887, 
+                                         0.441157031667267, 0.430077201499387, 0.413223140495868))
+knitr::kable(cont_proc_vols, digits=3)
+```
+
+along with a default intensity function
+
+$$
+h(S_t,t) = 0.05 \left(  0.077 +(1-0.077)  \left( \frac{S_0}{S} \right)^{1.02}  \right)
+$$
+
+We can then price our convertible bond, finding that it has present value 94.87 percent of par, which is remarkably close to the contemporaneous market quotes.
 
 ## Performance
 
@@ -528,7 +577,8 @@ Analyzing performance of our basic PDE solver in simple cases shows that converg
 ``` {r plot_step_size_convergence, cache=TRUE, fig.width=6, fig.height=4}
 euro_zero_strike_call = EuropeanOption(maturity=3.53, strike=0, 
                                        callput=1, name="CallStrike0")
-eqcall =  function(n) {
+
+eqcall = function(n) {
   find_present_value(S0=100,instruments=list(c=euro_zero_strike_call),num_time_steps=n)$c
   }
 
@@ -537,6 +587,7 @@ cs = sapply(s,eqcall)/100
 es = (cs - cs[[length(cs)]])[1:(length(s)-1)]
 num_steps = s[1:length(es)]
 conv.rate.model = lm(log(es)~log(num_steps))
+
 plot(s, (cs - cs[[length(cs)]]), log='xy',
      col='orange', pch=19,
      xlab='Step Count (log scale)',
@@ -552,14 +603,17 @@ Grid width is also important for most securities.  Here, the simple case boasts 
 
 ``` {r plot_width_convergence, cache=TRUE, fig.width=6, fig.height=4}
 euro_zero_strike_call = EuropeanOption(maturity=3.53, strike=0, callput=1, name="CallStrike0")
+
 eqwcall =  function(w) {
   find_present_value(S0=100,instruments=list(c=euro_zero_strike_call),
                      num_time_steps=200, std_devs_width=w)$c
 }
+
 w=c(0.25,0.5,0.75,1,1.5,2,2.5,3,3.5,4,4.5,5,6)
 ws = sapply(w,eqwcall)/100
 werr = (ws[[length(ws)]]-ws)[1:(length(w)-1)]
 widths = w[1:length(werr)]
+
 plot(widths, werr, log='y',
      col='darkgreen',pch=19,
      xlab='Width In Standard Deviations',
@@ -569,8 +623,10 @@ plot(widths, werr, log='y',
 ```
 
 
-In the case of more complex equity-linked default, and a coupon-bearing convertible bond, we observe relative errors about twice as large, though we still enjoy superlinear convergence. 
-``` {r plot_cb_convergence, cache=TRUE, fig.width=6, fig.height=4}
+In the case of more complex equity-linked default, and a coupon-bearing convertible bond, we observe relative errors about twice as large, though we still enjoy superlinear convergence.
+
+
+``` {r plot_cbond_convergence, cache=TRUE, fig.width=6, fig.height=4}
   h = 0.1; p = 6;
   pct2 = function(T,t=0) {
     exp(-0.02*(T-t))
@@ -611,4 +667,7 @@ In the case of more complex equity-linked default, and a coupon-bearing converti
                                newdata=list(x=num_steps))),
         col="gray", lty=4)
 ```
+
+These are fairly typical convergence rates for derivatives grid pricing schemes.
+
 ## References

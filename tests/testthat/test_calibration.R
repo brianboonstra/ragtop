@@ -7,14 +7,17 @@ flog.threshold(ERROR, name='ragtop.implicit.setup.width')
 flog.threshold(WARN)
 
 test_that("Black-Scholes volatility calibration", {
-  expect_equal(calibrate_defaultable_volatility(0.75, 20, const_default_intensity=0.0, max.iter=20),
+  expect_equal(equivalent_jump_vola_to_bs(0.75, 20, const_default_intensity=0.0, max.iter=20),
                0.75,
                tolerance=1.e-5)
-  expect_equal(calibrate_defaultable_volatility(0.75, 20, const_default_intensity=0.07, max.iter=20),
+  expect_equal(equivalent_bs_vola_to_jump(0.75, 20, const_default_intensity=0.0, max.iter=20),
+               0.75,
+               tolerance=1.e-5)
+  expect_equal(equivalent_jump_vola_to_bs(0.75, 20, const_default_intensity=0.07, max.iter=20),
                0.5649847,
                tolerance=1.e-5)
 })
-
+equivalent_jump_vola_to_bs
 aiv = american_implied_volatility(25,CALL,S0=100,K=100,time=2.2, const_short_rate=0.03)
 bsiv = implied_volatility(25, CALL, S0=100, K=100, r=0.03, time=2.2)
 test_that("American implied vola same as european when no early exercise", {

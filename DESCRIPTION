@@ -5,7 +5,8 @@ Version: 0.5
 Date: 2016-05-16
 Author: Brian K. Boonstra
 Maintainer: Brian K. Boonstra <ragtop@boonstra.org>
-Description: This package prices convertible bonds and a
+Description: This package prices American and European
+    equity options, convertible bonds and a
     variety of other financial derivatives. It uses an
     extension of the usual Black-Scholes model in which
     jump to default may occur at a probability specified

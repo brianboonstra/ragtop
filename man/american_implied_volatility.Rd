@@ -15,13 +15,13 @@ american_implied_volatility(option_price, callput, S0, K, time,
 \arguments{
 \item{option_price}{Option price to match}
 
-\item{callput}{1 for calls, -1 for puts (may be a vector of the same)}
+\item{callput}{1 for calls, -1 for puts}
 
 \item{S0}{initial underlying price}
 
-\item{K}{strike (may be a vector)}
+\item{K}{strike}
 
-\item{time}{Time from \code{0} until expiration (may be a vector)}
+\item{time}{Time from \code{0} until expiration}
 
 \item{const_default_intensity}{A constant to use for the instantaneous default intensity in case \code{default_intensity_fcn}
 is not given}

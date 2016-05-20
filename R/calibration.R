@@ -195,7 +195,7 @@ equivalent_jump_vola_to_bs = function(bs_vola, time,
     flog.debug("Default free price %s exceeds the minimum price %s so a solution exists",
                default_free_price, min_value, name='ragtop.calibration.equivalent_jump_vola_to_bs')
   }
-  vola = 0.9*default_free_vola  # Reasonable starting guess without doing much math
+  vola = 0.9*bs_vola  # Reasonable starting guess without doing much math
   bs_vals = black_scholes_on_term_structures(-1, 1, 1, time,
                                                        const_volatility=vola,
                                                        discount_factor_fcn = discount_factor_fcn,
@@ -264,7 +264,7 @@ equivalent_bs_vola_to_jump = function(jump_process_vola, time,
                                                         dividends=dividends,
                                                         borrow_cost=borrow_cost,
                                                         dividend_rate=dividend_rate)$Price
-  vola = defaultable_volatility  # Reasonable starting guess without doing much math
+  vola = jump_process_vola  # Reasonable starting guess without doing much math
   bs_vals = black_scholes_on_term_structures(-1, 1, 1, time,
                                              const_volatility=vola,
                                              discount_factor_fcn = discount_factor_fcn,
@@ -412,7 +412,7 @@ implied_volatility_with_term_struct = function(option_price, callput, S0, K, tim
   compute_price = function(v) {
     black_scholes_on_term_structures(callput, S0, K, time,
                                      const_volatility=v, # Redundant, but left for clarity
-                                     variance_cumulation_fcn = function(T, t){v^2*(T-t)},
+                                     variance_cumulation_fcn = function(T, t,...){v^2*(T-t)},
                                      ...)
   }
   min_vola = 1.e-12
@@ -484,6 +484,9 @@ implied_volatility_with_term_struct = function(option_price, callput, S0, K, tim
 #'   underlying pricing algorithm
 #' @inheritParams form_present_value_grid
 #' @inheritParams american
+#' @param callput 1 for calls, -1 for puts
+#' @param K strike
+#' @param time Time from \code{0} until expiration
 #' @param option_price Option price to match
 #' @param ... Additional arguments to be passed on to \code{\link{implied_volatility_with_term_struct}}
 #'   and \code{\link{american}}
@@ -995,22 +998,22 @@ penalty_with_intensity_link = function(p, s, h,
   }
   modelvols = implied_volatilities_with_rates_struct(num_pvs, get_field('callput'), S0,
                                                      get_field('strike'),
-                                                     discount_factor_fcn=disc_fcn,
+                                                     discount_factor_fcn=discount_factor_fcn,
                                                      get_field('maturity'))
   midvols = implied_volatilities_with_rates_struct(fit_instrument_prices,
                                                    get_field('callput'), S0,
                                                    get_field('strike'),
-                                                   discount_factor_fcn=disc_fcn,
+                                                   discount_factor_fcn=discount_factor_fcn,
                                                    get_field('maturity'))
   bidvols = implied_volatilities_with_rates_struct(fit_instrument_prices-0.5*fit_instrument_spreads,
                                                    get_field('callput'), S0,
                                                    get_field('strike'),
-                                                   discount_factor_fcn=disc_fcn,
+                                                   discount_factor_fcn=discount_factor_fcn,
                                                    get_field('maturity'))
   askvols = implied_volatilities_with_rates_struct(fit_instrument_prices+0.5*fit_instrument_spreads,
                                                    get_field('callput'), S0,
                                                    get_field('strike'),
-                                                   discount_factor_fcn=disc_fcn,
+                                                   discount_factor_fcn=discount_factor_fcn,
                                                    get_field('maturity'))
   volspreads = askvols - bidvols
   pen_components =  ((modelvols-midvols)/(0.5*volspreads) )^2
@@ -1041,7 +1044,6 @@ fit_to_option_market = function(variance_instruments,
                                 relative_spread_tolerance=0.15,
                                 num_variance_time_steps=30)
 {
-  #TODO: Allow NULL weights and choose something smart
   #TODO: Allow NULL spreads and choose something smart
   h = base_default_intensity
   ss = c(1/26, 1/13, 2/13, 6/13, 11/13)
@@ -1122,4 +1124,95 @@ fit_to_option_market = function(variance_instruments,
                     }
   )
   list(h=h, s=best_s, p=best_p, default_intensity_fcn=def_intens_f, variance=varnce, penalties_found=pens_found)
+}
+
+
+
+#' Calibrate volatilities and equity-linked default intensity making many assumptions
+#'
+#' @export fit_to_option_market_df
+fit_to_option_market_df = function(
+  S0 = TSLAMarket$S0,
+  discount_factor_fcn = spot_to_df_fcn(TSLAMarket$risk_free_rates),
+  options_df = TSLAMarket$options,
+  min_maturity = 1/12,
+  min_moneyness=0.80,
+  max_moneyness = 1.20,
+  base_default_intensity=0.05)
+{
+  make_option = function(x) {
+    if (x['callput']>0) cp='C' else cp='P'
+    ragtop::AmericanOption(callput=x['callput'], strike=x['K'], maturity=x['time'],
+                           name=paste(cp,x['K'],as.integer(100*x['time']), sep='_'))
+  }
+
+  dfrow_bsimpvol = function(x, tgt_field='mid') {
+    if (any(is.na(x))) {
+      iv = NA
+    } else {
+      iv = implied_volatility_with_term_struct(x[tgt_field], x['callput'],
+                                               S0, x['K'], x['time'],
+                                               discount_factor_fcn=discount_factor_fcn)
+    }
+    iv
+  }
+  dfrow_bs_delta = function(x) {
+    bs = black_scholes_on_term_structures(x['callput'], S0, x['K'], x['time'],
+                                          const_volatility=x['midvol'],
+                                          discount_factor_fcn=discount_factor_fcn)
+    bs$Delta
+  }
+  big_near_50_delta = function(d) {
+    pmax(0, 0.5 - abs(abs(d) - 0.5))
+  }
+
+  atm_put_price = max(options_df$K[options_df$K<=S0])
+  atm_put_ix = ((options_df$K==atm_put_price) & (options_df$callput==PUT)
+                & (options_df$time>min_maturity))
+  atm_puts = lapply(unlist(apply(options_df[atm_put_ix,], 1, list),
+                           recursive = FALSE),
+                    make_option)
+  atm_put_prices = options_df$mid[atm_put_ix]
+  atm_put_spreads = options_df$spread[atm_put_ix]
+
+  valid_moneyness_ix = ((options_df$K > options_df*S0) &
+                          (options_df$K < max_moneyness*S0))
+  other_opt_ix = (options_df$time>min_maturity) & (!atm_put_ix) & valid_moneyness_ix
+
+  fittable_options = options_df[other_opt_ix,]
+  flog.info("%s by %s fittable options include %s %s",
+            nrow(fittable_options), ncol(fittable_options),
+            paste0(colnames(fittable_options)), paste0(fittable_options[1,]),
+            name='ragtop.calibration.fit_to_option_market_df')
+  fittable_options$midvol = apply(fittable_options, 1, dfrow_bsimpvol, 'mid')
+  fittable_options$bidvol = apply(fittable_options, 1, dfrow_bsimpvol, tgt_field='bid')
+  fittable_options$askvol = apply(fittable_options, 1, dfrow_bsimpvol, tgt_field='ask')
+  fittable_options = fittable_options[!is.na(fittable_options$bidvol),]
+  fittable_options$delta =  apply(fittable_options, 1, dfrow_bs_delta)
+
+  fittable_options$weight = fittable_options$time * big_near_50_delta(fittable_options$delta)
+  fittable_options = fittable_options[!is.na(fittable_options$weight),]
+  flog.info("Will fit to options with %s weights ranging from %s to %s",
+            nrow(fittable_options), min(fittable_options$weight),
+            max(fittable_options$weight),
+            name='ragtop.calibration.fit_to_option_market_df')
+
+  fittable_amer_options  = apply(fittable_options, 1, make_option)
+  fittable_amer_option_prices  = fittable_options$mid
+  fittable_amer_option_spreads  = fittable_options$spread
+  fittable_amer_option_weights  = fittable_options$weight
+
+  fit = ragtop::fit_to_option_market(
+    variance_instruments=atm_puts,
+    variance_instrument_prices=atm_put_prices,
+    variance_instrument_spreads=atm_put_spreads,
+    fit_instruments=fittable_amer_options,
+    fit_instrument_prices=fittable_amer_option_prices,
+    fit_instrument_spreads=fittable_amer_option_spreads,
+    fit_instrument_weights=fittable_amer_option_weights,
+    S0=S0,
+    base_default_intensity=base_default_intensity,
+    discount_factor_fcn = discount_factor_fcn)
+
+  fit
 }

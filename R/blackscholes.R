@@ -157,7 +157,7 @@ black_scholes_on_term_structures = function(callput, S0, K, time,
   if (length(time)>1) {
     stop("Only a single expiration time may be provided.")
   }
-  if (time<=0) {
+  if (is.na(time) || time<=0) {
     stop("Expiration time must be strictly positive.")
   }
   flog.debug("black_scholes_on_term_structures():  callput %s\nS0=%s\n  K=%s\n  time=%s\n  divrate=%s\n  borrow_cost=%s",

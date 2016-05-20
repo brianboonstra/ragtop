@@ -6,142 +6,185 @@ output: rmarkdown::html_vignette
 bibliography: converts.bib
 #bibliography: ragtop_references.bib
 vignette: >
-  %\VignetteIndexEntry{ragtop: Complex Derivatives Pricing}
+  %\VignetteIndexEntry{ragtop: Pricing equity derivatives with extensions of Black-Scholes}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+```{r global_options, include=FALSE}
+library(ragtop)
+library(futile.logger)
+library(ggplot2)
+library(reshape2)
+library(stringr)
+library(MASS)
+
+flog.threshold(ERROR)
+flog.threshold(ERROR, name='ragtop.implicit.timestep.construct_tridiagonals')
+flog.threshold(ERROR, name='ragtop.calibration.implied_volatility.lowprice')
+flog.threshold(ERROR, name='ragtop.calibration.implied_volatility_with_term_struct')
+flog.threshold(ERROR, name='ragtop.implicit.setup.width')
+
+knitr::opts_chunk$set(fig.width=6.5, fig.height=4, fig.path='Figs/',
+                      echo=FALSE, warning=FALSE, message=FALSE, comment=FALSE)
+# PALETTES: see http://www.r-bloggers.com/the-paul-tol-21-color-salute/
+# FOCUS PALETTES
+# Red as highlight
+redfocus = c("#CB181D", "#252525", "#525252", "#737373", "#969696", "#BDBDBD", "#D9D9D9", "#F0F0F0")
+ 
+# Green as highlight
+greenfocus = c("#41AB5D", "#252525", "#525252", "#737373", "#969696", "#BDBDBD", "#D9D9D9", "#F0F0F0")
+ 
+# Blue as highlight
+bluefocus = c("#0033FF", "#252525", "#525252", "#737373", "#969696", "#BDBDBD", "#D9D9D9", "#F0F0F0")
+ 
+# EQUAL WEIGHT
+# Generated with rainbow(12, s = 0.6, v = 0.75)
+rainbow12equal = c("#BF4D4D", "#BF864D", "#BFBF4D", "#86BF4D", "#4DBF4D", "#4DBF86", "#4DBFBF", "#4D86BF", "#4D4DBF", "#864DBF", "#BF4DBF", "#BF4D86")
+rainbow10equal = c("#BF4D4D", "#BF914D", "#A8BF4D", "#63BF4D", "#4DBF7A", "#4DBFBF", "#4D7ABF", "#634DBF", "#A84DBF", "#BF4D91")
+rainbow8equal = c("#BF4D4D", "#BFA34D", "#86BF4D", "#4DBF69", "#4DBFBF", "#4D69BF", "#864DBF", "#BF4DA3")
+rainbow6equal = c("#BF4D4D", "#BFBF4D", "#4DBF4D", "#4DBFBF", "#4D4DBF", "#BF4DBF")
+ 
+# Generated with package "gplots" function rich.colors(12)
+rich12equal = c("#000040", "#000093", "#0020E9", "#0076FF", "#00B8C2", "#04E466", "#49FB25", "#E7FD09", "#FEEA02", "#FFC200", "#FF8500", "#FF3300")
+rich10equal = c("#000041", "#0000A9", "#0049FF", "#00A4DE", "#03E070", "#5DFC21", "#F6F905", "#FFD701", "#FF9500", "#FF3300")
+rich8equal = c("#000041", "#0000CB", "#0081FF", "#02DA81", "#80FE1A", "#FDEE02", "#FFAB00", "#FF3300")
+rich6equal = c("#000043", "#0033FF", "#01CCA4", "#BAFF12", "#FFCC00", "#FF3300")
+ 
+# Generated with package "fields" function tim.colors(12), which is said to emulate the default matlab colorset
+tim12equal = c("#00008F", "#0000EA", "#0047FF", "#00A2FF", "#00FEFF", "#5AFFA5", "#B5FF4A", "#FFED00", "#FF9200", "#FF3700", "#DB0000", "#800000")
+tim10equal = c("#00008F", "#0000FF", "#0070FF", "#00DFFF", "#50FFAF", "#BFFF40", "#FFCF00", "#FF6000", "#EF0000", "#800000")
+tim8equal = c("#00008F", "#0020FF", "#00AFFF", "#40FFBF", "#CFFF30", "#FF9F00", "#FF1000", "#800000")
+tim6equal = c("#00008F", "#005AFF", "#23FFDC", "#ECFF13", "#FF4A00", "#800000")
+ 
+# Generated with sort(brewer.pal(8,"Dark2")) #Dark2, Set2
+dark8equal = c("#1B9E77", "#666666", "#66A61E", "#7570B3", "#A6761D", "#D95F02", "#E6AB02", "#E7298A")
+dark6equal = c("#1B9E77", "#66A61E", "#7570B3", "#D95F02", "#E6AB02", "#E7298A")
+set8equal = c("#66C2A5", "#8DA0CB", "#A6D854", "#B3B3B3", "#E5C494", "#E78AC3", "#FC8D62", "#FFD92F")
+set6equal = c("#66C2A5", "#8DA0CB", "#A6D854", "#E78AC3", "#FC8D62", "#FFD92F")
+ 
+
+```
 
 ## Introduction
 
-Financial derivatives generally fall into one of just a few classes: fixed income, equities, foreign exchange, commodities, and energy.  Pricing models for such derivatives usually involve standard approaches distinct to each of these asset classes.  For example, equity derivatives are priced on variants of the famous Black-Scholes model, while tranche protection on mortgage-backed securities uses copulas with marginal poisson distribution.  Convertible bonds are one of the few types of derivative securities straddling asset classes, and whose valuation must be linked to reasonable models of *multiple* asset types, involving equity valuations, fixed income and sometimes foreign exchange.
+Financial derivatives generally fall into one of just a few classes: fixed income, equities, foreign exchange, commodities, and energy.  Pricing models for these derivatives usually involve standard approaches distinct to each of these asset classes.  For example, equity derivatives are priced on variants of the famous Black-Scholes model, while tranche protection on mortgage-backed securities uses copulas with marginal Poisson distributions.  Convertible bonds are one of the few types of derivative securities straddling asset classes, and whose valuation must be linked to reasonable models of *multiple* asset types, involving equity valuations, fixed income and sometimes foreign exchange.
 
-A **convertible bond** is similar to a corporate bond, with promised coupons and notional payments at some known set of future dates, but with a twist.  The bond holder, who has effectively lent money to the issuer, can choose to *convert* the bond into equity (subject to some restrictions), in an amount known as the *conversion value*.  The bond price therefore depends on three major processes:
+A **convertible bond** is similar to a corporate bond^[A standard corporate bond is often called a *straight* bond], promising coupons and notional payments at some known set of future dates, but with a twist.  The bond holder, who has effectively lent money to the issuer, can choose to *convert* the bond into equity (subject to some restrictions), in a varying amount known as the *conversion value*.  The bond value therefore depends on three major processes:
 
-- *interest rates* affecting the discounted value of future coupons and notional
 - *equity* value affecting conversion value
 - *default* of the issuer wiping out equity, coupons and notional
+- *interest rates* affecting the discounted value of future coupons and notional
 
-Of these processes, the changes in equity value are most important, followed closely by issuer default.  The `ragtop` package provides derivative pricing and calibration based on simply linked models of equities and corporate defaults.  Though convertible bonds are our most important case, we also consider mandatories, compound options, and portfolios of equity options and credit derivatives on the same underlying company.
+Of these processes, the changes in equity value are most important, followed closely by issuer default^[One might wonder how a fixed-income security could be relatively insensitive to stochastic interest rates.  Most convertibles are issued in countries with stable economies, so the rates are generally far less variable and far smaller than the credit spreads of the bond issuers.].  We discuss derivative pricing and calibration based on simply linked models of equities and corporate defaults.  Though convertible bonds are our most important case, we also consider mandatories, compound options, and portfolios of equity options and credit derivatives on the same underlying company.
 
 
 ## Stochastic Model
 
-Our basic stochastic model links equity values $S_t$ with *hazard rate* or default intensity $h$
+Our basic stochastic model^[More explicitly we could write
+$$
+\frac{dS_t}{S_t}=(r(t)+h(S_t,t)-q(t)) dt + \sigma(t) dZ - dJ(h(S_t,t))
+$$] links equity values $S_t$ with *hazard rate* or default intensity $h$
 $$
 	\frac{dS_t}{S_t}=(r+h-q) dt + \sigma dZ - dJ
 $$
-where $h$ is a deterministic function of stock price and time, and $J$ is a Poisson jump process^[More explicitly we could write
-$$
-\frac{dS_t}{S_t}=(r(t)+h(S_t,t)-q(t)) dt + \sigma(t) dZ - dJ(h(S_t,t))
-$$] [see @Lin06; @And04; and @WuC06].  This model is similar to Black-Scholes, with the jump process $J$ representing default, compensated by extra drift in the equity at rate $h$.
-
-As an important parsimonious example we may take the default intensity $h$ to be given by a shifted power law
-$$
-h(S,t) = h_c + \alpha(t) S^p
-$$
-where $\alpha(\cdot)$ is a deterministic function of time and the power $p$ is a constant generally between -10 and -1.  In practice, the volatility $\sigma$, borrow cost $q$ and (less frequently) even the short rate $r$ can often be set to constants, though we do not make that assumption here.
-
-
-## Arguments of Intuition
-
-Only two parameters of our model are likely to be well-understood and readily specified by practitioners:
-- The short rate $r(t)$ can be inferred using the usual interest rate curve bootstrapping techniques.
-- The borrow cost $q(t)$ is typically set according to the rates negotiated with a prime broker.
-
-### Stock Volatility $\sigma$
-
-We generally think of stock volatility in terms of equity option markets.  For that reason, we expect to "imply" an appropriate value for $\sigma^{\text{impl}}$ from equity options where possible.  However, it is important to keep in mind that $\sigma^{\text{impl}}$ is inevitably different from the default-free $\sigma^{\text{impl}}_{\text{BS}}$ in the Black-Scholes model.  The two will be closely related, but since some of the price variability is represented by the jump process $dJ$, we will have $\sigma^{\text{impl}} < \sigma^{\text{impl}}_{\text{BS}}$.
-
-Convertible bonds often have tenors far exceeding those found in liquid option markets.  This makes historical volatility estimates^[Historical volatility estimates are usually formed by computing the standard deviation of $\log\left(\frac{S^H_{i}}{S^H_{i-1}}\right)$ for a time series of historical prices $S^H$.] more desirable.  Since historical prices are by definition default-free, they are compatible with $\sigma$ and not with $\sigma_{\text{BS}}$.  (This property of historical volatility estimation for risky entities is generally underappreciated.)
-
-### Survival Probabilities and Independent Default Intensity $\tilde{h}$
-
-Equity default observations are almost infinitely sparser than equity price observations^[Equity defaults are significantly sparser than major corporate events such as takeovers, spinoffs and special dividends as well.  Modelers do not generally treat corporate events because their details and effects are a complete modeling quagmire.].  Default models and specifications are correspondingly crude.  We think of default intensity (independent of stock price) as being based on a sequence $\{H_i, T_i\}$ such that default time $T_d$ satisfies
-$$
-	\text{Prob}( T_d > T_i ) = \exp{-H_i T_i}.
-$$
-Where possible, the $H_i$ are observed credit default swap (CDS) spreads. Taking $T_0=0$ we then find a step function $\tilde{h}(t)$ with left-discontinuities at $\{T_i\}$ such that
-$$
-H_i T_i = \sum_{j \leq i} h(T_j) (T_j-T_{j-1})
-$$
-
-The survival probability to any time $t$ is then given by the Poisson distribution function of
-$$
-	\text{Prob}( T_d > t ) = \exp{\left(-\int_0^t \tilde{h}(s) ds \right)}
-$$
-
-In most cases this is trivial, since only one spread observation $H$ is available. 
-
-For shifted power laws we can match a wide variety of survival probability functions by choosing various intensity modifiers $\alpha(t)$.  A particularly important case is the constant-intensity target with rate $h_c$
-$$
-	\text{Prob}( T_d > t ) = e^{-h_c t}.
-$$
-
 
 
 ## Representation As A Partial Differential Equation
 
-Assume we have a deterministic short rate $r(t)$, holding cost $q(t)$ and volatility $\sigma(t)$.  Following the usual arguments [Kar91], we can apply the Feynman-Kac theorem to our SDE to obtain a PDE satisfied by any derivative of $S$
+Recalling that short rate $r(t)$, holding cost $q(t)$ and volatility $\sigma(t)$ are deterministic, we can apply the usual arguments [@Kar91,@And04] and the Feynman-Kac theorem to our SDE to obtain a PDE satisfied by any derivative of $S$ that lacks cashflows
 $$
-{{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} t}}} -rV + \left(r-q+h\right)S{{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S}}}+\frac12 \sigma(t)^2 S^2 {{\frac{\partial^2 \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S^2}}}=0
-$$
-
-
-### Change of Variables
-
-For greater stability and superior computational properties, we change variables
-$$
-\begin{aligned}
-	\tau &= T-t \\
-	z &= \log(S/K) - (r-q-\frac12 \sigma^2 ) \tau\\
-	g(z,\tau) &= B\left(0,t(\tau)\right) V( S(z),t(\tau) )
-\end{aligned}
+{{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} t}}} -rV + h(\delta-V) + \left(r-q+h\right)S{{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S}}}+\frac12 \sigma^2 S^2 {{\frac{\partial^2 \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S^2}}}=0.
 $$
 
-where $B()$ is the usual discount factor function
-$$
-B\left(0,t(\tau)\right) = \exp\left(-\int_0^{t(\tau)} r(s) d\mspace{-1.0mu}s  \right)
-$$
+This backward parabolic PDE is amenable to numerical integration, which we specify in the final section below.  For now, let us take it as given that for any derivative with known boundary conditions we are able to form solutions $v^{(m)}_n$ on a grid of times $t^{(m)}, m=0,\dots,M$ and stock prices $S_n, n=-N,\dots,N$.  The present value of our derivative is represented by the entry $v^{(M)}_0$.
 
+## Option Market Data
 
+We have included some option market data in \code{ragtop}, consisting of a set of several hundred option details for Tesla Motor in April 2016.
 
-## Styles
-
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
-
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
-
-## Figures
-
-The figure sizes have been customised so that you can easily put two images side-by-side. 
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
+```{r show_TSLA_S0, echo=TRUE}
+TSLAMarket$S0
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
-
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
+```{r show_TSLA_rf, echo=TRUE}
+TSLAMarket$risk_free_rates
 ```
 
-Also a quote using `>`:
+```{r, results='asis'}
+knitr::kable(TSLAMarket$options[c(200,300,400,500,600, 800),], digits=3, row.names = F)
+```
 
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
+## Pricing Options
+
+Tesla does not pay any dividends, so we can evaluate calls using the Black Scholes model
+
+```{r blackscholes, echo=TRUE}
+blackscholes(TSLAMarket$options[400,'callput'], 
+             TSLAMarket$S0, 
+             TSLAMarket$options[400,'K'], 
+             0.005, 
+             TSLAMarket$options[400,'time'], 
+             0.50)
+```
+
+or better yet find the implied Black-Scholes volatility
+
+```{r implied_volatility, echo=TRUE}
+implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
+                   S0 = TSLAMarket$S0, 
+                   callput = TSLAMarket$options[400,'callput'], 
+                   K=TSLAMarket$options[400,'K'], 
+                   r = 0.005, 
+                   time = TSLAMarket$options[400,'time'])
+```
+
+For puts, we need to use a pricing algorithm that accounts for early exercise.  \code{ragtop} uses a control variate scheme on top of an implicity PDE solver to achieve reasonable performance
+
+```{r implied_volatility, echo=TRUE}
+american_implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
+       S0 = TSLAMarket$S0, 
+       callput = TSLAMarket$options[400,'callput'], 
+       K=TSLAMarket$options[400,'K'], 
+       const_short_rate = 0.005, 
+       time = TSLAMarket$options[400,'time'])
+```
+
+This is also the underlying scheme for implied volatility
+
+```{r american_implied_volatility, echo=TRUE}
+american_implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
+     S0 = TSLAMarket$S0, 
+     callput = TSLAMarket$options[400,'callput'], 
+     K=TSLAMarket$options[400,'K'], 
+     const_short_rate = 0.005, 
+     time = TSLAMarket$options[400,'time'])
+```
+
+
+### Including Default Intensities
+
+We can correct for constant intensities of default with parameters of convenience
+
+```{r implied_volatility, echo=TRUE}
+implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
+                   S0 = TSLAMarket$S0, 
+                   callput = TSLAMarket$options[400,'callput'], 
+                   K=TSLAMarket$options[400,'K'], 
+                   r = 0.005, 
+                   time = TSLAMarket$options[400,'time'],
+                   const_default_intensity = 0.03)
+```
+
+```{r american_implied_volatility, echo=TRUE}
+american_implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
+     S0 = TSLAMarket$S0, 
+     callput = TSLAMarket$options[400,'callput'], 
+     K=TSLAMarket$options[400,'K'], 
+     const_short_rate = 0.005, 
+     time = TSLAMarket$options[400,'time'],
+     const_default_intensity = 0.0200)
+```
+
 
 ## References
 
