@@ -25,7 +25,7 @@
 #'
 #' @section Important Features:
 #'
-#' \itemize {
+#' \itemize{
 #'  \item{\emph{Black-Scholes}: }{The standard model is automatically supported as a special case, but also has optimized routines}
 #'  \item{\emph{Term Structures}: }{The package allows for any kind of instrument to be priced with time-varying rates, volatility and default intensity}
 #'  \item{\emph{Dividends}: }{Allows for discrete dividends in an arbitrary combination of fixed and proportional amounts.  The difference between fixed and proprtional can be up to 10 percent in implied volatility terms.}

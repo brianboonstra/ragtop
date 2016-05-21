@@ -11,7 +11,49 @@ fit_to_option_market(variance_instruments, variance_instrument_prices,
   exp(-const_short_rate * (T - t)) }, ..., base_default_intensity = 0.05,
   relative_spread_tolerance = 0.15, num_variance_time_steps = 30)
 }
+\arguments{
+\item{variance_instruments}{A list of instruments in strictly increasing order
+of maturity, from which the volatility term structure will be inferred.  Once the
+calibration is finished, the chosen parameters will reproduce the prices of
+these instruments with fairly high precision.}
+
+\item{variance_instrument_prices}{Central price targets for the variance instruments}
+
+\item{variance_instrument_spreads}{Bid-offer spreads used to normalize errors
+in variance instrument prices during term structure fitting}
+
+\item{fit_instruments}{A list of instruments in any order, from which the
+mispricing penalties used for judging fit quality will be computed}
+
+\item{fit_instrument_prices}{Central price targets for the variance instruments}
+
+\item{fit_instrument_spreads}{Bid-offer spreads used to normalize errors
+in fit instrument prices during default intensity}
+
+\item{S0}{Current underlying price}
+
+\item{discount_factor_fcn}{A function for computing present values to
+time \code{t} of various cashflows occurring during this timestep, with
+arguments \code{T}, \code{t}}
+
+\item{base_default_intensity}{Overall default intensity (in natural units)}
+
+\item{fit_instrument_spreads}{Bid-offer spreads used to normalize errors
+in fit instrument prices during default intensity}
+}
 \description{
-Calibrate volatilities and equity-linked default intensity
+Given derivative instruments (subclasses of
+  GridPricedInstrument, though typically either \code{\link{AmericanOption}}
+  or \code{\link{EuropeanOption}} objects), along with their prices and spreads, calibrate
+  variance cumulation (the
+ at-the-money volatility of the continuous process) and equity linked default
+ intensity of the form $h(s + (1-s)(S0/S_t)^p)$.
+}
+\details{
+In its present form, this function uses a brain-dead grid search.
+}
+\seealso{
+\code{\link{penalty_with_intensity_link}} for the penalty function used
+  as an optimization target
 }
 

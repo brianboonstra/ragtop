@@ -59,6 +59,7 @@ happens to come from the straight Black-Scholes model.
 }
 \seealso{
 Other Equity Dependent Default Intensity: \code{\link{find_present_value}},
+  \code{\link{fit_to_option_market_df}},
   \code{\link{form_present_value_grid}},
   \code{\link{implied_jump_process_volatility}}
 

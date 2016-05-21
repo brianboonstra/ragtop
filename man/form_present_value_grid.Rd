@@ -62,6 +62,7 @@ If any instrument in the \code{instruments} has a strike, then the grid will be
 }
 \seealso{
 Other Equity Dependent Default Intensity: \code{\link{find_present_value}},
+  \code{\link{fit_to_option_market_df}},
   \code{\link{fit_variance_cumulation}},
   \code{\link{implied_jump_process_volatility}}
 }

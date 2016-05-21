@@ -55,7 +55,8 @@ Use a finite difference scheme to form estimates of present values for a variety
  value of each instrument at the present stock price \code{S0}
 }
 \seealso{
-Other Equity Dependent Default Intensity: \code{\link{fit_variance_cumulation}},
+Other Equity Dependent Default Intensity: \code{\link{fit_to_option_market_df}},
+  \code{\link{fit_variance_cumulation}},
   \code{\link{form_present_value_grid}},
   \code{\link{implied_jump_process_volatility}}
 }

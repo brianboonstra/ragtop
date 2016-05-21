@@ -21,4 +21,11 @@ Given a volatility term structure, create a corresponding variance
   forward volatility, with the final such forward volatility
   extending to infinity.
 }
+\examples{
+vc = variance_cumulation_from_vols(
+  data.frame(time=c(0.1,2,3),
+  volatility=c(0.2,0.5,1.2)))
+vc(1.5, 0)
+
+}
 

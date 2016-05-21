@@ -9,7 +9,34 @@ price_with_intensity_link(p, s, h, variance_instruments,
   num_time_steps = 30, ..., relative_spread_tolerance = 0.15,
   num_variance_time_steps = 30)
 }
+\arguments{
+\item{p}{Power of default intensity}
+
+\item{s}{Proprtion of constant defalt intensity}
+
+\item{h}{Base}
+
+\item{variance_instruments}{A list of instruments in strictly increasing order
+of maturity, from which the volatility term structure will be inferred.  Once the
+calibration is finished, the chosen parameters will reproduce the prices of
+these instruments with fairly high precision.}
+
+\item{variance_instrument_prices}{Central price targets for the variance instruments}
+
+\item{variance_instrument_spreads}{Bid-offer spreads used to normalize errors
+in variance instrument prices during term structure fitting}
+
+\item{fit_instruments}{A list of instruments in any order, from which the
+mispricing penalties used for judging fit quality will be computed}
+
+\item{S0}{Current underlying price}
+}
 \description{
-Helper function (instrument pricing) for calibration of equity-linked default intensity
+Given derivative instruments (subclasses of
+  GridPricedInstrument, though typically either \code{\link{AmericanOption}}
+  or \code{\link{EuropeanOption}} objects), along with their prices and spreads, calibrate
+  variance cumulation (the
+ at-the-money volatility of the continuous process) and then price the instruments via equity linked default
+ intensity of the form $h(s + (1-s)(S0/S_t)^p)$.
 }
 

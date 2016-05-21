@@ -48,6 +48,7 @@ implied_jump_process_volatility(25, AmericanOption(maturity=1.1, strike=100, cal
   without equity dependence of default intensity, \code{\link{american_implied_volatility}} for the same on American options
 
 Other Equity Dependent Default Intensity: \code{\link{find_present_value}},
+  \code{\link{fit_to_option_market_df}},
   \code{\link{fit_variance_cumulation}},
   \code{\link{form_present_value_grid}}
 

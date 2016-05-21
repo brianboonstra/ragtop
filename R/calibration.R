@@ -938,6 +938,17 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
 
 #' Helper function (instrument pricing) for calibration of equity-linked default intensity
 #'
+#' Given derivative instruments (subclasses of
+#'   GridPricedInstrument, though typically either \code{\link{AmericanOption}}
+#'   or \code{\link{EuropeanOption}} objects), along with their prices and spreads, calibrate
+#'   variance cumulation (the
+#'  at-the-money volatility of the continuous process) and then price the instruments via equity linked default
+#'  intensity of the form $h(s + (1-s)(S0/S_t)^p)$.
+#'
+#' @param p Power of default intensity
+#' @param s Proprtion of constant defalt intensity
+#' @param h Base
+#' @inheritParams fit_to_option_market
 #' @export price_with_intensity_link
 price_with_intensity_link = function(p, s, h,
                                      variance_instruments,
@@ -980,6 +991,7 @@ price_with_intensity_link = function(p, s, h,
 #'    vol terms).
 #'
 #' @inheritParams fit_to_option_market
+#' @inheritParams price_with_intensity_link
 #' @seealso \code{\link{price_with_intensity_link}} for the pricing function
 #' @export penalty_with_intensity_link
 penalty_with_intensity_link = function(p, s, h,

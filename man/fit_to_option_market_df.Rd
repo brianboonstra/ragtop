@@ -9,7 +9,37 @@ fit_to_option_market_df(S0 = TSLAMarket$S0,
   options_df = TSLAMarket$options, min_maturity = 1/12,
   min_moneyness = 0.8, max_moneyness = 1.2, base_default_intensity = 0.05)
 }
+\arguments{
+\item{S0}{Current underlying price}
+
+\item{discount_factor_fcn}{A function for computing present values to
+time \code{t} of various cashflows occurring during this timestep, with
+arguments \code{T}, \code{t}}
+
+\item{options_df}{A data frame of American option details.  It should
+have columns \code{callput}, \code{K}, \code{time},
+\code{mid}, \code{bid}, and \code{ask},}
+
+\item{min_maturity}{Minimum option maturity to allow in calibration}
+
+\item{min_moneyness}{Maximum option strike as a proportion of S0 to allow in calibration}
+
+\item{max_moneyness}{Maximum option strike as a proportion of S0  to allow in calibration}
+
+\item{base_default_intensity}{Overall default intensity (in natural units)}
+}
 \description{
-Calibrate volatilities and equity-linked default intensity making many assumptions
+This is a convenience function for calibrating variance cumulation (the
+ at-the-money volatility of the continuous process) and equity linked default
+ intensity of the form $h(s + (1-s)(S0/S_t)^p)$, using a \code{data.frame} of
+ option market data.
+}
+\seealso{
+\code{\link{fit_to_option_market}} the underlying fit algorithm
+
+Other Equity Dependent Default Intensity: \code{\link{find_present_value}},
+  \code{\link{fit_variance_cumulation}},
+  \code{\link{form_present_value_grid}},
+  \code{\link{implied_jump_process_volatility}}
 }
 

@@ -11,7 +11,51 @@ penalty_with_intensity_link(p, s, h, variance_instruments,
   discount_factor_fcn = function(T, t) {     exp(-const_short_rate * (T - t))
   }, ..., relative_spread_tolerance = 0.15, num_variance_time_steps = 30)
 }
+\arguments{
+\item{p}{Power of default intensity}
+
+\item{s}{Proprtion of constant defalt intensity}
+
+\item{h}{Base}
+
+\item{variance_instruments}{A list of instruments in strictly increasing order
+of maturity, from which the volatility term structure will be inferred.  Once the
+calibration is finished, the chosen parameters will reproduce the prices of
+these instruments with fairly high precision.}
+
+\item{variance_instrument_prices}{Central price targets for the variance instruments}
+
+\item{variance_instrument_spreads}{Bid-offer spreads used to normalize errors
+in variance instrument prices during term structure fitting}
+
+\item{fit_instruments}{A list of instruments in any order, from which the
+mispricing penalties used for judging fit quality will be computed}
+
+\item{fit_instrument_prices}{Central price targets for the variance instruments}
+
+\item{fit_instrument_spreads}{Bid-offer spreads used to normalize errors
+in fit instrument prices during default intensity}
+
+\item{S0}{Current underlying price}
+
+\item{discount_factor_fcn}{A function for computing present values to
+time \code{t} of various cashflows occurring during this timestep, with
+arguments \code{T}, \code{t}}
+}
 \description{
-Helper function (volatility-normalized pricing error) for calibration of equity-linked default intensity
+Given a set SDE parameters, form a volatility term structure that fairly precisely matches
+  the supplied prices of the \code{variance_instruments}.  Then use that term structure and
+  the default intensity to price all the \code{fit_instruments}, and compare them to the
+  \code{fit_instrument_prices}.
+}
+\details{
+Forms implied Black-Scholes volatilities from all supplied mid prices, and their
+   implied bid and offer prices, as well as from the prices computed by the grid solver. Each
+   instrument is then assigned an error term component in proportion to its weight
+   and the pricing error (in implied vol terms) divided by the spread (also in implied
+   vol terms).
+}
+\seealso{
+\code{\link{price_with_intensity_link}} for the pricing function
 }
 
