@@ -2,9 +2,6 @@
 library(ragtop)
 library(futile.logger)
 library(ggplot2)
-library(reshape2)
-library(stringr)
-library(MASS)
 
 flog.threshold(ERROR)
 flog.threshold(ERROR, name='ragtop.implicit.timestep.construct_tridiagonals')
@@ -14,54 +11,18 @@ flog.threshold(ERROR, name='ragtop.implicit.setup.width')
 
 knitr::opts_chunk$set(fig.width=6.5, fig.height=4, fig.path='Figs/',
                       echo=FALSE, warning=FALSE, message=FALSE, comment=FALSE)
-# PALETTES: see http://www.r-bloggers.com/the-paul-tol-21-color-salute/
-# FOCUS PALETTES
-# Red as highlight
-redfocus = c("#CB181D", "#252525", "#525252", "#737373", "#969696", "#BDBDBD", "#D9D9D9", "#F0F0F0")
- 
-# Green as highlight
-greenfocus = c("#41AB5D", "#252525", "#525252", "#737373", "#969696", "#BDBDBD", "#D9D9D9", "#F0F0F0")
- 
-# Blue as highlight
-bluefocus = c("#0033FF", "#252525", "#525252", "#737373", "#969696", "#BDBDBD", "#D9D9D9", "#F0F0F0")
- 
-# EQUAL WEIGHT
-# Generated with rainbow(12, s = 0.6, v = 0.75)
-rainbow12equal = c("#BF4D4D", "#BF864D", "#BFBF4D", "#86BF4D", "#4DBF4D", "#4DBF86", "#4DBFBF", "#4D86BF", "#4D4DBF", "#864DBF", "#BF4DBF", "#BF4D86")
-rainbow10equal = c("#BF4D4D", "#BF914D", "#A8BF4D", "#63BF4D", "#4DBF7A", "#4DBFBF", "#4D7ABF", "#634DBF", "#A84DBF", "#BF4D91")
-rainbow8equal = c("#BF4D4D", "#BFA34D", "#86BF4D", "#4DBF69", "#4DBFBF", "#4D69BF", "#864DBF", "#BF4DA3")
-rainbow6equal = c("#BF4D4D", "#BFBF4D", "#4DBF4D", "#4DBFBF", "#4D4DBF", "#BF4DBF")
- 
-# Generated with package "gplots" function rich.colors(12)
-rich12equal = c("#000040", "#000093", "#0020E9", "#0076FF", "#00B8C2", "#04E466", "#49FB25", "#E7FD09", "#FEEA02", "#FFC200", "#FF8500", "#FF3300")
-rich10equal = c("#000041", "#0000A9", "#0049FF", "#00A4DE", "#03E070", "#5DFC21", "#F6F905", "#FFD701", "#FF9500", "#FF3300")
-rich8equal = c("#000041", "#0000CB", "#0081FF", "#02DA81", "#80FE1A", "#FDEE02", "#FFAB00", "#FF3300")
-rich6equal = c("#000043", "#0033FF", "#01CCA4", "#BAFF12", "#FFCC00", "#FF3300")
- 
-# Generated with package "fields" function tim.colors(12), which is said to emulate the default matlab colorset
-tim12equal = c("#00008F", "#0000EA", "#0047FF", "#00A2FF", "#00FEFF", "#5AFFA5", "#B5FF4A", "#FFED00", "#FF9200", "#FF3700", "#DB0000", "#800000")
-tim10equal = c("#00008F", "#0000FF", "#0070FF", "#00DFFF", "#50FFAF", "#BFFF40", "#FFCF00", "#FF6000", "#EF0000", "#800000")
-tim8equal = c("#00008F", "#0020FF", "#00AFFF", "#40FFBF", "#CFFF30", "#FF9F00", "#FF1000", "#800000")
-tim6equal = c("#00008F", "#005AFF", "#23FFDC", "#ECFF13", "#FF4A00", "#800000")
- 
-# Generated with sort(brewer.pal(8,"Dark2")) #Dark2, Set2
-dark8equal = c("#1B9E77", "#666666", "#66A61E", "#7570B3", "#A6761D", "#D95F02", "#E6AB02", "#E7298A")
-dark6equal = c("#1B9E77", "#66A61E", "#7570B3", "#D95F02", "#E6AB02", "#E7298A")
-set8equal = c("#66C2A5", "#8DA0CB", "#A6D854", "#B3B3B3", "#E5C494", "#E78AC3", "#FC8D62", "#FFD92F")
-set6equal = c("#66C2A5", "#8DA0CB", "#A6D854", "#E78AC3", "#FC8D62", "#FFD92F")
- 
 
 
-## ----show_TSLA_S0, echo=TRUE---------------------------------------------
+## ----show_TSLA_S0, comment="", echo=TRUE---------------------------------
 TSLAMarket$S0
 
-## ----show_TSLA_rf, echo=TRUE---------------------------------------------
-TSLAMarket$risk_free_rates
+## ----show_TSLA_rf, comment="", echo=TRUE---------------------------------
+knitr::kable(TSLAMarket$risk_free_rates, digits=3, row.names = F)
 
-## ---- results='asis'-----------------------------------------------------
+## ---- results='asis', comment=""-----------------------------------------
 knitr::kable(TSLAMarket$options[c(200,300,400,500,600, 800),], digits=3, row.names = F)
 
-## ----blackscholes, echo=TRUE---------------------------------------------
+## ----blackscholes, comment=""--------------------------------------------
 blackscholes(TSLAMarket$options[500,'callput'], 
              TSLAMarket$S0, 
              TSLAMarket$options[500,'K'], 
@@ -69,7 +30,7 @@ blackscholes(TSLAMarket$options[500,'callput'],
              TSLAMarket$options[500,'time'], 
              0.50)
 
-## ----implied_volatility, echo=TRUE---------------------------------------
+## ----implied_volatility, echo=TRUE, comment=""---------------------------
 implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
                    S0 = TSLAMarket$S0, 
                    callput = TSLAMarket$options[400,'callput'], 
@@ -77,7 +38,7 @@ implied_volatility(option_price = TSLAMarket$options[400,'ask'],
                    r = 0.005, 
                    time = TSLAMarket$options[400,'time'])
 
-## ----amer, echo=TRUE-----------------------------------------------------
+## ----amer, echo=TRUE, comment=""-----------------------------------------
 american(
        callput = TSLAMarket$options[400,'callput'], 
        S0 = TSLAMarket$S0, 
@@ -85,7 +46,7 @@ american(
        const_short_rate = 0.005, 
        time = TSLAMarket$options[400,'time'])
 
-## ----american_implied_volatility, echo=TRUE------------------------------
+## ----american_implied_volatility, echo=TRUE, comment=""------------------
 american_implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
      S0 = TSLAMarket$S0, 
      callput = TSLAMarket$options[400,'callput'], 
@@ -93,7 +54,7 @@ american_implied_volatility(option_price = TSLAMarket$options[400,'ask'],
      const_short_rate = 0.005, 
      time = TSLAMarket$options[400,'time'])
 
-## ----implied_volatility_def, echo=TRUE-----------------------------------
+## ----implied_volatility_def, comment="", echo=TRUE-----------------------
 implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
                    S0 = TSLAMarket$S0, 
                    callput = TSLAMarket$options[400,'callput'], 
@@ -102,7 +63,7 @@ implied_volatility(option_price = TSLAMarket$options[400,'ask'],
                    time = TSLAMarket$options[400,'time'],
                    const_default_intensity = 0.03)
 
-## ----american_implied_volatility_def, echo=TRUE--------------------------
+## ----american_implied_volatility_def, comment="", echo=T-----------------
 american_implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
      S0 = TSLAMarket$S0, 
      callput = TSLAMarket$options[400,'callput'], 
@@ -110,4 +71,199 @@ american_implied_volatility(option_price = TSLAMarket$options[400,'ask'],
      const_short_rate = 0.005, 
      time = TSLAMarket$options[400,'time'],
      const_default_intensity = 0.0200)
+
+## ----ts_fcns, echo=TRUE, comment=""--------------------------------------
+## Dividends
+divs = data.frame(time=seq(from=0.11, to=2, by=0.25),
+                  fixed=seq(1.5, 1, length.out=8),
+                  proportional = seq(1, 1.5, length.out=8))
+
+## Interest rates
+disct_fcn = ragtop::spot_to_df_fcn(ragtop::TSLAMarket$risk_free_rates)
+
+## Default intensity
+disc_factor_fcn = function(T, t, ...) {
+  exp(-0.03 * (T - t)) }
+surv_prob_fcn = function(T, t, ...) {
+  exp(-0.07 * (T - t)) }
+
+## Variance cumulation / volatility term structure
+vc = variance_cumulation_from_vols(
+   data.frame(time=c(0.1,2,3),
+              volatility=c(0.2,0.5,1.2)))
+paste0("Cumulated variance to 18 months is ", vc(1.5, 0))
+
+## ----blackscholes_ts, comment="", echo=TRUE------------------------------
+black_scholes_on_term_structures(
+   callput=TSLAMarket$options[500,'callput'], 
+   S0=TSLAMarket$S0, 
+   K=TSLAMarket$options[500,'K'], 
+   discount_factor_fcn=disct_fcn, 
+   time=TSLAMarket$options[500,'time'], 
+   variance_cumulation_fcn=vc,
+   dividends=divs)
+
+## ----amer_ts, echo=TRUE, comment=""--------------------------------------
+american(
+    callput = TSLAMarket$options[400,'callput'], 
+    S0 = TSLAMarket$S0, 
+    K=TSLAMarket$options[400,'K'], 
+    discount_factor_fcn=disct_fcn, 
+    time = TSLAMarket$options[400,'time'],
+    survival_probability_fcn=surv_prob_fcn,
+    variance_cumulation_fcn=vc,
+    dividends=divs)
+
+## ----implied_bs_volatility_def_ts, comment="", echo =T-------------------
+implied_volatility_with_term_struct(
+   option_price = TSLAMarket$options[400,'ask'], 
+   S0 = TSLAMarket$S0, 
+   callput = TSLAMarket$options[400,'callput'], 
+   K=TSLAMarket$options[400,'K'], 
+   discount_factor_fcn=disct_fcn, 
+   time = TSLAMarket$options[400,'time'],
+   survival_probability_fcn=surv_prob_fcn,
+   dividends=divs)
+
+## ----amer_ts_iv, echo=TRUE, comment=""-----------------------------------
+american_implied_volatility(
+    option_price=TSLAMarket$options[400,'ask'], 
+    callput = TSLAMarket$options[400,'callput'], 
+    S0 = TSLAMarket$S0, 
+    K=TSLAMarket$options[400,'K'], 
+    discount_factor_fcn=disct_fcn, 
+    time = TSLAMarket$options[400,'time'],
+    survival_probability_fcn=surv_prob_fcn,
+    dividends=divs)
+
+## ----def_int_fav, echo=TRUE, comment=""----------------------------------
+  def_ints_fcn = function(t, S, ...){
+    0.09+0.01*(S0/S)^1.5
+    }
+
+## ----impl_curve_elems, echo=TRUE, comment=""-----------------------------
+  options_df = TSLAMarket$options
+  S0 = TSLAMarket$S0
+  make_option = function(x) {
+    if (x['callput']>0) cp='C' else cp='P'
+    ragtop::AmericanOption(callput=x['callput'], strike=x['K'], maturity=x['time'],
+                           name=paste(cp,x['K'],as.integer(100*x['time']), sep='_'))
+  }
+  atm_put_price = max(options_df$K[options_df$K<=S0])
+  atm_put_ix = ((options_df$K==atm_put_price) & (options_df$callput==PUT)
+                & (options_df$time>1/12))
+  atm_puts = apply(options_df[atm_put_ix,], 1, make_option)
+
+  atm_put_prices = options_df$mid[atm_put_ix]
+  knitr::kable(options_df[atm_put_ix,], digits=3, row.names = F)
+
+## ----varfit, echo=TRUE, comment=""---------------------------------------
+vcm = fit_variance_cumulation(S0, eq_options=atm_puts,
+       mid_prices=atm_put_prices,
+       spreads=0.01*atm_put_prices,
+       use_impvol=TRUE,
+       discount_factor_fcn=disct_fcn, 
+       default_intensity_fcn = def_ints_fcn,
+       num_time_steps=100)
+vcm$volatilities
+
+## ----fit_elems, echo=FALSE, comment=""-----------------------------------
+  h0 = 0.05
+  fit_target_ix = ((options_df$K==210 | options_df$K==220 ) & (options_df$callput==PUT)
+                & (options_df$time>6/12))
+  fit_targets = apply(options_df[atm_put_ix,], 1, make_option)
+
+  fit_target_prices = options_df$mid[atm_put_ix]
+  knitr::kable(options_df[fit_target_ix,], digits=3, row.names = F)
+
+## ----fit_pen, echo=TRUE, comment=""--------------------------------------
+  h0 = 0.05
+  fit_penalty = function(p, s) {
+  def_intens_f = function(t,S,...) {h0 * (s + (1-s) * (S0/S)^p)}
+  varnce = fit_variance_cumulation(
+              S0, eq_options=atm_puts,
+              mid_prices=atm_put_prices,
+              spreads=0.01*atm_put_prices,
+              use_impvol=TRUE,
+              default_intensity_fcn = def_intens_f,
+              discount_factor_fcn=disct_fcn, 
+              num_time_steps=100)
+  pvs_list = find_present_value(
+              S0=S0, instruments=fit_targets,
+              default_intensity_fcn=def_intens_f,
+              variance_cumulation_fcn=varnce$cumulation_function,
+              discount_factor_fcn=disct_fcn,
+              num_time_steps=45)
+  pvs = as.numeric(pvs_list)
+  pensum = sum((fit_target_prices - pvs)^2)
+  pensum
+}
+fit_penalty(1, 0.5)
+
+## ----define_cb, echo=TRUE, comment=""------------------------------------
+cb = ragtop::ConvertibleBond(
+  maturity=2.87, conversion_ratio=2.7788, notional=1000,
+  coupons=data.frame(payment_time=seq(2.8,0, by=-0.25),
+                     payment_size=1000*0.0025/4),
+  discount_factor_fcn = disct_fcn,
+  name='CBond'
+)
+
+s = 0.75
+h0 = 0.04
+p = 2.5
+
+## ----associated_f, echo=TRUE, comment=""---------------------------------
+calibrated_intensity_f = function(t, S, ...){
+  0.03+0.01*(S0/S)^1.5
+}
+
+calib_varnce = fit_variance_cumulation(
+              S0, eq_options=atm_puts,
+              mid_prices=atm_put_prices,
+              spreads=0.01*atm_put_prices,
+              use_impvol=TRUE,
+              default_intensity_fcn = calibrated_intensity_f,
+              discount_factor_fcn=disct_fcn, 
+              num_time_steps=100)
+calib_varnce$volatilities
+
+## ----price_cb, echo=TRUE, comment=""-------------------------------------
+cb_value = form_present_value_grid(
+  S0=S0, grid_center=S0,
+  instruments=list(Convertible=cb),
+  num_time_steps=250,
+  default_intensity_fcn=calibrated_intensity_f,
+  discount_factor_fcn = disct_fcn,
+  variance_cumulation_fcn=calib_varnce$cumulation_function)
+
+## ----grid_cb_delta, echo=TRUE, comment=""--------------------------------
+cbprices = ragtop::form_present_value_grid(
+  S0=S0, grid_center=S0,
+  instruments=list(Convertible=cb),
+  num_time_steps=250,
+  default_intensity_fcn=calibrated_intensity_f,
+  discount_factor_fcn = disct_fcn,
+  variance_cumulation_fcn=calib_varnce$cumulation_function,
+  std_devs_width=5)
+cbgrid = na.omit(as.data.frame(cbprices))
+
+present_value_interp = splinefun(
+  x=cbgrid[,"Underlying"],
+  y=cbgrid[,"Convertible"])
+
+delta = present_value_interp(S0, deriv=1)
+delta
+
+## ----grid_cb_plot, echo=TRUE, comment=""---------------------------------
+present_value = present_value_interp(S0)
+cbplot = ( ggplot(cbgrid,
+                  aes(x=Underlying,y=Convertible)) +
+             geom_line(size=1.2) +
+             scale_x_continuous(limits=c(0,2.5*S0)) +
+             scale_y_continuous(limits=c(0,2.5*cb$notional)) +
+             geom_point(aes(x=S0,y=present_value), color="red") +
+             labs(title="Convertible Bond Value")
+)
+cbplot
 

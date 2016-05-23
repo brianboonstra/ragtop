@@ -6,6 +6,7 @@
   flog.threshold(ERROR, name='ragtop.implicit.timestep.construct_tridiagonals')
   flog.threshold(ERROR, name='ragtop.calibration.implied_volatility_with_term_struct')
   flog.threshold(ERROR, name='ragtop.calibration.implied_volatility.lowprice')
+  flog.threshold(ERROR, name='ragtop.implicit.setup.width')
   invisible()
 }
 
