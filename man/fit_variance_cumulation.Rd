@@ -55,6 +55,9 @@ occurring during this timestep, dependent on time and stock price, with
 arguments \code{t}, \code{S}.  Should be consistent with
 \code{survival_probability_fcn} if specified}
 
+\item{dividends}{A \code{data.frame} with columns \code{time}, \code{fixed},
+and \code{proportional}.  Dividend size at the given \code{time} is}
+
 \item{borrow_cost}{Stock borrow cost, affecting the drift rate}
 
 \item{dividend_rate}{Continuous dividend rate, affecting the drift rate}

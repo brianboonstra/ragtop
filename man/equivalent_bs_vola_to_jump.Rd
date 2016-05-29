@@ -22,12 +22,21 @@ is not given}
 \item{const_default_intensity}{A constant to use for the instantaneous default intensity in case \code{survival_probability_fcn}
 is not given}
 
+\item{discount_factor_fcn}{A function for computing present values to
+time \code{t} of various cashflows occurring during this timestep, with
+arguments \code{T}, \code{t}}
+
+\item{survival_probability_fcn}{(Implied argument) A function for probability of survival, with
+arguments \code{T}, \code{t} and \code{T>t}.}
+
 \item{dividends}{A \code{data.frame} with columns \code{time}, \code{fixed},
 and \code{proportional}.  Dividend size at the given \code{time} is
 then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
 dividends will be converted to proportional for purposes of this algorithm.}
 
 \item{borrow_cost}{A continuous rate for stock borrow costs}
+
+\item{dividend_rate}{A continuous accumulation rate for the stock, affecting the drift}
 
 \item{relative_tolerance}{Relative tolerance in instrument price defining the root-finder halting condition}
 

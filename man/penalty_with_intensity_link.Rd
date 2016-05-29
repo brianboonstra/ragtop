@@ -44,6 +44,9 @@ instrument prices before summing to form the penalty}
 \item{num_time_steps}{Time step count passed on to \code{\link{find_present_value}}
 while fitting instrument values}
 
+\item{const_short_rate}{A constant to use for the instantaneous interest rate in case \code{discount_factor_fcn}
+is not given}
+
 \item{discount_factor_fcn}{A function for computing present values to
 time \code{t} of various cashflows occurring during this timestep, with
 arguments \code{T}, \code{t}}
