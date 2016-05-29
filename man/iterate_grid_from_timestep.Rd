@@ -13,9 +13,15 @@ iterate_grid_from_timestep(starting_time_step, time_pts, z, S0, instruments,
 \item{starting_time_step}{The index into time_pts of the first timestep
 to be emplyed.  This must be no larger than the length of time_pts, minus one}
 
+\item{time_pts}{Time nodes to be treated on the grid}
+
 \item{z}{Space grid value morphable to stock prices using \code{stock_level_fcn}}
 
 \item{S0}{Time zero price of the base equity}
+
+\item{instruments}{A list of instruments to be priced.  Each
+one must have a \code{strike} and a \code{optionality_fcn}, as
+with \code{\link{GridPricedInstrument}} and its subclasses.}
 
 \item{stock_level_fcn}{A function for changing space grid value to stock
 prices, with arguments \code{z} and \code{t}}
@@ -39,6 +45,8 @@ then expected to be equal to \code{fixed + proportional * S / S0}}
 \item{grid}{An optional grid into which results at each timestep will
 be written.  Its size should be at least
 \code{(1+starting_time_step, length(z), length(instruments))}}
+
+\item{original_grid_values}{Grid values to timestep from}
 }
 \value{
 Either a populated grid of present values of derivative prices, or a matrix
@@ -49,5 +57,14 @@ Either a populated grid of present values of derivative prices, or a matrix
 Timestep an implicit integration scheme to numerically integrate
 the pricing differential equation for each of the given instruments,
 backwardating from time \code{Tmax} to time 0.
+}
+\seealso{
+Other Implicit Grid Solver: \code{\link{construct_implicit_grid_structure}},
+  \code{\link{find_present_value}},
+  \code{\link{form_present_value_grid}},
+  \code{\link{infer_conforming_time_grid}},
+  \code{\link{integrate_pde}},
+  \code{\link{take_implicit_timestep}},
+  \code{\link{timestep_instruments}}
 }
 

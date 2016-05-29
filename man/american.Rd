@@ -27,6 +27,10 @@ is not given}
 \item{const_default_intensity}{A constant to use for the instantaneous default intensity in case \code{default_intensity_fcn}
 is not given}
 
+\item{discount_factor_fcn}{A function for computing present values to
+time \code{t} of various cashflows occurring during this timestep, with
+arguments \code{T}, \code{t}}
+
 \item{survival_probability_fcn}{(Implied argument) A function for probability of survival, with
 arguments \code{T}, \code{t} and \code{T>t}.  E.g. with
 a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}. Should be matched to \code{default_intensity_fcn}}
@@ -35,8 +39,16 @@ a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}. Should be matc
 occurring at a given time, dependent on time and stock price, with
 arguments \code{t}, \code{S}.  Should be matched to \code{survival_probability_fcn}}
 
+\item{...}{Further arguments passed on to \code{\link{find_present_value}}}
+
 \item{num_time_steps}{Number of steps to use in the grid solver.  Can usually be
 set quite low due to the control variate scheme.}
+
+\item{structure_constant}{The maximum ratio between time intervals \code{dt}
+and the square of space intervals \code{dz^2}}
+
+\item{std_devs_width}{The number of standard deviations, in \code{sigma * sqrt(T)}
+units, to incorporate into the grid}
 }
 \value{
 A vector of estimated option present values
@@ -54,7 +66,8 @@ The scheme
  American-exercise options.
 }
 \examples{
-american(PUT, S0=100, K=110, time=0.77, const_short_rate = 0.06, const_volatility=0.20, num_time_steps=200)
+american(PUT, S0=100, K=110, time=0.77, const_short_rate = 0.06,
+         const_volatility=0.20, num_time_steps=200)
 american(callput=-1, S0=100, K=90, time=1, const_short_rate=0.025,
          variance_cumulation_fcn = function(T, t) {  # Term structure of vola
              0.45 ^ 2 * (T - t) + 0.15^2 * max(0, T-0.25)

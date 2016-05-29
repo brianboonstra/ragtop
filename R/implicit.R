@@ -38,10 +38,18 @@ library(futile.logger)
 #'  {structure_constant} will force a step in {z} space much bigger
 #'  than the width in standard deviations.
 #'
+#' @param tenors Tenors of instruments to be treated on this grid
+#' @param M Minimum number of timesteps on this grid
+#' @param S0 An initial stock price, for setting grid scale
+#' @param K An instrument reference stock price, for setting grid scale
+#' @param c A continuous stock drift rate
+#' @param min_z_width Minimum grid width, in log space
+#' @param sigma Volatility of diffusion process (without jumps to default)
 #' @param structure_constant The maximum ratio between time intervals \code{dt}
 #'  and the square of space intervals \code{dz^2}
 #' @param std_devs_width The number of standard deviations, in \code{sigma * sqrt(T)}
 #'  units, to incorporate into the grid
+#' @family Implicit Grid Solver
 #'
 #' @return A list with elements \describe{
 #'   \item{\code{T}}{The maximum time for this grid}
@@ -85,6 +93,16 @@ construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structu
 
 
 #' Matrix entries for implicit numerical differentiation using Neumann boundary conditions
+#'
+#' @param drift Vector of drift rate of underlying equity grid points, including
+#'   induced drift from default intensity
+#' @param sigma Volatility of diffusion process (without jumps to default)
+#' @param structure_constant The ratio between time interval \code{dt}
+#'  and the square of space interval \code{dz^2}
+#' @return A list with elements \code{super}, \code{diag} and \code{sub}
+#'   containing the superdiagonal, diagonal and subdiagonal of the implicit
+#'   timestep differencing matrix
+#' @export construct_tridiagonals
 construct_tridiagonals = function(sigma, structure_constant, drift)
 {
   N = length(drift)
@@ -116,14 +134,20 @@ construct_tridiagonals = function(sigma, structure_constant, drift)
 #'
 #' Take one timestep of an implicit solver for a given instrument
 #'
+#' @param t Time after this timestep has been taken
+#' @param S Underlying equity values for the grid
 #' @param survival_probabilities Vector of probabilities of survival
 #'  for each space grid node
 #' @param tridiag_matrix_entries Diagonal, superdiagonal and subdiagonal
 #'  of tridiagonal matrix from the numerical integrator
 #' @param full_discount_factor A discount factor for the transform from
 #'  grid values to actual derivative prices
+#' @param instr_name Name of instrument to use in log messages
 #' @param local_discount_factor A discount factor to apply to
 #'  recovery values
+#' @param discount_factor_fcn A function for computing present values to
+#'   time \code{t} of various cashflows occurring during this timestep, with
+#'   arguments \code{T}, \code{t}
 #' @param prev_grid_values A vector of space grid values from the
 #'  previously calculated timestep
 #' @param instrument If not NULL/NA,  must have a \code{recovery_fcn} and
@@ -132,6 +156,9 @@ construct_tridiagonals = function(sigma, structure_constant, drift)
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
 #'   then expected to be equal to \code{fixed + proportional * S / S0}
+#' @return Grid values for the instrument after taking the implicit timestep
+#' @family Implicit Grid Solver
+#' @export take_implicit_timestep
 take_implicit_timestep = function(t, S, full_discount_factor,
                                   local_discount_factor,
                                   discount_factor_fcn,
@@ -205,12 +232,11 @@ take_implicit_timestep = function(t, S, full_discount_factor,
 #'
 #' @inheritParams take_implicit_timestep
 #' @param S0 Time zero price of the base equity
+#' @param instruments Instruments corresponding to layers of the value grid in \code{prev_grid_values}
+#' @param dt Interval to the end of this timestep
 #' @param z Space grid value morphable to stock prices using \code{stock_level_fcn}
 #' @param stock_level_fcn A function for changing space grid value to stock
 #'   prices, with arguments \code{z} and \code{t}
-#' @param discount_factor_fcn A function for computing present values to
-#'   time \code{t} of various cashflows occurring during this timestep, with
-#'   arguments \code{T}, \code{t}
 #' @param default_intensity_fcn A function for computing default intensity
 #'   occurring during this timestep, dependent on time and stock price, with
 #'   arguments \code{t}, \code{S}.
@@ -219,6 +245,8 @@ take_implicit_timestep = function(t, S, full_discount_factor,
 #'   a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}.
 #' @param prev_grid_values A matrix with one column for each
 #'   instrument and one row for each of the \eqn{N} values of \code{z}
+#' @return  Grid values after applying an implicit timestep
+#' @family Implicit Grid Solver
 timestep_instruments = function(z, prev_grid_values,
                                 t, dt, S0,
                                 instruments,
@@ -304,11 +332,14 @@ timestep_instruments = function(z, prev_grid_values,
 #' At its base, this function chooses a time grid with \code{1+min_num_time_steps}
 #'   elements from 0 to \code{Tmax}.  Any coupon, call, or put times occurring in
 #'   one of the supplied instruments are also inserted.
+#'
 #' @param min_num_time_steps The minimum number of timesteps the output vector should have
 #' @param Tmax The maximum time on the grid
 #' @param instruments A set of instruments whose maturity and terms
 #'   and conditions can introduce extra timesteps.  Each will be queried for the output of
 #'   a \code{critical_times} function.
+#' @return A vector of times at which the grid should have nodes
+#' @family Implicit Grid Solver
 infer_conforming_time_grid = function(min_num_time_steps, Tmax, instruments=NULL)
 {
   time_grid = seq(from=0, to=Tmax, length.out=1+min_num_time_steps)
@@ -374,6 +405,8 @@ infer_conforming_time_grid = function(min_num_time_steps, Tmax, instruments=NULL
 #'
 #' @return A grid of present values of derivative prices, adapted to \code{z} at
 #'   each timestep.  Time zero value will appear in the first index.
+#' @family Implicit Grid Solver
+#' @export integrate_pde
 integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
                             stock_level_fcn,
                             discount_factor_fcn,
@@ -436,15 +469,23 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
 #' the pricing differential equation for each of the given instruments,
 #' backwardating from time \code{Tmax} to time 0.
 #' @inheritParams timestep_instruments
+#' @inheritParams integrate_pde
 #' @param grid An optional grid into which results at each timestep will
 #'   be written.  Its size should be at least
 #'   \code{(1+starting_time_step, length(z), length(instruments))}
 #' @param starting_time_step The index into time_pts of the first timestep
 #'  to be emplyed.  This must be no larger than the length of time_pts, minus one
+#' @param time_pts Time nodes to be treated on the grid
+#' @param original_grid_values Grid values to timestep from
+#' @param instruments A list of instruments to be priced.  Each
+#'   one must have a \code{strike} and a \code{optionality_fcn}, as
+#'   with \code{\link{GridPricedInstrument}} and its subclasses.
 #'
 #' @return Either a populated grid of present values of derivative prices, or a matrix
 #'   of values at the first time point, adapted to \code{z} at
 #'   each timestep.  Time zero value will appear in the first index of any grid.
+#' @family Implicit Grid Solver
+#' @export iterate_grid_from_timestep
 iterate_grid_from_timestep = function(starting_time_step, time_pts, z, S0, instruments,
                                       stock_level_fcn,
                                       discount_factor_fcn,
@@ -494,6 +535,7 @@ iterate_grid_from_timestep = function(starting_time_step, time_pts, z, S0, instr
 #'
 #' @inheritParams construct_implicit_grid_structure
 #' @inheritParams timestep_instruments
+#' @param num_time_steps Minimum number of time steps in the grid
 #' @param const_volatility A constant to use for volatility in case \code{variance_cumulation_fcn}
 #'  is not given
 #' @param const_short_rate A constant to use for the instantaneous interest rate in case \code{discount_factor_fcn}
@@ -501,11 +543,19 @@ iterate_grid_from_timestep = function(starting_time_step, time_pts, z, S0, instr
 #' @param const_default_intensity A constant to use for the instantaneous default intensity in case \code{default_intensity_fcn}
 #'  is not given
 #' @param grid_center A reasonable central value for the grid, defaults to S0 or an instrument strike
+#' @param borrow_cost Stock borrow cost, affecting the drift rate
+#' @param dividend_rate Continuous dividend rate, affecting the drift rate
+#' @param override_Tmax A different maximum time on the grid to enforce
+#' @param instruments A list of instruments to be priced.  Each
+#'   one must have a \code{strike} and a \code{optionality_fcn}, as
+#'   with \code{\link{GridPricedInstrument}} and its subclasses.
 #' @family Equity Dependent Default Intensity
+#' @family Implicit Grid Solver
 #'
 #' @export form_present_value_grid
 form_present_value_grid = function(S0, num_time_steps, instruments,
-                              const_volatility=0.5, const_short_rate=0, const_default_intensity=0, override_Tmax=NA,
+                              const_volatility=0.5, const_short_rate=0,
+                              const_default_intensity=0, override_Tmax=NA,
                               discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
                               default_intensity_fcn = function(t, S, ...){const_default_intensity+0.0*S},
                               variance_cumulation_fcn = function(T, t){const_volatility^2*(T-t)},
@@ -597,8 +647,10 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
 #'  value of each instrument at the present stock price \code{S0}
 #'
 #' @inheritParams form_present_value_grid
+#' @inheritParams construct_implicit_grid_structure
 #' @return A list of present values, with the same names as \code{instruments}
 #' @family Equity Dependent Default Intensity
+#' @family Implicit Grid Solver
 #'
 #' @export find_present_value
 find_present_value = function(S0, num_time_steps, instruments,

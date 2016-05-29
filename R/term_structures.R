@@ -91,6 +91,11 @@ variance_cumulation_from_vols = function(vols_df)
 #' @param yield_curve A data.frame with numeric columns \code{time} (in
 #'   increasing order) and \code{rate} (in natural units)
 #' @return A function taking two time arguments, which returns the discount factor from the second to the first
+#' @examples
+#' disct_fcn = ragtop::spot_to_df_fcn(
+#'   data.frame(time=c(1, 5, 10, 15),
+#'              rate=c(0.01, 0.02, 0.03, 0.05)))
+#' print(disct_fcn(1, 0.5))
 #' @export spot_to_df_fcn
 spot_to_df_fcn = function(yield_curve) {
   yield_curve$dfs = exp(-yield_curve$time*yield_curve$rate)
@@ -119,7 +124,7 @@ spot_to_df_fcn = function(yield_curve) {
 #' @param on_date Date for which to query Quandl for the curve
 #' @return A function taking two time arguments, which returns the discount factor from the second to the first
 #' @export Quandl_df_fcn_UST_raw
-Quandl_df_fcn_UST_raw = function(on_date='2016-04-18') {
+Quandl_df_fcn_UST_raw = function(on_date) {
   yield_curve_elems = Quandl::Quandl("USTREASURY/YIELD", start_date=on_date, end_date=on_date)
   yield_curve_elems$Date = NULL
   yc_rates = as.numeric(yield_curve_elems)/100  # Values are reported as percent
@@ -131,7 +136,8 @@ Quandl_df_fcn_UST_raw = function(on_date='2016-04-18') {
 #'
 #' This is a caching wrapper for \code{\link{Quandl_df_fcn_UST_raw}}
 #'
-#' @param on_date Date for which to query Quandl for the curve
+#' @param ... Arguments passed to \code{\link{Quandl_df_fcn_UST_raw}}
+#' @param envir Environment passed to \code{\link{Quandl_df_fcn_UST_raw}}
 #' @return A function taking two time arguments, which returns the discount factor from the second to the first
 #' @export Quandl_df_fcn_UST
 Quandl_df_fcn_UST = R.cache::addMemoization(Quandl_df_fcn_UST_raw)

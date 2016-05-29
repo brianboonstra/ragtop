@@ -6,6 +6,11 @@
 \usage{
 is.blank(x, false.triggers = FALSE)
 }
+\arguments{
+\item{x}{Argument to test}
+
+\item{false.triggers}{Whether to allow nonempty vectors of all FALSE to trigger this condition}
+}
 \description{
 Return TRUE if the argument is empty, NULL or NA
 }

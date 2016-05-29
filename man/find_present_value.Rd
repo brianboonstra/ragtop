@@ -13,7 +13,13 @@ find_present_value(S0, num_time_steps, instruments, const_volatility = 0.5,
   dividend_rate = 0, structure_constant = 2, std_devs_width = 3)
 }
 \arguments{
-\item{S0}{Time zero price of the base equity}
+\item{S0}{An initial stock price, for setting grid scale}
+
+\item{num_time_steps}{Minimum number of time steps in the grid}
+
+\item{instruments}{A list of instruments to be priced.  Each
+one must have a \code{strike} and a \code{optionality_fcn}, as
+with \code{\link{GridPricedInstrument}} and its subclasses.}
 
 \item{const_volatility}{A constant to use for volatility in case \code{variance_cumulation_fcn}
 is not given}
@@ -23,6 +29,8 @@ is not given}
 
 \item{const_default_intensity}{A constant to use for the instantaneous default intensity in case \code{default_intensity_fcn}
 is not given}
+
+\item{override_Tmax}{A different maximum time on the grid to enforce}
 
 \item{discount_factor_fcn}{A function for computing present values to
 time \code{t} of various cashflows occurring during this timestep, with
@@ -39,6 +47,10 @@ a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}.}
 \item{dividends}{A \code{data.frame} with columns \code{time}, \code{fixed},
 and \code{proportional}.  Dividend size at the given \code{time} is
 then expected to be equal to \code{fixed + proportional * S / S0}}
+
+\item{borrow_cost}{Stock borrow cost, affecting the drift rate}
+
+\item{dividend_rate}{Continuous dividend rate, affecting the drift rate}
 
 \item{structure_constant}{The maximum ratio between time intervals \code{dt}
 and the square of space intervals \code{dz^2}}
@@ -59,5 +71,13 @@ Other Equity Dependent Default Intensity: \code{\link{fit_to_option_market_df}},
   \code{\link{fit_variance_cumulation}},
   \code{\link{form_present_value_grid}},
   \code{\link{implied_jump_process_volatility}}
+
+Other Implicit Grid Solver: \code{\link{construct_implicit_grid_structure}},
+  \code{\link{form_present_value_grid}},
+  \code{\link{infer_conforming_time_grid}},
+  \code{\link{integrate_pde}},
+  \code{\link{iterate_grid_from_timestep}},
+  \code{\link{take_implicit_timestep}},
+  \code{\link{timestep_instruments}}
 }
 

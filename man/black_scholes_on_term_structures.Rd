@@ -21,6 +21,15 @@ black_scholes_on_term_structures(callput, S0, K, time, const_volatility = 0.5,
 
 \item{time}{Time from \code{0} until expiration}
 
+\item{const_volatility}{A constant to use for volatility in case \code{variance_cumulation_fcn}
+is not given}
+
+\item{const_short_rate}{A constant to use for the instantaneous interest rate in case \code{discount_factor_fcn}
+is not given}
+
+\item{const_default_intensity}{A constant to use for the instantaneous default intensity in case \code{default_intensity_fcn}
+is not given}
+
 \item{discount_factor_fcn}{A function for computing present values to
 time \code{t} of various cashflows occurring during this timestep, with
 arguments \code{T}, \code{t}}

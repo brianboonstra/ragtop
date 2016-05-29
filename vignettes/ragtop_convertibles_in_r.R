@@ -55,21 +55,15 @@ american_implied_volatility(option_price = TSLAMarket$options[400,'ask'],
      time = TSLAMarket$options[400,'time'])
 
 ## ----implied_volatility_def, comment="", echo=TRUE-----------------------
-implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
-                   S0 = TSLAMarket$S0, 
-                   callput = TSLAMarket$options[400,'callput'], 
-                   K=TSLAMarket$options[400,'K'], 
-                   r = 0.005, 
-                   time = TSLAMarket$options[400,'time'],
+implied_volatility(option_price = 17, 
+                   S0 = 250, callput = CALL,  K=245,
+                   r = 0.005, time = 2,
                    const_default_intensity = 0.03)
 
 ## ----american_implied_volatility_def, comment="", echo=T-----------------
-american_implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
-     S0 = TSLAMarket$S0, 
-     callput = TSLAMarket$options[400,'callput'], 
-     K=TSLAMarket$options[400,'K'], 
-     const_short_rate = 0.005, 
-     time = TSLAMarket$options[400,'time'],
+american_implied_volatility(option_price = 19.1, 
+     S0 = 223.17, callput = PUT, K=220, 
+     const_short_rate = 0.005, time = 1.45,
      const_default_intensity = 0.0200)
 
 ## ----ts_fcns, echo=TRUE, comment=""--------------------------------------
@@ -79,11 +73,12 @@ divs = data.frame(time=seq(from=0.11, to=2, by=0.25),
                   proportional = seq(1, 1.5, length.out=8))
 
 ## Interest rates
-disct_fcn = ragtop::spot_to_df_fcn(ragtop::TSLAMarket$risk_free_rates)
+disct_fcn = ragtop::spot_to_df_fcn(
+  data.frame(time=c(1, 5, 10, 15),
+             rate=c(0.01, 0.02, 0.03, 0.05))
+)
 
 ## Default intensity
-disc_factor_fcn = function(T, t, ...) {
-  exp(-0.03 * (T - t)) }
 surv_prob_fcn = function(T, t, ...) {
   exp(-0.07 * (T - t)) }
 
@@ -100,6 +95,7 @@ black_scholes_on_term_structures(
    K=TSLAMarket$options[500,'K'], 
    discount_factor_fcn=disct_fcn, 
    time=TSLAMarket$options[500,'time'], 
+   survival_probability_fcn=surv_prob_fcn,
    variance_cumulation_fcn=vc,
    dividends=divs)
 

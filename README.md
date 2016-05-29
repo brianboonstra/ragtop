@@ -105,30 +105,26 @@ We can also find volatilities of European exercise options
 
 ``` r
 implied_volatility_with_term_struct(
-   option_price = TSLAMarket$options[400,'ask'], 
-   S0 = TSLAMarket$S0, 
-   callput = TSLAMarket$options[400,'callput'], 
-   K=TSLAMarket$options[400,'K'], 
-   discount_factor_fcn=disct_fcn, 
-   time = TSLAMarket$options[400,'time'],
-   survival_probability_fcn=surv_prob_fcn,
-   dividends=divs)
-[1] 0.4112688
+    option_price=19, callput = PUT, 
+    S0 = 185.17,K=182.50, 
+    discount_factor_fcn=disct_fcn, 
+    time = 1.12,
+    survival_probability_fcn=surv_prob_fcn,
+    dividends=divs)
+[1] 0.1133976
 ```
 
 as well as American exercise options
 
 ``` r
 american_implied_volatility(
-    option_price=TSLAMarket$options[400,'ask'], 
-    callput = TSLAMarket$options[400,'callput'], 
-    S0 = TSLAMarket$S0, 
-    K=TSLAMarket$options[400,'K'], 
+    option_price=19, callput = PUT, 
+    S0 = 185.17,K=182.50, 
     discount_factor_fcn=disct_fcn, 
-    time = TSLAMarket$options[400,'time'],
+    time = 1.12,
     survival_probability_fcn=surv_prob_fcn,
     dividends=divs)
-[1] 0.4090605
+[1] 0.113407
 ```
 
 More Sophisticated Calibration

@@ -14,9 +14,9 @@ penalty_with_intensity_link(p, s, h, variance_instruments,
 \arguments{
 \item{p}{Power of default intensity}
 
-\item{s}{Proprtion of constant defalt intensity}
+\item{s}{Proportion of constant default intensity}
 
-\item{h}{Base}
+\item{h}{Base default intensity}
 
 \item{variance_instruments}{A list of instruments in strictly increasing order
 of maturity, from which the volatility term structure will be inferred.  Once the
@@ -36,11 +36,25 @@ mispricing penalties used for judging fit quality will be computed}
 \item{fit_instrument_spreads}{Bid-offer spreads used to normalize errors
 in fit instrument prices during default intensity}
 
+\item{fit_instrument_weights}{Weights applied to relative errors in fit
+instrument prices before summing to form the penalty}
+
 \item{S0}{Current underlying price}
+
+\item{num_time_steps}{Time step count passed on to \code{\link{find_present_value}}
+while fitting instrument values}
 
 \item{discount_factor_fcn}{A function for computing present values to
 time \code{t} of various cashflows occurring during this timestep, with
 arguments \code{T}, \code{t}}
+
+\item{...}{Further arguments passed to \code{\link{price_with_intensity_link}}}
+
+\item{relative_spread_tolerance}{Tolerance to apply in
+calling \code{\link{fit_variance_cumulation}}}
+
+\item{num_variance_time_steps}{Number of time steps to use in
+calling \code{\link{fit_variance_cumulation}}}
 }
 \description{
 Given a set SDE parameters, form a volatility term structure that fairly precisely matches

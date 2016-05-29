@@ -6,7 +6,23 @@
 \usage{
 shift_for_dividends(grid_values_before_shift, stock_prices, div_sum)
 }
+\arguments{
+\item{grid_values_before_shift}{Values on grid before accounting for
+expected dividends}
+
+\item{stock_prices}{Stock prices for which to shift the grid}
+
+\item{div_sum}{Sum of dividend values at each grid point}
+}
+\value{
+An object like \code{grid_values_before_shift} with entries shifted
+  according to the dividend sums
+}
 \description{
 Shift a set of grid values for dividends paid, using spline interpolation
+}
+\seealso{
+Other Dividends: \code{\link{adjust_for_dividends}},
+  \code{\link{time_adj_dividends}}
 }
 

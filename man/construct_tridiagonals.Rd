@@ -6,6 +6,20 @@
 \usage{
 construct_tridiagonals(sigma, structure_constant, drift)
 }
+\arguments{
+\item{sigma}{Volatility of diffusion process (without jumps to default)}
+
+\item{structure_constant}{The ratio between time interval \code{dt}
+and the square of space interval \code{dz^2}}
+
+\item{drift}{Vector of drift rate of underlying equity grid points, including
+induced drift from default intensity}
+}
+\value{
+A list with elements \code{super}, \code{diag} and \code{sub}
+  containing the superdiagonal, diagonal and subdiagonal of the implicit
+  timestep differencing matrix
+}
 \description{
 Matrix entries for implicit numerical differentiation using Neumann boundary conditions
 }

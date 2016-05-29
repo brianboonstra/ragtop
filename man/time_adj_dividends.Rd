@@ -10,9 +10,26 @@ time_adj_dividends(relevant_divs, t_final, r, h, S, S0)
 \item{relevant_divs}{A \code{data.frame} with columns \code{time}, \code{fixed},
 and \code{proportional}.  Dividend size at the given \code{time} is
 then expected to be equal to \code{fixed + proportional * S / S0}}
+
+\item{t_final}{Time beyond which to ignore dividends}
+
+\item{r}{risk-free interest rate}
+
+\item{h}{Default intensities}
+
+\item{S}{Stock prices}
+
+\item{S0}{initial underlying price}
+}
+\value{
+Sum of dividends, at each grid node
 }
 \description{
 For each of the N elements of \code{S/h} find the sum of the
 given M dividends, discounted to \code{t_final} by \code{r} and \code{h}
+}
+\seealso{
+Other Dividends: \code{\link{adjust_for_dividends}},
+  \code{\link{shift_for_dividends}}
 }
 

@@ -62,23 +62,29 @@ control_variate_pairs = function(callput, K, time)
 #'  American-exercise options.
 #'
 #' @inheritParams form_present_value_grid
+#' @inheritParams construct_implicit_grid_structure
 #' @param callput 1 for calls, -1 for puts (may be a vector of the same)
 #' @param S0 initial underlying price
 #' @param K strike (may be a vector)
 #' @param time Time from \code{0} until expiration (may be a vector)
 #' @param num_time_steps Number of steps to use in the grid solver.  Can usually be
 #'   set quite low due to the control variate scheme.
+#' @param discount_factor_fcn A function for computing present values to
+#'   time \code{t} of various cashflows occurring during this timestep, with
+#'   arguments \code{T}, \code{t}
 #' @param survival_probability_fcn (Implied argument) A function for probability of survival, with
 #'   arguments \code{T}, \code{t} and \code{T>t}.  E.g. with
 #'   a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}. Should be matched to \code{default_intensity_fcn}
 #' @param default_intensity_fcn A function for computing default intensity
 #'   occurring at a given time, dependent on time and stock price, with
 #'   arguments \code{t}, \code{S}.  Should be matched to \code{survival_probability_fcn}
+#' @param ... Further arguments passed on to \code{\link{find_present_value}}
 #' @return A vector of estimated option present values
 #' @family Equity Independent Default Intensity
 #' @family American Exercise Equity Options
 #' @examples
-#' american(PUT, S0=100, K=110, time=0.77, const_short_rate = 0.06, const_volatility=0.20, num_time_steps=200)
+#' american(PUT, S0=100, K=110, time=0.77, const_short_rate = 0.06,
+#'          const_volatility=0.20, num_time_steps=200)
 #' american(callput=-1, S0=100, K=90, time=1, const_short_rate=0.025,
 #'          variance_cumulation_fcn = function(T, t) {  # Term structure of vola
 #'              0.45 ^ 2 * (T - t) + 0.15^2 * max(0, T-0.25)

@@ -50,7 +50,8 @@ Note that if the \code{default_intensity} is set larger than zero then
 All inputs must either be scalars or have the same nonscalar shape.
 }
 \examples{
-blackscholes(callput=-1, S0=100, K=90, r=0.03, time=1, vola=0.5, default_intensity=0.07)  # -1 is a PUT
+blackscholes(callput=-1, S0=100, K=90, r=0.03, time=1, # -1 is a PUT
+             vola=0.5, default_intensity=0.07)
 }
 \seealso{
 Other Equity Independent Default Intensity: \code{\link{american_implied_volatility}},

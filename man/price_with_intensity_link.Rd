@@ -12,9 +12,9 @@ price_with_intensity_link(p, s, h, variance_instruments,
 \arguments{
 \item{p}{Power of default intensity}
 
-\item{s}{Proprtion of constant defalt intensity}
+\item{s}{Proportion of constant default intensity}
 
-\item{h}{Base}
+\item{h}{Base default intensity}
 
 \item{variance_instruments}{A list of instruments in strictly increasing order
 of maturity, from which the volatility term structure will be inferred.  Once the
@@ -30,6 +30,19 @@ in variance instrument prices during term structure fitting}
 mispricing penalties used for judging fit quality will be computed}
 
 \item{S0}{Current underlying price}
+
+\item{num_time_steps}{Time step count passed on to \code{\link{find_present_value}}
+while fitting instrument values}
+
+\item{...}{Further arguments passed to both
+\code{\link{fit_variance_cumulation}} and to
+\code{\link{find_present_value}}}
+
+\item{relative_spread_tolerance}{Tolerance to apply in
+calling \code{\link{fit_variance_cumulation}}}
+
+\item{num_variance_time_steps}{Number of time steps to use in
+calling \code{\link{fit_variance_cumulation}}}
 }
 \description{
 Given derivative instruments (subclasses of

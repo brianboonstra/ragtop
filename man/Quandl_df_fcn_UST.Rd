@@ -7,7 +7,9 @@
 Quandl_df_fcn_UST(..., envir = parent.frame())
 }
 \arguments{
-\item{on_date}{Date for which to query Quandl for the curve}
+\item{...}{Arguments passed to \code{\link{Quandl_df_fcn_UST_raw}}}
+
+\item{envir}{Environment passed to \code{\link{Quandl_df_fcn_UST_raw}}}
 }
 \value{
 A function taking two time arguments, which returns the discount factor from the second to the first

@@ -16,6 +16,14 @@ coupon_value_at_exercise(t, coupons_df, discount_factor_fcn, model_t = 0,
 columns \code{payment_time} and \code{payment_size}.}
 
 \item{discount_factor_fcn}{A function specifying how future cashflows should generally be discounted for this instrument}
+
+\item{model_t}{Model timestamp passed to \code{\link{value_from_prior_coupons}}}
+
+\item{accelerate_future_coupons}{If \code{TRUE}, future coupons will be accelerated on exercise to pad present value}
+
+\item{acceleration_discount_factor_fcn}{A function specifying how future coupons should be discounted for this instrument under coupon acceleration conditions}
+
+\item{acceleration_t}{The maximum time up to which future coupons will be counted for acceleration, passed on to \code{\link{accelerated_coupon_value}}}
 }
 \value{
 A scalar equal to the present value
@@ -25,5 +33,11 @@ Compute "present" value as of time t for coupons that
 would otherwise have been paid up to time \code{acceleration_t}, in the
 case of accelerated coupon provisions for forced conversions (or
 sometimes even unforced ones).
+}
+\seealso{
+Other Bond Coupon Acceleration: \code{\link{accelerated_coupon_value}}
+
+Other Bond Coupons: \code{\link{accelerated_coupon_value}},
+  \code{\link{value_from_prior_coupons}}
 }
 

@@ -80,6 +80,7 @@
 #'                    std_devs_width=5)
 #'
 #' ## Fitting Term Structure of Volatility
+#' ## Not Run
 #' opts = list(m1=AmericanOption(callput=-1, strike=9.9, maturity=1/12, name="m1"),
 #'             m2=AmericanOption(callput=-1, strike=9.8, maturity=1/6, name="m2"))
 #' vfit = fit_variance_cumulation(S0, opts, c(0.6, 0.8), default_intensity_fcn=h_fcn)

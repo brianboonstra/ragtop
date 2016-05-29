@@ -4,7 +4,7 @@
 \alias{Quandl_df_fcn_UST_raw}
 \title{Get a US Treasury curve discount factor function}
 \usage{
-Quandl_df_fcn_UST_raw(on_date = "2016-04-18")
+Quandl_df_fcn_UST_raw(on_date)
 }
 \arguments{
 \item{on_date}{Date for which to query Quandl for the curve}

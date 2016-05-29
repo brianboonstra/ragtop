@@ -16,19 +16,19 @@ Description: This package prices American and European
     from Andersen and Buffum (2002) and Linetsky (2006).
 Depends:
     limSolve (>= 1.5.5.1),
-    futile.logger (>= 1.4.1)
+    futile.logger (>= 1.4.1),
+    R (>= 2.10),
+    methods (>= 3.2.2)
 Suggests:
     testthat,
     roxygen2,
     knitr,
     rmarkdown,
     reshape2,
-    dygraph,
     stringr,
     ggplot2,
     MASS,
     RColorBrewer,
-    RQuantLib,
     R.cache,
     Quandl
 License: GPL (>= 2)

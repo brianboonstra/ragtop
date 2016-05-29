@@ -4,12 +4,15 @@
 \alias{implied_jump_process_volatility}
 \title{Implied volatility of any instrument}
 \usage{
-implied_jump_process_volatility(instrument_price, instrument,
-  variance_cumulation_fcn = NULL, ..., starting_volatility_estimate = 0.85,
-  relative_tolerance = 0.005, max.iter = 100, max_vola = 4)
+implied_jump_process_volatility(instrument_price, instrument, ...,
+  starting_volatility_estimate = 0.85, relative_tolerance = 0.005,
+  max.iter = 100, max_vola = 4)
 }
 \arguments{
 \item{instrument_price}{Target price for root finder}
+
+\item{instrument}{Instrument to search for the target price on, passed as
+the sole instrument to \code{\link{find_present_value}}}
 
 \item{...}{Additional arguments to be passed on to \code{\link{find_present_value}}}
 
@@ -39,7 +42,9 @@ Note that equity-linked default intensities can result in instrument prices that
   but not necessarily any particular one.
 }
 \examples{
-implied_jump_process_volatility(25, AmericanOption(maturity=1.1, strike=100, callput=-1), S0=100, num_time_steps=50, relative_tolerance=1.e-3)
+implied_jump_process_volatility(
+    25, AmericanOption(maturity=1.1, strike=100, callput=-1),
+    S0=100, num_time_steps=50, relative_tolerance=1.e-3)
 
 }
 \seealso{

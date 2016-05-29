@@ -17,4 +17,10 @@ A function taking two time arguments, which returns the discount factor from the
 Use a piecewise constant approximation to the given spot curve to
  generate a function capable of returning corresponding discount factors
 }
+\examples{
+disct_fcn = ragtop::spot_to_df_fcn(
+  data.frame(time=c(1, 5, 10, 15),
+             rate=c(0.01, 0.02, 0.03, 0.05)))
+print(disct_fcn(1, 0.5))
+}
 

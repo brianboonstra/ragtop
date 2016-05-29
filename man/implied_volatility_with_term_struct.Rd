@@ -28,15 +28,6 @@ implied_volatility_with_term_struct(option_price, callput, S0, K, time, ...,
 \item{max.iter}{Maximum number of root-finder iterations allowed}
 
 \item{max_vola}{Maximum volatility to try}
-
-\item{survival_probability_fcn}{(Implied argument) A function for probability
-of survival, with arguments \code{T}, \code{t} and \code{T>t}.  E.g. with
-a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}.}
-
-\item{dividends}{A \code{data.frame} with columns \code{time}, \code{fixed},
-and \code{proportional}.  Dividend size at the given \code{time} is
-then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
-dividends will be converted to proportional for purposes of this algorithm.}
 }
 \value{
 Estimated volatility
@@ -49,6 +40,22 @@ Use the Black-Scholes formula to generate European option values and run them
 \details{
 Differs from \code{implied_volatility} by calling \code{black_scholes_on_term_structures} for
   pricing, thereby allowing term structures of rates, and a nontrivial \code{survival_probability_fcn}
+}
+\examples{
+## Dividends
+divs = data.frame(time=seq(from=0.11, to=2, by=0.25),
+                  fixed=seq(1.5, 1, length.out=8),
+                  proportional = seq(1, 1.5, length.out=8))
+surv_prob_fcn = function(T, t, ...) {
+  exp(-0.07 * (T - t)) }
+disc_factor_fcn = function(T, t, ...) {
+  exp(-0.03 * (T - t)) }
+implied_volatility_with_term_struct(
+    option_price = 12, S0 = 150, callput=PUT,
+    K = 147.50, time=1.5,
+    discount_factor_fcn=disc_factor_fcn,
+    survival_probability_fcn=surv_prob_fcn,
+    dividends=divs)
 }
 \seealso{
 \code{\link{implied_volatility}} for simpler cases with constant

@@ -27,9 +27,7 @@ american_implied_volatility(option_price, callput, S0, K, time,
 is not given}
 
 \item{survival_probability_fcn}{(Implied argument) A function for probability of survival, with
-arguments \code{T}, \code{t} and \code{T>t}.  E.g. with
-a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}. Should be matched
-to \code{default_intensity_fcn}}
+arguments \code{T}, \code{t} and \code{T>t}.}
 
 \item{default_intensity_fcn}{A function for computing default intensity
 occurring at a given time, dependent on time and stock price, with
@@ -38,19 +36,19 @@ arguments \code{t}, \code{S}.  Should be matched to \code{survival_probability_f
 \item{...}{Additional arguments to be passed on to \code{\link{implied_volatility_with_term_struct}}
 and \code{\link{american}}}
 
-\item{num_time_steps}{Number of steps to use in the grid solver.  Can usually be
-set quite low due to the control variate scheme.}
+\item{num_time_steps}{Minimum number of time steps in the grid}
+
+\item{structure_constant}{The maximum ratio between time intervals \code{dt}
+and the square of space intervals \code{dz^2}}
+
+\item{std_devs_width}{The number of standard deviations, in \code{sigma * sqrt(T)}
+units, to incorporate into the grid}
 
 \item{relative_tolerance}{Relative tolerance in instrument price defining the root-finder halting condition}
 
 \item{max.iter}{Maximum number of root-finder iterations allowed}
 
 \item{max_vola}{Maximum volatility to try}
-
-\item{dividends}{A \code{data.frame} with columns \code{time}, \code{fixed},
-and \code{proportional}.  Dividend size at the given \code{time} is
-then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
-dividends will be converted to proportional for purposes of this algorithm.}
 }
 \value{
 Estimated volatility
@@ -62,10 +60,12 @@ Use the grid solver to generate american option values under
   option price has been found.
 }
 \examples{
-american_implied_volatility(25,CALL,S0=100,K=100,time=2.2, const_short_rate=0.03)
+american_implied_volatility(25,CALL,S0=100,K=100,time=2.2,
+  const_short_rate=0.03, num_time_steps=5)
 df250 =  function(t) ( exp(-0.02*t)*exp(-0.03*max(0,t-1.0))) # Simple term structure
 df25 = function(T,t){df250(T)/df250(t)} # Relative discount factors
-american_implied_volatility(25,-1,100,100,2.2,discount_factor_fcn=df25)
+american_implied_volatility(25,-1,100,100,2.2,
+  discount_factor_fcn=df25, num_time_steps=5)
 }
 \seealso{
 \code{\link{implied_volatility_with_term_struct}} for implied volatility

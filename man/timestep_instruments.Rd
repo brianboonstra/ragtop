@@ -14,7 +14,13 @@ timestep_instruments(z, prev_grid_values, t, dt, S0, instruments,
 \item{prev_grid_values}{A matrix with one column for each
 instrument and one row for each of the \eqn{N} values of \code{z}}
 
+\item{t}{Time after this timestep has been taken}
+
+\item{dt}{Interval to the end of this timestep}
+
 \item{S0}{Time zero price of the base equity}
+
+\item{instruments}{Instruments corresponding to layers of the value grid in \code{prev_grid_values}}
 
 \item{stock_level_fcn}{A function for changing space grid value to stock
 prices, with arguments \code{z} and \code{t}}
@@ -35,9 +41,21 @@ a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}.}
 and \code{proportional}.  Dividend size at the given \code{time} is
 then expected to be equal to \code{fixed + proportional * S / S0}}
 }
+\value{
+Grid values after applying an implicit timestep
+}
 \description{
 Backwardate grid values for all the given instruments from a set of grid
   values matched to time \code{t+dt} to form a new set of grid value as
   of time \code{t}.
+}
+\seealso{
+Other Implicit Grid Solver: \code{\link{construct_implicit_grid_structure}},
+  \code{\link{find_present_value}},
+  \code{\link{form_present_value_grid}},
+  \code{\link{infer_conforming_time_grid}},
+  \code{\link{integrate_pde}},
+  \code{\link{iterate_grid_from_timestep}},
+  \code{\link{take_implicit_timestep}}
 }
 

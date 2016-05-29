@@ -15,6 +15,8 @@ fit_variance_cumulation(S0, eq_options, mid_prices, spreads = NULL,
   0 * S }, dividends = NULL, borrow_cost = 0, dividend_rate = 0, ...)
 }
 \arguments{
+\item{S0}{Current stock price}
+
 \item{eq_options}{A list of options to find prices for.  Each must have fields \code{callput},
 \code{maturity}, and \code{strike}.  This list must be in strictly increasing order of maturity.}
 
@@ -30,11 +32,32 @@ fit_variance_cumulation(S0, eq_options, mid_prices, spreads = NULL,
 
 \item{force_same_grid}{Price all options on the same grid, rather than having smaller timestep sizes for earlier maturities}
 
+\item{num_time_steps}{Minimum number of time steps in the grid}
+
+\item{const_short_rate}{A constant to use for the instantaneous interest rate in case \code{discount_factor_fcn}
+is not given}
+
+\item{const_default_intensity}{A constant to use for the instantaneous default intensity in case \code{default_intensity_fcn}
+is not given}
+
+\item{discount_factor_fcn}{A function for computing present values to
+time \code{t} of various cashflows occurring, with
+arguments \code{T}, \code{t}}
+
 \item{survival_probability_fcn}{A function for probability of survival, with
 arguments \code{T}, \code{t} and \code{T>t}.  E.g. with
 a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}.  This argument is
 only used in normalization of prices to vols for root finder tolerance, and
 is therefore entirely optional}
+
+\item{default_intensity_fcn}{A function for computing default intensity
+occurring during this timestep, dependent on time and stock price, with
+arguments \code{t}, \code{S}.  Should be consistent with
+\code{survival_probability_fcn} if specified}
+
+\item{borrow_cost}{Stock borrow cost, affecting the drift rate}
+
+\item{dividend_rate}{Continuous dividend rate, affecting the drift rate}
 
 \item{...}{Futher arguments to \code{\link{find_present_value}}}
 }

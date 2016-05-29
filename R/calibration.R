@@ -35,11 +35,20 @@ library(futile.logger)
 #' @param const_default_intensity hazard rate of underlying default
 #' @param divrate A continuous rate for dividends and other cashflows such as foreign interest rates
 #' @param borrow_cost A continuous rate for stock borrow costs
+#' @param max.iter Number of iterations to try before abandoning the search
+#' @param relative_tolerance Relative tolerance in option price to achieve before halting the search
+#' @param max_vola Maximum volatility to try in the search
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
 #'   then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
 #'   dividends will be converted to proportional for purposes of this algorithm.  To handle
 #'   truly fixed dividends, see \code{\link{implied_jump_process_volatility}}
+#' @examples
+#' implied_volatility(2.5, 1, 100, 105, 0.01, 0.75)
+#' implied_volatility(option_price = 17,
+#'                    callput = CALL, S0 = 250,  K=245,
+#'                    r = 0.005, time = 2,
+#'                    const_default_intensity = 0.03)
 #' @return A scalar volatility
 #' @keywords Black-Scholes
 #' @family Implied Volatilities
@@ -126,26 +135,28 @@ implied_volatility = function(option_price, callput, S0, K, r, time,
 #' Find default-free volatilities based on known interest rates and hazard rates, using
 #'   a given option price.
 #'
-#' @param option_price Present option values
-#' @param callput 1 for calls, -1 for puts
-#' @param S0 initial underlying price
-#' @param K strike
-#' @param r risk-free interest rate
-#' @param time Time from \code{0} until expiration
-#' @param default_intensity hazard rate of underlying default
-#' @param divrate A continuous rate for dividends and other cashflows such as foreign interest rates
-#' @param borrow_cost A continuous rate for stock borrow costs
+#' @param ... Arguments passed to \code{\link{implied_volatility}}
+#' @param option_price Present option values (may be a vector)
+#' @param callput 1 for calls, -1 for puts (may be a vector)
+#' @param S0 initial underlying price (may be a vector)
+#' @param K strike (may be a vector)
+#' @param r risk-free interest rate (may be a vector)
+#' @param time Time from \code{0} until expiration (may be a vector)
+#' @param const_default_intensity hazard rate of underlying default (may be a vector)
+#' @param divrate A continuous rate for dividends and other cashflows such as foreign interest rates (may be a vector)
+#' @param borrow_cost A continuous rate for stock borrow costs (may be a vector)
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
 #'   then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
 #'   dividends will be converted to proprtional for purposes of this algorithm.
+#' @inheritParams implied_volatility
 #' @return Scalar volatilities
 #' @family Implied Volatilities
 #' @family European Options
 #' @family Equity Independent Default Intensity
 #' @export implied_volatilities
 implied_volatilities = Vectorize(implied_volatility)
-
+#
 #' Find jump process volatility with a given default risk from a straight Black-Scholes volatility
 #'
 #' Find default-free volatility (i.e. volatility of a Wiener process with a
@@ -156,10 +167,18 @@ implied_volatilities = Vectorize(implied_volatility)
 #' @param time Time to expiration of associated option contracts
 #' @param const_short_rate A constant to use for the instantaneous interest rate in case \code{discount_factor_fcn}
 #'  is not given
+#' @param dividend_rate A continuous accumulation rate for the stock, affecting the drift
+#' @param discount_factor_fcn A function for computing present values to
+#'   time \code{t} of various cashflows occurring during this timestep, with
+#'   arguments \code{T}, \code{t}
+#' @param survival_probability_fcn (Implied argument) A function for probability of survival, with
+#'   arguments \code{T}, \code{t} and \code{T>t}.
 #' @param const_default_intensity A constant to use for the instantaneous default intensity in case \code{survival_probability_fcn}
 #'  is not given
 #' @param relative_tolerance Relative tolerance in instrument price defining the root-finder halting condition
 #' @param max.iter Maximum number of root-finder iterations allowed
+#' @inheritParams find_present_value
+#' @inheritParams blackscholes
 #' @return A scalar volatility
 #' @family Implied Volatilities
 #' @family Equity Independent Default Intensity
@@ -239,10 +258,18 @@ equivalent_jump_vola_to_bs = function(bs_vola, time,
 #' @param time Time to expiration of associated option contracts
 #' @param const_short_rate A constant to use for the instantaneous interest rate in case \code{discount_factor_fcn}
 #'  is not given
+#' @param dividend_rate A continuous accumulation rate for the stock, affecting the drift
+#' @param discount_factor_fcn A function for computing present values to
+#'   time \code{t} of various cashflows occurring during this timestep, with
+#'   arguments \code{T}, \code{t}
+#' @param survival_probability_fcn (Implied argument) A function for probability of survival, with
+#'   arguments \code{T}, \code{t} and \code{T>t}.
 #' @param const_default_intensity A constant to use for the instantaneous default intensity in case \code{survival_probability_fcn}
 #'  is not given
 #' @param relative_tolerance Relative tolerance in instrument price defining the root-finder halting condition
 #' @param max.iter Maximum number of root-finder iterations allowed
+#' @inheritParams blackscholes
+#' @inheritParams find_present_value
 #' @return A scalar defaultable volatility of an option
 #' @family Implied Volatilities
 #' @family Equity Independent Default Intensity
@@ -273,7 +300,7 @@ equivalent_bs_vola_to_jump = function(jump_process_vola, time,
                                              borrow_cost=borrow_cost,
                                              dividend_rate=dividend_rate)
   flog.debug("Equiv BS  volatility black_scholes_on_term_structures() testing %s against %s at err %s vega %s",
-             vola, default_free_price, bs_vals$Price - defaultable_price, bs_vals$Vega,
+             vola, defaultable_price, bs_vals$Price - defaultable_price, bs_vals$Vega,
              name='ragtop.calibration.equivalent_bs_vola_to_jump')
   iter = 0
   while ((abs(bs_vals$Price/defaultable_price-1.0)>relative_tolerance) && (iter<max.iter)) {
@@ -287,7 +314,7 @@ equivalent_bs_vola_to_jump = function(jump_process_vola, time,
                                                borrow_cost=borrow_cost,
                                                dividend_rate=dividend_rate)
     flog.debug("Equiv BS volatility testing black_scholes_on_term_structures(PUT,...) %s at err %s vega %s",
-               vola, bs_vals$Price - default_free_price, bs_vals$Vega,
+               vola, bs_vals$Price - defaultable_price, bs_vals$Vega,
                name='ragtop.calibration.equivalent_bs_vola_to_jump')
     iter = iter + 1
   }
@@ -315,16 +342,20 @@ equivalent_bs_vola_to_jump = function(jump_process_vola, time,
 #' @param discount_factor_fcn A function for computing present values to
 #'   time \code{t}, with arguments \code{T}, \code{t}
 #' @param time Time from \code{0} until expirations (may be a vector)
-#' @param default_intensity hazard rates of underlying default  (may be a vector)
+#' @param const_default_intensity hazard rates of underlying default  (may be a vector)
 #' @param divrate A continuous rate for dividends and other cashflows such as foreign interest rates  (may be a vector)
 #' @param borrow_cost A continuous rate for stock borrow costs  (may be a vector)
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
 #'   then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
 #'   dividends will be converted to proprtional for purposes of this algorithm.
+#' @inheritParams find_present_value
+#' @inheritParams implied_volatility
 #' @examples
 #'   d_fcn = function(T,t) {exp(-0.03*(T-t))}
-#'   implied_volatilities_with_rates_struct(c(23,24,25), c(-1,1,1), 100, 100, discount_factor_fcn=d_fcn, time=c(4,4,5))
+#'   implied_volatilities_with_rates_struct(c(23,24,25),
+#'          c(-1,1,1), 100, 100,
+#'          discount_factor_fcn=d_fcn, time=c(4,4,5))
 #'
 #' @return Scalar volatilities
 #' @family Implied Volatilities
@@ -387,16 +418,24 @@ implied_volatilities_with_rates_struct = function(option_price, callput, S0, K, 
 #' @param time Time to expiration
 #' @param ... Further arguments to be passed on to \code{black_scholes_on_term_structures}
 #' @param starting_volatility_estimate The Newton method's original guess
-#' @param survival_probability_fcn (Implied argument) A function for probability
-#'   of survival, with arguments \code{T}, \code{t} and \code{T>t}.  E.g. with
-#'   a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}.
-#' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
-#'   and \code{proportional}.  Dividend size at the given \code{time} is
-#'   then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
-#'   dividends will be converted to proportional for purposes of this algorithm.
 #' @param relative_tolerance Relative tolerance in instrument price defining the root-finder halting condition
 #' @param max.iter Maximum number of root-finder iterations allowed
 #' @param max_vola Maximum volatility to try
+#' @examples
+#' ## Dividends
+#' divs = data.frame(time=seq(from=0.11, to=2, by=0.25),
+#'                   fixed=seq(1.5, 1, length.out=8),
+#'                   proportional = seq(1, 1.5, length.out=8))
+#' surv_prob_fcn = function(T, t, ...) {
+#'   exp(-0.07 * (T - t)) }
+#' disc_factor_fcn = function(T, t, ...) {
+#'   exp(-0.03 * (T - t)) }
+#' implied_volatility_with_term_struct(
+#'     option_price = 12, S0 = 150, callput=PUT,
+#'     K = 147.50, time=1.5,
+#'     discount_factor_fcn=disc_factor_fcn,
+#'     survival_probability_fcn=surv_prob_fcn,
+#'     dividends=divs)
 #' @return Estimated volatility
 #' @family Implied Volatilities
 #' @family Equity Independent Default Intensity
@@ -491,16 +530,10 @@ implied_volatility_with_term_struct = function(option_price, callput, S0, K, tim
 #' @param ... Additional arguments to be passed on to \code{\link{implied_volatility_with_term_struct}}
 #'   and \code{\link{american}}
 #' @param survival_probability_fcn (Implied argument) A function for probability of survival, with
-#'   arguments \code{T}, \code{t} and \code{T>t}.  E.g. with
-#'   a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}. Should be matched
-#'   to \code{default_intensity_fcn}
+#'   arguments \code{T}, \code{t} and \code{T>t}.
 #' @param default_intensity_fcn A function for computing default intensity
 #'   occurring at a given time, dependent on time and stock price, with
 #'   arguments \code{t}, \code{S}.  Should be matched to \code{survival_probability_fcn}
-#' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
-#'   and \code{proportional}.  Dividend size at the given \code{time} is
-#'   then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
-#'   dividends will be converted to proportional for purposes of this algorithm.
 #' @param relative_tolerance Relative tolerance in instrument price defining the root-finder halting condition
 #' @param max.iter Maximum number of root-finder iterations allowed
 #' @param max_vola Maximum volatility to try
@@ -511,10 +544,12 @@ implied_volatility_with_term_struct = function(option_price, callput, S0, K, tim
 #' @family Equity Independent Default Intensity
 #' @family American Exercise Equity Options
 #' @examples
-#' american_implied_volatility(25,CALL,S0=100,K=100,time=2.2, const_short_rate=0.03)
+#' american_implied_volatility(25,CALL,S0=100,K=100,time=2.2,
+#'   const_short_rate=0.03, num_time_steps=5)
 #' df250 =  function(t) ( exp(-0.02*t)*exp(-0.03*max(0,t-1.0))) # Simple term structure
 #' df25 = function(T,t){df250(T)/df250(t)} # Relative discount factors
-#' american_implied_volatility(25,-1,100,100,2.2,discount_factor_fcn=df25)
+#' american_implied_volatility(25,-1,100,100,2.2,
+#'   discount_factor_fcn=df25, num_time_steps=5)
 #' @export american_implied_volatility
 american_implied_volatility = function(option_price, callput, S0, K, time,
                                        const_default_intensity = 0,
@@ -629,6 +664,8 @@ american_implied_volatility = function(option_price, callput, S0, K, time,
 #'   without equity dependence of default intensity, \code{\link{american_implied_volatility}} for the same on American options
 #' @inheritParams find_present_value
 #' @inheritParams american
+#' @param instrument Instrument to search for the target price on, passed as
+#'   the sole instrument to \code{\link{find_present_value}}
 #' @param instrument_price Target price for root finder
 #' @param starting_volatility_estimate Bisection method original guess
 #' @param ... Additional arguments to be passed on to \code{\link{find_present_value}}
@@ -641,10 +678,12 @@ american_implied_volatility = function(option_price, callput, S0, K, time,
 #' @family Implied Volatilities
 #' @family Equity Dependent Default Intensity
 #' @examples
-#' implied_jump_process_volatility(25, AmericanOption(maturity=1.1, strike=100, callput=-1), S0=100, num_time_steps=50, relative_tolerance=1.e-3)
+#' implied_jump_process_volatility(
+#'     25, AmericanOption(maturity=1.1, strike=100, callput=-1),
+#'     S0=100, num_time_steps=50, relative_tolerance=1.e-3)
 #'
 #' @export implied_jump_process_volatility
-implied_jump_process_volatility = function(instrument_price, instrument, variance_cumulation_fcn=NULL,
+implied_jump_process_volatility = function(instrument_price, instrument,
                                          ...,
                                          starting_volatility_estimate=0.85,
                                          relative_tolerance=5.e-3,
@@ -725,7 +764,6 @@ implied_jump_process_volatility = function(instrument_price, instrument, varianc
 #' nonlinear transformation that just
 #' happens to come from the straight Black-Scholes model.
 #'
-#' @inheritParams find_present_value
 #' @param eq_options A list of options to find prices for.  Each must have fields \code{callput},
 #'                   \code{maturity}, and \code{strike}.  This list must be in strictly increasing order of maturity.
 #' @param mid_prices Prices to match
@@ -740,6 +778,18 @@ implied_jump_process_volatility = function(instrument_price, instrument, varianc
 #' @param force_same_grid Price all options on the same grid, rather than having smaller timestep sizes for earlier maturities
 #' @param use_impvol Judge fit quality on implied vol distance rather than price distance
 #' @param ... Futher arguments to \code{\link{find_present_value}}
+#' @inheritParams form_present_value_grid
+#' @inheritParams find_present_value
+#' @param S0  Current stock price
+#' @param discount_factor_fcn A function for computing present values to
+#'   time \code{t} of various cashflows occurring, with
+#'   arguments \code{T}, \code{t}
+#' @param default_intensity_fcn A function for computing default intensity
+#'   occurring during this timestep, dependent on time and stock price, with
+#'   arguments \code{t}, \code{S}.  Should be consistent with
+#'   \code{survival_probability_fcn} if specified
+#' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
+#'   and \code{proportional}.  Dividend size at the given \code{time} is
 #' @return A list with two elements, \code{volatilities} and \code{cumulation_function}.  The \code{cumulation_function} will
 #'   be a 2-parameter function giving cumulated variances, as created by code{\link{variance_cumulation_from_vols}}
 #' @keywords calibration
@@ -946,8 +996,11 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
 #'  intensity of the form $h(s + (1-s)(S0/S_t)^p)$.
 #'
 #' @param p Power of default intensity
-#' @param s Proprtion of constant defalt intensity
-#' @param h Base
+#' @param s Proportion of constant default intensity
+#' @param ... Further arguments passed to both
+#'   \code{\link{fit_variance_cumulation}} and to
+#'   \code{\link{find_present_value}}
+#' @param h Base default intensity
 #' @inheritParams fit_to_option_market
 #' @export price_with_intensity_link
 price_with_intensity_link = function(p, s, h,
@@ -990,8 +1043,14 @@ price_with_intensity_link = function(p, s, h,
 #'    and the pricing error (in implied vol terms) divided by the spread (also in implied
 #'    vol terms).
 #'
+#' @param ... Further arguments passed to \code{\link{price_with_intensity_link}}
+#' @param num_time_steps Time step count passed on to \code{\link{find_present_value}}
+#'   while fitting instrument values
+#' @param const_short_rate A constant to use for the instantaneous interest rate in case \code{discount_factor_fcn}
+#'  is not given
 #' @inheritParams fit_to_option_market
 #' @inheritParams price_with_intensity_link
+#' @inheritParams find_present_value
 #' @seealso \code{\link{price_with_intensity_link}} for the pricing function
 #' @export penalty_with_intensity_link
 penalty_with_intensity_link = function(p, s, h,
@@ -1065,6 +1124,7 @@ penalty_with_intensity_link = function(p, s, h,
 #' @details
 #'  In its present form, this function uses a brain-dead grid search.
 #'
+#' @inheritParams form_present_value_grid
 #' @param S0 Current underlying price
 #' @param variance_instruments A list of instruments in strictly increasing order
 #'  of maturity, from which the volatility term structure will be inferred.  Once the
@@ -1076,14 +1136,21 @@ penalty_with_intensity_link = function(p, s, h,
 #' @param fit_instrument_prices Central price targets for the variance instruments
 #' @param variance_instrument_spreads Bid-offer spreads used to normalize errors
 #'   in variance instrument prices during term structure fitting
+#' @param fit_instrument_weights Weights applied to relative errors in fit
+#'   instrument prices before summing to form the penalty
 #' @param fit_instrument_spreads Bid-offer spreads used to normalize errors
 #'   in fit instrument prices during default intensity
-#' @param fit_instrument_spreads Bid-offer spreads used to normalize errors
-#'   in fit instrument prices during default intensity
+#' @param num_time_steps Time step count passed on to \code{\link{find_present_value}}
+#'   while fitting instrument values
 #' @param base_default_intensity Overall default intensity (in natural units)
 #' @param discount_factor_fcn A function for computing present values to
 #'   time \code{t} of various cashflows occurring during this timestep, with
 #'   arguments \code{T}, \code{t}
+#' @param num_variance_time_steps Number of time steps to use in
+#'   calling \code{\link{fit_variance_cumulation}}
+#' @param relative_spread_tolerance Tolerance to apply in
+#'   calling \code{\link{fit_variance_cumulation}}
+#' @param ... Further arguments passed to \code{\link{penalty_with_intensity_link}}
 #' @seealso \code{\link{penalty_with_intensity_link}} for the penalty function used
 #'   as an optimization target
 #' @export fit_to_option_market
@@ -1209,9 +1276,9 @@ fit_to_option_market = function(variance_instruments,
 #' @seealso \code{\link{fit_to_option_market}} the underlying fit algorithm
 #' @export fit_to_option_market_df
 fit_to_option_market_df = function(
-  S0 = TSLAMarket$S0,
-  discount_factor_fcn = spot_to_df_fcn(TSLAMarket$risk_free_rates),
-  options_df = TSLAMarket$options,
+  S0 = ragtop::TSLAMarket$S0,
+  discount_factor_fcn = spot_to_df_fcn(ragtop::TSLAMarket$risk_free_rates),
+  options_df = ragtop::TSLAMarket$options,
   min_maturity = 1/12,
   min_moneyness=0.80,
   max_moneyness = 1.20,

@@ -23,6 +23,8 @@ time \code{t}, with arguments \code{T}, \code{t}}
 
 \item{time}{Time from \code{0} until expirations (may be a vector)}
 
+\item{const_default_intensity}{hazard rates of underlying default  (may be a vector)}
+
 \item{divrate}{A continuous rate for dividends and other cashflows such as foreign interest rates  (may be a vector)}
 
 \item{borrow_cost}{A continuous rate for stock borrow costs  (may be a vector)}
@@ -32,7 +34,11 @@ and \code{proportional}.  Dividend size at the given \code{time} is
 then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
 dividends will be converted to proprtional for purposes of this algorithm.}
 
-\item{default_intensity}{hazard rates of underlying default  (may be a vector)}
+\item{relative_tolerance}{Relative tolerance in option price to achieve before halting the search}
+
+\item{max.iter}{Number of iterations to try before abandoning the search}
+
+\item{max_vola}{Maximum volatility to try in the search}
 }
 \value{
 Scalar volatilities
@@ -49,7 +55,9 @@ for each option, and then calling \code{implied_volatilities}
 }
 \examples{
   d_fcn = function(T,t) {exp(-0.03*(T-t))}
-  implied_volatilities_with_rates_struct(c(23,24,25), c(-1,1,1), 100, 100, discount_factor_fcn=d_fcn, time=c(4,4,5))
+  implied_volatilities_with_rates_struct(c(23,24,25),
+         c(-1,1,1), 100, 100,
+         discount_factor_fcn=d_fcn, time=c(4,4,5))
 
 }
 \seealso{

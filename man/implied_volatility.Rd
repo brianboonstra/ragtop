@@ -33,6 +33,12 @@ and \code{proportional}.  Dividend size at the given \code{time} is
 then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
 dividends will be converted to proportional for purposes of this algorithm.  To handle
 truly fixed dividends, see \code{\link{implied_jump_process_volatility}}}
+
+\item{relative_tolerance}{Relative tolerance in option price to achieve before halting the search}
+
+\item{max.iter}{Number of iterations to try before abandoning the search}
+
+\item{max_vola}{Maximum volatility to try in the search}
 }
 \value{
 A scalar volatility
@@ -44,6 +50,13 @@ Find default-free volatility (not necessarily just Black-Scholes) based on
 \details{
 To get a straight Black-Scholes implied volatility, simply call this function with
  \code{const_default_intensity} set to zero (the default).
+}
+\examples{
+implied_volatility(2.5, 1, 100, 105, 0.01, 0.75)
+implied_volatility(option_price = 17,
+                   callput = CALL, S0 = 250,  K=245,
+                   r = 0.005, time = 2,
+                   const_default_intensity = 0.03)
 }
 \seealso{
 Other Equity Independent Default Intensity: \code{\link{american_implied_volatility}},

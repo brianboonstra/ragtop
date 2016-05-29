@@ -10,11 +10,19 @@ take_implicit_timestep(t, S, full_discount_factor, local_discount_factor,
   instr_name = "this instrument")
 }
 \arguments{
+\item{t}{Time after this timestep has been taken}
+
+\item{S}{Underlying equity values for the grid}
+
 \item{full_discount_factor}{A discount factor for the transform from
 grid values to actual derivative prices}
 
 \item{local_discount_factor}{A discount factor to apply to
 recovery values}
+
+\item{discount_factor_fcn}{A function for computing present values to
+time \code{t} of various cashflows occurring during this timestep, with
+arguments \code{T}, \code{t}}
 
 \item{prev_grid_values}{A vector of space grid values from the
 previously calculated timestep}
@@ -32,8 +40,22 @@ themselves allowed to be NA.}
 \item{dividends}{A \code{data.frame} with columns \code{time}, \code{fixed},
 and \code{proportional}.  Dividend size at the given \code{time} is
 then expected to be equal to \code{fixed + proportional * S / S0}}
+
+\item{instr_name}{Name of instrument to use in log messages}
+}
+\value{
+Grid values for the instrument after taking the implicit timestep
 }
 \description{
 Take one timestep of an implicit solver for a given instrument
+}
+\seealso{
+Other Implicit Grid Solver: \code{\link{construct_implicit_grid_structure}},
+  \code{\link{find_present_value}},
+  \code{\link{form_present_value_grid}},
+  \code{\link{infer_conforming_time_grid}},
+  \code{\link{integrate_pde}},
+  \code{\link{iterate_grid_from_timestep}},
+  \code{\link{timestep_instruments}}
 }
 

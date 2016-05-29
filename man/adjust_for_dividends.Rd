@@ -8,12 +8,24 @@
 adjust_for_dividends(grid_values, t, dt, r, h, S, S0, dividends)
 }
 \arguments{
+\item{grid_values}{A \code{matrix} with one row for each level of \code{S} and one
+column per set of \code{S}-associated instrument values}
+
+\item{t}{Time after this timestep has been taken}
+
+\item{dt}{Interval to end of timestep}
+
+\item{r}{risk-free interest rate}
+
+\item{h}{Default intensities}
+
+\item{S}{Underlying equity values for the grid}
+
+\item{S0}{Time zero price of the base equity}
+
 \item{dividends}{A \code{data.frame} with columns \code{time}, \code{fixed},
 and \code{proportional}.  Dividend size at the given \code{time} is
 then expected to be equal to \code{fixed + proportional * S / S0}}
-
-\item{grid_value}{A \code{matrix} with one row for each level of \code{S} and one
-column per set of \code{S}-associated instrument values}
 }
 \value{
 An object like \code{grid_values} with entries modified according to the dividends
@@ -22,5 +34,9 @@ An object like \code{grid_values} with entries modified according to the dividen
 Analyze \code{dividends} to find ones paid in the interval \code{(t,t+dt]}. Form
  present value as of time \code{t} for them, and then use spline interpolation
  to adjust instrument values accordingly.
+}
+\seealso{
+Other Dividends: \code{\link{shift_for_dividends}},
+  \code{\link{time_adj_dividends}}
 }
 

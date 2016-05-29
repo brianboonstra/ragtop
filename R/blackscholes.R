@@ -16,6 +16,8 @@
 ## You should have received a copy of the GNU General Public License
 ## along with ragtop.  If not, see <http://www.gnu.org/licenses/>.
 
+library(futile.logger)
+
 
 #' Constant CALL for defining option contracts
 #'
@@ -58,7 +60,8 @@ PUT = -1
 #' @family European Options
 #' @family Equity Independent Default Intensity
 #' @examples
-#' blackscholes(callput=-1, S0=100, K=90, r=0.03, time=1, vola=0.5, default_intensity=0.07)  # -1 is a PUT
+#' blackscholes(callput=-1, S0=100, K=90, r=0.03, time=1, # -1 is a PUT
+#'              vola=0.5, default_intensity=0.07)
 #' @export blackscholes
 blackscholes = function(callput, S0, K, r, time, vola,
                         default_intensity=0, divrate=0, borrow_cost=0,
@@ -125,6 +128,12 @@ blackscholes = function(callput, S0, K, r, time, vola,
 #' @param discount_factor_fcn A function for computing present values to
 #'   time \code{t} of various cashflows occurring during this timestep, with
 #'   arguments \code{T}, \code{t}
+#' @param const_volatility A constant to use for volatility in case \code{variance_cumulation_fcn}
+#'  is not given
+#' @param const_short_rate A constant to use for the instantaneous interest rate in case \code{discount_factor_fcn}
+#'  is not given
+#' @param const_default_intensity A constant to use for the instantaneous default intensity in case \code{default_intensity_fcn}
+#'  is not given
 #' @param survival_probability_fcn A function for probability of survival, with
 #'   arguments \code{T}, \code{t} and \code{T>t}.  E.g. with
 #'   a constant volatility \eqn{s} this takes the form \eqn{(T-t)s^2}.

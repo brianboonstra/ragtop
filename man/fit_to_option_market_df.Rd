@@ -4,9 +4,9 @@
 \alias{fit_to_option_market_df}
 \title{Calibrate volatilities and equity-linked default intensity making many assumptions}
 \usage{
-fit_to_option_market_df(S0 = TSLAMarket$S0,
-  discount_factor_fcn = spot_to_df_fcn(TSLAMarket$risk_free_rates),
-  options_df = TSLAMarket$options, min_maturity = 1/12,
+fit_to_option_market_df(S0 = ragtop::TSLAMarket$S0,
+  discount_factor_fcn = spot_to_df_fcn(ragtop::TSLAMarket$risk_free_rates),
+  options_df = ragtop::TSLAMarket$options, min_maturity = 1/12,
   min_moneyness = 0.8, max_moneyness = 1.2, base_default_intensity = 0.05)
 }
 \arguments{

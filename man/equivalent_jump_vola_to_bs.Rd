@@ -22,6 +22,13 @@ is not given}
 \item{const_default_intensity}{A constant to use for the instantaneous default intensity in case \code{survival_probability_fcn}
 is not given}
 
+\item{dividends}{A \code{data.frame} with columns \code{time}, \code{fixed},
+and \code{proportional}.  Dividend size at the given \code{time} is
+then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
+dividends will be converted to proportional for purposes of this algorithm.}
+
+\item{borrow_cost}{A continuous rate for stock borrow costs}
+
 \item{relative_tolerance}{Relative tolerance in instrument price defining the root-finder halting condition}
 
 \item{max.iter}{Maximum number of root-finder iterations allowed}

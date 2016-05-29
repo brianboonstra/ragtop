@@ -14,11 +14,19 @@ accelerated_coupon_value(t, coupons_df, discount_factor_fcn,
 columns \code{payment_time} and \code{payment_size}.}
 
 \item{discount_factor_fcn}{A function specifying how the contract says future coupons should be discounted for this instrument in case the acceleration clause is triggered}
+
+\item{acceleration_t}{Time limit, up to which coupons will be accelerated}
 }
 \description{
 Compute "present" value as of time t for coupons that
 would otherwise have been paid up to time acceleration_t, in the
 case of accelerated coupon provisions for forced conversions (or
 sometimes even unforced ones).
+}
+\seealso{
+Other Bond Coupon Acceleration: \code{\link{coupon_value_at_exercise}}
+
+Other Bond Coupons: \code{\link{coupon_value_at_exercise}},
+  \code{\link{value_from_prior_coupons}}
 }
 

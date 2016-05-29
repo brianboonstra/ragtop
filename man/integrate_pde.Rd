@@ -51,4 +51,13 @@ Use an implicit integration scheme to numerically integrate
 the pricing differential equation for each of the given instruments,
 backwardating from time \code{Tmax} to time 0.
 }
+\seealso{
+Other Implicit Grid Solver: \code{\link{construct_implicit_grid_structure}},
+  \code{\link{find_present_value}},
+  \code{\link{form_present_value_grid}},
+  \code{\link{infer_conforming_time_grid}},
+  \code{\link{iterate_grid_from_timestep}},
+  \code{\link{take_implicit_timestep}},
+  \code{\link{timestep_instruments}}
+}
 
