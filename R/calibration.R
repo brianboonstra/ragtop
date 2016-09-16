@@ -54,6 +54,7 @@ library(futile.logger)
 #' @family Implied Volatilities
 #' @family Equity Independent Default Intensity
 #' @family European Options
+#' @import futile.logger
 #' @export implied_volatility
 implied_volatility = function(option_price, callput, S0, K, r, time,
                               const_default_intensity=0, divrate=0, borrow_cost=0,
@@ -154,6 +155,7 @@ implied_volatility = function(option_price, callput, S0, K, r, time,
 #' @family Implied Volatilities
 #' @family European Options
 #' @family Equity Independent Default Intensity
+#' @import futile.logger
 #' @export implied_volatilities
 implied_volatilities = Vectorize(implied_volatility)
 #
@@ -361,6 +363,7 @@ equivalent_bs_vola_to_jump = function(jump_process_vola, time,
 #' @family Implied Volatilities
 #' @family European Options
 #' @family Equity Independent Default Intensity
+#' @import futile.logger
 #' @export implied_volatilities_with_rates_struct
 implied_volatilities_with_rates_struct = function(option_price, callput, S0, K, discount_factor_fcn, time,
                                                   const_default_intensity=0, divrate=0, borrow_cost=0,
@@ -440,6 +443,7 @@ implied_volatilities_with_rates_struct = function(option_price, callput, S0, K, 
 #' @family Implied Volatilities
 #' @family Equity Independent Default Intensity
 #' @family European Options
+#' @import futile.logger
 #' @export implied_volatility_with_term_struct
 implied_volatility_with_term_struct = function(option_price, callput, S0, K, time,
                                                ...,
@@ -550,6 +554,7 @@ implied_volatility_with_term_struct = function(option_price, callput, S0, K, tim
 #' df25 = function(T,t){df250(T)/df250(t)} # Relative discount factors
 #' american_implied_volatility(25,-1,100,100,2.2,
 #'   discount_factor_fcn=df25, num_time_steps=5)
+#' @import futile.logger
 #' @export american_implied_volatility
 american_implied_volatility = function(option_price, callput, S0, K, time,
                                        const_default_intensity = 0,
@@ -1153,6 +1158,7 @@ penalty_with_intensity_link = function(p, s, h,
 #' @param ... Further arguments passed to \code{\link{penalty_with_intensity_link}}
 #' @seealso \code{\link{penalty_with_intensity_link}} for the penalty function used
 #'   as an optimization target
+#' @import futile.logger
 #' @export fit_to_option_market
 fit_to_option_market = function(variance_instruments,
                                 variance_instrument_prices,

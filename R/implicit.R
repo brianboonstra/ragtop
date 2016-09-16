@@ -61,6 +61,7 @@ library(futile.logger)
 #'   \item{\code{N}}{The number of space points}
 #'   \item{\code{z}}{Locations of space points}
 #' }
+#' @import futile.logger
 construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structure_constant, std_devs_width,
                                              min_z_width=0)
 {
@@ -102,6 +103,7 @@ construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structu
 #' @return A list with elements \code{super}, \code{diag} and \code{sub}
 #'   containing the superdiagonal, diagonal and subdiagonal of the implicit
 #'   timestep differencing matrix
+#' @import futile.logger
 #' @export construct_tridiagonals
 construct_tridiagonals = function(sigma, structure_constant, drift)
 {
@@ -156,6 +158,7 @@ construct_tridiagonals = function(sigma, structure_constant, drift)
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
 #'   then expected to be equal to \code{fixed + proportional * S / S0}
+#' @import limSolve
 #' @return Grid values for the instrument after taking the implicit timestep
 #' @family Implicit Grid Solver
 #' @export take_implicit_timestep

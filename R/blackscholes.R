@@ -153,6 +153,7 @@ blackscholes = function(callput, S0, K, r, time, vola,
 #'                                  variance_cumulation_fcn = function(T, t) {
 #'                                    0.45 ^ 2 * (T - t)
 #'                                  })
+#' @import futile.logger
 #' @export black_scholes_on_term_structures
 black_scholes_on_term_structures = function(callput, S0, K, time,
            const_volatility=0.5, const_short_rate=0, const_default_intensity=0,

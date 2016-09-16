@@ -48,6 +48,7 @@ library(futile.logger)
 #' @field last_computed_grid The most recently computed set of values from a grid pricing scheme.  Used internally for pricing chains of derivatives.
 #' @field name A mnemonic name for the instrument, not used by ragtop
 #' @export GridPricedInstrument
+#' @import methods
 #' @exportClass GridPricedInstrument
 GridPricedInstrument = setRefClass(
   "GridPricedInstrument",

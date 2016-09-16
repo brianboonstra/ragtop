@@ -99,6 +99,7 @@ time_adj_dividends = function(relevant_divs, t_final, r, h, S, S0)
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
 #'   then expected to be equal to \code{fixed + proportional * S / S0}
 #' @return An object like \code{grid_values} with entries modified according to the dividends
+#' @import futile.logger
 #' @family Dividends
 #' @export adjust_for_dividends
 adjust_for_dividends = function(grid_values, t, dt, r, h, S, S0, dividends)
