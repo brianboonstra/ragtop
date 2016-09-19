@@ -1,8 +1,13 @@
 ---
 title: "ragtop: Complex Derivatives Pricing"
+header-includes: \usepackage{amsmath}
 author: "Brian K. Boonstra"
 date: "First Version: May 20, 2016  This Version: `r Sys.Date()`"
 output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    keep_tex: true
   rmarkdown::html_vignette:
     keep_md: yes
 bibliography: converts.bib
@@ -257,7 +262,7 @@ Let's further postulate a set of financial instruments with known prices.  If th
   knitr::kable(options_df[atm_put_ix,], digits=3, row.names = F)
 ```
 
-Once we have those instruments, we can successively fit our volatility term structure to longer-and-longer dated securities.  This is done for us in the \code{fit_variance_cumulation} function
+Once we have those instruments, we can successively fit our volatility term structure to longer-and-longer dated securities.  This is done for us in the `fit_variance_cumulation` function
 
 ```{r varfit, echo=TRUE, comment=""}
 vcm = fit_variance_cumulation(S0, eq_options=atm_puts,
@@ -327,7 +332,7 @@ fit_penalty(1, 0.5)
 ```
 
 
-We can apply our favorite optimizer to this penalty function in order to optimize the model parameters.  **ragtop** includes one such fitting algorithm in \code{fit_to_option_market} and its simpler but less featureful companion \code{fit_to_option_market_df}.  Let's say we have decided $h_0=0.04$, $s=0.75$ and $p=5/2$.  We may have some other instrument we wish to price consistent with this calibration, such as a convertible bond
+We can apply our favorite optimizer to this penalty function in order to optimize the model parameters.  **ragtop** includes one such fitting algorithm in `fit_to_option_market` and its simpler but less featureful companion `fit_to_option_market_df`.  Let's say we have decided $h_0=0.04$, $s=0.75$ and $p=5/2$.  We may have some other instrument we wish to price consistent with this calibration, such as a convertible bond
 
 ```{r define_cb, echo=TRUE, comment=""}
 cb = ragtop::ConvertibleBond(
