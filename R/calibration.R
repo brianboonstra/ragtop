@@ -974,9 +974,10 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
                  eq_opt$maturity, min_vol, max_vol, brent_tol,
                  name='ragtop.calibration.fit_variance_cumulation')
       orig_search_interval = c(min_vol, max_vol)
-      solv = uniroot(distfunc, interval=orig_search_interval, extendInt="no",
-                     f.lower=f.lower, f.upper=f.upper,
-                     tol=brent_tol, maxiter=20)
+      solv = stats::uniroot(distfunc,
+                            interval=orig_search_interval, extendInt="no",
+                            f.lower=f.lower, f.upper=f.upper,
+                            tol=brent_tol, maxiter=20)
       found_v = unlist(solv['root'])[[1]]
       done = TRUE
     }
@@ -1183,7 +1184,7 @@ fit_to_option_market = function(variance_instruments,
                           p=rep(test_p, each=length(ss)),
                           penalty=rep(NA, length(ss)*length(test_p)))
   flog.info("Will populate penalties table:\n%s",
-            paste(capture.output(pens_found), "\n", sep=""),
+            paste(utils::capture.output(pens_found), "\n", sep=""),
             name='ragtop.calibration.fit_to_option_market')
   for (ix_s in (1:length(ss))) {
     s = ss[[ix_s]]
@@ -1218,7 +1219,7 @@ fit_to_option_market = function(variance_instruments,
                 pen_result, p,s,h,ix_s,
                 name='ragtop.calibration.fit_to_option_market')
       flog.info("Found penalties are now:\n%s",
-                paste(capture.output(pens_found), "\n", sep=""),
+                paste(utils::capture.output(pens_found), "\n", sep=""),
                 name='ragtop.calibration.fit_to_option_market.compute')
       pen_result
     }

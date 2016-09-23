@@ -695,9 +695,10 @@ find_present_value = function(S0, num_time_steps, instruments,
   for (k in (1:length(instruments))) {
     instrument = instruments[[k]]
     instr_name = names(instruments)[[k]]
-    present_values[[instr_name]] = spline(x=present_value_grid[,"Underlying"],
-                                          y=present_value_grid[,instr_name],
-                                          xout=S0)$y
+    present_values[[instr_name]] = stats::spline(
+      x=present_value_grid[,"Underlying"],
+      y=present_value_grid[,instr_name],
+      xout=S0)$y
   }
   present_values
 }
