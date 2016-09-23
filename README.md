@@ -136,3 +136,5 @@ Technical Documentation
 =======================
 
 The source for the technical paper is in this repository. You can also find the pdf [here](http://thureoscapital.com/ragtop.pdf)
+
+[![Travis-CI Build Status](https://travis-ci.org/brianboonstra/ragtop.svg?branch=master)](https://travis-ci.org/brianboonstra/ragtop)

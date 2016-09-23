@@ -1,11 +1,11 @@
 Package: ragtop
 Type: Package
-Title: Pricing equity derivatives with extensions of Black-Scholes
+Title: Pricing Equity Derivatives with Extensions of Black-Scholes
 Version: 0.5
-Date: 2016-05-16
+Date: 2016-09-23
 Author: Brian K. Boonstra
 Maintainer: Brian K. Boonstra <ragtop@boonstra.org>
-Description: This package prices American and European
+Description: Algorithms to price American and European
     equity options, convertible bonds and a
     variety of other financial derivatives. It uses an
     extension of the usual Black-Scholes model in which
