@@ -125,7 +125,7 @@ spot_to_df_fcn = function(yield_curve) {
 #' @return A function taking two time arguments, which returns the discount factor from the second to the first
 #' @export Quandl_df_fcn_UST_raw
 Quandl_df_fcn_UST_raw = function(on_date) {
-  if (is.element('R.cache', installed.packages()[,1])) {
+  if (is.element('R.cache', utils::installed.packages()[,1])) {
     yield_curve_elems = Quandl::Quandl("USTREASURY/YIELD", start_date=on_date, end_date=on_date)
     yield_curve_elems$Date = NULL
     yc_rates = as.numeric(yield_curve_elems)/100  # Values are reported as percent
@@ -146,8 +146,10 @@ Quandl_df_fcn_UST_raw = function(on_date) {
 #' @param envir Environment passed to \code{\link{Quandl_df_fcn_UST_raw}}
 #' @return A function taking two time arguments, which returns the discount factor from the second to the first
 #' @export Quandl_df_fcn_UST
-Quandl_df_fcn_UST = Quandl_df_fcn_UST_raw
-if (is.element('R.cache', installed.packages()[,1])) {
+Quandl_df_fcn_UST = function(...,envir=parent.frame()) {
+  Quandl_df_fcn_UST_raw(...)
+}
+if (is.element('R.cache', utils::installed.packages()[,1])) {
   Quandl_df_fcn_UST = R.cache::addMemoization(Quandl_df_fcn_UST_raw)
 }
 
