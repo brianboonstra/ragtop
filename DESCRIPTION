@@ -12,7 +12,7 @@ Description: Algorithms to price American and European
     jump to default may occur at a probability specified
     by a power-law link between stock price and hazard
     rate as found in the paper by Takahashi, Kobayashi,
-    and Nakagawa (2001) <doi:10.3905/jfi.2001.31930>.  We
+    and Nakagawa (2001) <doi:10.3905/jfi.2001.319302>.  We
     use ideas and techniques from Andersen and
     Buffum (2002) <doi:10.2139/ssrn.355308> and
     Linetsky (2006) <doi:10.1111/j.1467-9965.2006.00271.x>.
