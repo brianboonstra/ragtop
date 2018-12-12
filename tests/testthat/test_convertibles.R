@@ -97,3 +97,31 @@ opt_equiv_prices = find_present_value(S0=S0, instruments=list(call=euro_simple_c
 test_that("Option-equivalent convertible", {
   expect_equal(cbopt$conversion_ratio * opt_equiv_prices$call+cbopt$notional, opt_equiv_prices$convertible_bond, tolerance=1.e-2)
 })
+
+
+
+
+cb_zero_recov = ConvertibleBond(maturity=2.87,
+                     conversion_ratio=2.7788,
+                     notional=1000,
+                     coupons=data.frame(payment_time=seq(2.8,0, by=-0.25),
+                                        payment_size=1000*0.0025/4),
+                     discount_factor_fcn = pct4,
+                     name='NoRecov');
+cb_40_recov = ConvertibleBond(maturity=2.87,
+                      conversion_ratio=2.7788,
+                      notional=1000,
+                      recovery_rate=0.4,
+                      coupons=data.frame(payment_time=seq(2.8,0, by=-0.25),
+                                         payment_size=1000*0.0025/4),
+                      discount_factor_fcn = pct4,
+                      name='StdRecov');
+vs_with_and_without = find_present_value(S0=252,
+                                         instruments=list(NoRecov=cb_zero_recov, StdRecov=cb_40_recov),
+                                         num_time_steps=25,
+                                         const_default_intensity=0.1,
+                                         const_short_rate = 0.04,
+                                         const_volatility=0.5)
+test_that("Recovery rates matter", {
+  expect_gt(vs_with_and_without$StdRecov, 1.05 * vs_with_and_without$NoRecov)
+})

@@ -61,7 +61,7 @@ GridPricedInstrument = setRefClass(
       0.0
     },
     optionality_fcn = function(v,...) {
-      # To be overridden by subclasses
+      # To be overridden by subclasses, which must update last_computed_grid
       "Return a version of {v} at time {t} corrected for any optionality conditions."
       last_computed_grid <<- as.vector(v)
       v
@@ -185,6 +185,16 @@ ZeroCouponBond = setRefClass(
       v[v < 0] = 0
       last_computed_grid <<- as.vector(v)
       v
+    },
+    recovery_fcn = function(v,S,t,...) {
+      "Return recovery rate times notional, except where it exceeds bond value on the S grid."
+      recovery = 0.0*(v+S)
+      if (t < maturity && (!is.blank(recovery_rate))) {
+        recovery = 0.0 * v + recovery_rate * notional
+        recovery[v < recovery] = v[v < recovery]
+        recovery = recovery + 0 * S  # ensure proper shape
+      }
+      recovery
     }
   )
 )
