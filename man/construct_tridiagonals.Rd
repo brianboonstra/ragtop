@@ -23,4 +23,3 @@ A list with elements \code{super}, \code{diag} and \code{sub}
 \description{
 Matrix entries for implicit numerical differentiation using Neumann boundary conditions
 }
-

@@ -58,4 +58,4 @@ Other Implicit Grid Solver: \code{\link{construct_implicit_grid_structure}},
   \code{\link{iterate_grid_from_timestep}},
   \code{\link{timestep_instruments}}
 }
-
+\concept{Implicit Grid Solver}

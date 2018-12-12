@@ -24,4 +24,4 @@ having the same exercise specification
 Other American Exercise Equity Options: \code{\link{american_implied_volatility}},
   \code{\link{american}}
 }
-
+\concept{American Exercise Equity Options}

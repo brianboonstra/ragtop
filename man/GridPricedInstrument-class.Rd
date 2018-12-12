@@ -2,8 +2,8 @@
 % Please edit documentation in R/instruments.R
 \docType{class}
 \name{GridPricedInstrument-class}
-\alias{GridPricedInstrument}
 \alias{GridPricedInstrument-class}
+\alias{GridPricedInstrument}
 \title{Representation of financial instrument amenable to grid pricing schemes}
 \description{
 Our basic instrument defines a tenor/maturity, a method
@@ -20,6 +20,7 @@ decisions.
 
 \item{\code{name}}{A mnemonic name for the instrument, not used by ragtop}
 }}
+
 \section{Methods}{
 
 \describe{

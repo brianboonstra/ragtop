@@ -15,4 +15,3 @@ A function taking two time arguments, which returns the discount factor from the
 \description{
 Get a US Treasury curve discount factor function
 }
-

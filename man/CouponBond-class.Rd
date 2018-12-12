@@ -2,8 +2,8 @@
 % Please edit documentation in R/instruments.R
 \docType{class}
 \name{CouponBond-class}
-\alias{CouponBond}
 \alias{CouponBond-class}
+\alias{CouponBond}
 \title{Standard corporate or government bond}
 \description{
 A coupon bond is treated here as the entire collection of cashflows. In particular,
@@ -16,6 +16,7 @@ A coupon bond is treated here as the entire collection of cashflows. In particul
 \item{\code{coupons}}{A data.frame of details for each coupon.  It should have the
 columns \code{payment_time} and \code{payment_size}.}
 }}
+
 \section{Methods}{
 
 \describe{

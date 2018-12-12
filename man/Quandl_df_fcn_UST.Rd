@@ -17,4 +17,3 @@ A function taking two time arguments, which returns the discount factor from the
 \description{
 This is a caching wrapper for \code{\link{Quandl_df_fcn_UST_raw}}
 }
-

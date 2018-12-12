@@ -25,4 +25,4 @@ Shift a set of grid values for dividends paid, using spline interpolation
 Other Dividends: \code{\link{adjust_for_dividends}},
   \code{\link{time_adj_dividends}}
 }
-
+\concept{Dividends}

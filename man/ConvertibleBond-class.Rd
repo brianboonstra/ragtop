@@ -2,8 +2,8 @@
 % Please edit documentation in R/instruments.R
 \docType{class}
 \name{ConvertibleBond-class}
-\alias{ConvertibleBond}
 \alias{ConvertibleBond-class}
+\alias{ConvertibleBond}
 \title{Convertible bond with exercise into stock}
 \description{
 Convertible bond with exercise into stock
@@ -15,6 +15,7 @@ Convertible bond with exercise into stock
 
 \item{\code{dividend_ceiling}}{The level of dividend protection (if any) specified in terms and conditions}
 }}
+
 \section{Methods}{
 
 \describe{

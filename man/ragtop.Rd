@@ -42,6 +42,7 @@ Pricing in the standard Black-Scholes model is a special case with default
  \item{\emph{Algorithm Parameters}: }{Default parameters for the algorithm work well for a very wide variety of pricing and implied volatility scenarios}
  }
 }
+
 \examples{
 ## Vanilla European exercise
 blackscholes(callput=-1, S0=100, K=90, r=0.03, time=1, vola=0.5)
@@ -109,4 +110,3 @@ print(vfit$volatilities)
 }
 
 }
-

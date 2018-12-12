@@ -2,7 +2,10 @@
 Description And Installation
 ============================
 
-**ragtop** prices equity derivatives are priced on variants of the famous Black-Scholes model, with special attention paid to the case of American and European exercise options and to convertible bonds. To install the development version, use the command
+**ragtop** prices equity derivatives using variants of the famous
+Black-Scholes model, with special attention paid to the case of American
+and European exercise options and to convertible bonds. To install the
+development version, use the command
 
 ``` r
 devtools::install_github('brianboonstra/ragtop')
@@ -14,7 +17,9 @@ Usage
 Basic Usage
 -----------
 
-You can price american and european exercise options, either individually, or in groups. In the simplest case that looks like this for European exercise
+You can price american and european exercise options, either
+individually, or in groups. In the simplest case that looks like this
+for European exercise
 
 ``` r
 blackscholes(c(CALL, PUT), S0=100, K=c(100,110), time=0.77, r = 0.06, vola=0.20)
@@ -38,7 +43,11 @@ american(PUT, S0=100, K=c(100,110), time=0.77, const_short_rate = 0.06, const_vo
 
 ### Including Term Structures
 
-There are zillions of implementations of the Black-Scholes formula out there, and quite a few simple trees as well. One thing that makes **ragtop** a bit more useful than most other packages is that it treats dividends and term structures without too much pain. Assume we have some nontrivial term structures and dividends
+There are zillions of implementations of the Black-Scholes formula out
+there, and quite a few simple trees as well. One thing that makes
+**ragtop** a bit more useful than most other packages is that it treats
+dividends and term structures without too much pain. Assume we have some
+nontrivial term structures and dividends
 
 ``` r
 ## Dividends
@@ -130,11 +139,15 @@ american_implied_volatility(
 More Sophisticated Calibration
 ------------------------------
 
-You can also find more complete calibration routines in **ragtop**. See the vignette or the documentation for *fit\_variance\_cumulation* and *fit\_to\_option\_market*.
+You can also find more complete calibration routines in **ragtop**. See
+the vignette or the documentation for *fit\_variance\_cumulation* and
+*fit\_to\_option\_market*.
 
 Technical Documentation
 =======================
 
-The source for the technical paper is in this repository. You can also find the pdf [here](http://thureoscapital.com/ragtop.pdf)
+The source for the technical paper is in this repository. You can also
+find the pdf [here](http://thureoscapital.com/ragtop.pdf)
 
-[![Travis-CI Build Status](https://travis-ci.org/brianboonstra/ragtop.svg?branch=master)](https://travis-ci.org/brianboonstra/ragtop)
+[![Travis-CI Build
+Status](https://travis-ci.org/brianboonstra/ragtop.svg?branch=master)](https://travis-ci.org/brianboonstra/ragtop)

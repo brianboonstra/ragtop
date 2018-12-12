@@ -2,8 +2,8 @@
 % Please edit documentation in R/instruments.R
 \docType{class}
 \name{CallableBond-class}
-\alias{CallableBond}
 \alias{CallableBond-class}
+\alias{CallableBond}
 \title{Callable (and putable) corporate or government bond.}
 \description{
 When a bond is emph{callable}, the issuer may choose to pay the call
@@ -20,16 +20,13 @@ issuer pay the put price to the bond holder thus ending the life of the contract
 
 \item{\code{puts}}{A data.frame of details for each put.  It should have the columns \code{put_price} and \code{effective_time}.}
 }}
+
 \section{Methods}{
 
 \describe{
 \item{\code{critical_times()}}{Important times in the life of this instrument for simulation and grid solvers}
 }}
-\concept{
-callable
 
-putable
-
-bond
-}
-
+\concept{bond}
+\concept{callable}
+\concept{putable}

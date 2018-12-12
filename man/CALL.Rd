@@ -12,4 +12,3 @@ CALL
 Constant CALL for defining option contracts
 }
 \keyword{datasets}
-

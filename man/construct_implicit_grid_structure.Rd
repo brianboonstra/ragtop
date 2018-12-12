@@ -64,4 +64,4 @@ Other Implicit Grid Solver: \code{\link{find_present_value}},
   \code{\link{take_implicit_timestep}},
   \code{\link{timestep_instruments}}
 }
-
+\concept{Implicit Grid Solver}
