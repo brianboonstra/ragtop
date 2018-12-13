@@ -1,6 +1,4 @@
-#' Setup standard logging
-#'
-#' @import futile.logger
+# Setup standard logging
 .onLoad = function(libname, pkgname) {
   futile.logger::flog.threshold(futile.logger::WARN, name="ragtop")
   # The following fire warnings during calibration routines and I do not know how
