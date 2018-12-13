@@ -32,4 +32,4 @@ given M dividends, discounted to \code{t_final} by \code{r} and \code{h}
 Other Dividends: \code{\link{adjust_for_dividends}},
   \code{\link{shift_for_dividends}}
 }
-
+\concept{Dividends}

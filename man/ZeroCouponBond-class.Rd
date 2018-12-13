@@ -2,8 +2,8 @@
 % Please edit documentation in R/instruments.R
 \docType{class}
 \name{ZeroCouponBond-class}
-\alias{ZeroCouponBond}
 \alias{ZeroCouponBond-class}
+\alias{ZeroCouponBond}
 \title{A simple contract paying the \code{notional} amount at the \code{maturity}}
 \description{
 A simple contract paying the \code{notional} amount at the \code{maturity}
@@ -17,9 +17,12 @@ A simple contract paying the \code{notional} amount at the \code{maturity}
 
 \item{\code{discount_factor_fcn}}{A function specifying how cashflows should generally be discounted for this instrument}
 }}
+
 \section{Methods}{
 
 \describe{
 \item{\code{optionality_fcn(v, ...)}}{Return a version of {v} at time {t} corrected for any optionality conditions.}
+
+\item{\code{recovery_fcn(v, S, t, ...)}}{Return recovery value, given non-default values {v} at time {t}.  Subclasses may be more elaborate, this method simply returns 0.0.}
 }}
 

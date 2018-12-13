@@ -16,4 +16,3 @@ Constant to define when times are considered so close to each other
  digits
 }
 \keyword{datasets}
-

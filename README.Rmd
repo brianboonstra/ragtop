@@ -32,7 +32,7 @@ knitr::opts_chunk$set(
 
 # Description And Installation
 
-**ragtop** prices equity derivatives are priced on variants of the famous Black-Scholes model, with special attention paid to the case of American and European exercise options and to convertible bonds.  To install the development version, use the command
+**ragtop** prices equity derivatives using variants of the famous Black-Scholes model, with special attention paid to the case of American and European exercise options and to convertible bonds.  To install the development version, use the command
 
 ```{r, echo=TRUE}
 devtools::install_github('brianboonstra/ragtop')

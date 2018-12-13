@@ -2,8 +2,8 @@
 % Please edit documentation in R/instruments.R
 \docType{class}
 \name{AmericanOption-class}
-\alias{AmericanOption}
 \alias{AmericanOption-class}
+\alias{AmericanOption}
 \title{A standard option contract allowing for \emph{early} exercise at the choice of the option holder}
 \description{
 A standard option contract allowing for \emph{early} exercise at the choice of the option holder

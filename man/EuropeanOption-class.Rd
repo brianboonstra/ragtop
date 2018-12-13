@@ -2,8 +2,8 @@
 % Please edit documentation in R/instruments.R
 \docType{class}
 \name{EuropeanOption-class}
-\alias{EuropeanOption}
 \alias{EuropeanOption-class}
+\alias{EuropeanOption}
 \title{A standard option contract}
 \description{
 At maturity, the call option holder will "exercise", i.e. choose stock, with value \code{S}, if the

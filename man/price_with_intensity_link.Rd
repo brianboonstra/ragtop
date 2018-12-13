@@ -5,8 +5,8 @@
 \title{Helper function (instrument pricing) for calibration of equity-linked default intensity}
 \usage{
 price_with_intensity_link(p, s, h, variance_instruments,
-  variance_instrument_prices, variance_instrument_spreads, fit_instruments, S0,
-  num_time_steps = 30, ..., relative_spread_tolerance = 0.15,
+  variance_instrument_prices, variance_instrument_spreads, fit_instruments,
+  S0, num_time_steps = 30, ..., relative_spread_tolerance = 0.15,
   num_variance_time_steps = 30)
 }
 \arguments{
@@ -52,4 +52,3 @@ Given derivative instruments (subclasses of
  at-the-money volatility of the continuous process) and then price the instruments via equity linked default
  intensity of the form $h(s + (1-s)(S0/S_t)^p)$.
 }
-

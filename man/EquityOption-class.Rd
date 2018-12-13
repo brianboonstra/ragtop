@@ -2,8 +2,8 @@
 % Please edit documentation in R/instruments.R
 \docType{class}
 \name{EquityOption-class}
-\alias{EquityOption}
 \alias{EquityOption-class}
+\alias{EquityOption}
 \title{An option contract with call or put terms}
 \description{
 An option contract with call or put terms
@@ -15,4 +15,5 @@ An option contract with call or put terms
 
 \item{\code{callput}}{Either \code{1} for a call or \code{-1} for a put}
 }}
+
 

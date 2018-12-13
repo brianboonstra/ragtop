@@ -7,12 +7,14 @@
 fit_variance_cumulation(S0, eq_options, mid_prices, spreads = NULL,
   initial_vols_guess = 0.55 + 0 * mid_prices, use_impvol = TRUE,
   relative_spread_tolerance = 0.01, force_same_grid = FALSE,
-  num_time_steps = 40, const_short_rate = 0, const_default_intensity = 0,
-  discount_factor_fcn = function(T, t, ...) {     exp(-const_short_rate * (T -
-  t)) }, survival_probability_fcn = function(T, t, ...) {    
+  num_time_steps = 40, const_short_rate = 0,
+  const_default_intensity = 0, discount_factor_fcn = function(T, t,
+  ...) {     exp(-const_short_rate * (T - t)) },
+  survival_probability_fcn = function(T, t, ...) {    
   exp(-const_default_intensity * (T - t)) },
-  default_intensity_fcn = function(t, S, ...) {     const_default_intensity +
-  0 * S }, dividends = NULL, borrow_cost = 0, dividend_rate = 0, ...)
+  default_intensity_fcn = function(t, S, ...) {    
+  const_default_intensity + 0 * S }, dividends = NULL, borrow_cost = 0,
+  dividend_rate = 0, ...)
 }
 \arguments{
 \item{S0}{Current stock price}
@@ -84,11 +86,6 @@ nonlinear transformation that just
 happens to come from the straight Black-Scholes model.
 }
 \seealso{
-Other Equity Dependent Default Intensity: \code{\link{find_present_value}},
-  \code{\link{fit_to_option_market_df}},
-  \code{\link{form_present_value_grid}},
-  \code{\link{implied_jump_process_volatility}}
-
 Other Implied Volatilities: \code{\link{american_implied_volatility}},
   \code{\link{equivalent_bs_vola_to_jump}},
   \code{\link{equivalent_jump_vola_to_bs}},
@@ -97,10 +94,14 @@ Other Implied Volatilities: \code{\link{american_implied_volatility}},
   \code{\link{implied_volatilities}},
   \code{\link{implied_volatility_with_term_struct}},
   \code{\link{implied_volatility}}
+
+Other Equity Dependent Default Intensity: \code{\link{find_present_value}},
+  \code{\link{fit_to_option_market_df}},
+  \code{\link{form_present_value_grid}},
+  \code{\link{implied_jump_process_volatility}}
 }
-\concept{
-implied volatility
-}
+\concept{Equity Dependent Default Intensity}
+\concept{Implied Volatilities}
+\concept{implied volatility}
 \keyword{Black-Scholes}
 \keyword{calibration}
-

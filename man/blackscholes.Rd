@@ -54,6 +54,12 @@ blackscholes(callput=-1, S0=100, K=90, r=0.03, time=1, # -1 is a PUT
              vola=0.5, default_intensity=0.07)
 }
 \seealso{
+Other European Options: \code{\link{black_scholes_on_term_structures}},
+  \code{\link{implied_volatilities_with_rates_struct}},
+  \code{\link{implied_volatilities}},
+  \code{\link{implied_volatility_with_term_struct}},
+  \code{\link{implied_volatility}}
+
 Other Equity Independent Default Intensity: \code{\link{american_implied_volatility}},
   \code{\link{american}},
   \code{\link{black_scholes_on_term_structures}},
@@ -63,11 +69,6 @@ Other Equity Independent Default Intensity: \code{\link{american_implied_volatil
   \code{\link{implied_volatilities}},
   \code{\link{implied_volatility_with_term_struct}},
   \code{\link{implied_volatility}}
-
-Other European Options: \code{\link{black_scholes_on_term_structures}},
-  \code{\link{implied_volatilities_with_rates_struct}},
-  \code{\link{implied_volatilities}},
-  \code{\link{implied_volatility_with_term_struct}},
-  \code{\link{implied_volatility}}
 }
-
+\concept{Equity Independent Default Intensity}
+\concept{European Options}

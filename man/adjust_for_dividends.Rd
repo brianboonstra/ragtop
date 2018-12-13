@@ -39,4 +39,4 @@ Analyze \code{dividends} to find ones paid in the interval \code{(t,t+dt]}. Form
 Other Dividends: \code{\link{shift_for_dividends}},
   \code{\link{time_adj_dividends}}
 }
-
+\concept{Dividends}

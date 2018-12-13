@@ -28,4 +28,3 @@ vc = variance_cumulation_from_vols(
 vc(1.5, 0)
 
 }
-

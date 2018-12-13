@@ -14,4 +14,3 @@ is.blank(x, false.triggers = FALSE)
 \description{
 Return TRUE if the argument is empty, NULL or NA
 }
-

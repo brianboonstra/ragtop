@@ -12,4 +12,3 @@ PUT
 Constant PUT for defining option contracts
 }
 \keyword{datasets}
-

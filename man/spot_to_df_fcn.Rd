@@ -23,4 +23,3 @@ disct_fcn = ragtop::spot_to_df_fcn(
              rate=c(0.01, 0.02, 0.03, 0.05)))
 print(disct_fcn(1, 0.5))
 }
-

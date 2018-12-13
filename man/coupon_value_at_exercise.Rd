@@ -35,9 +35,10 @@ case of accelerated coupon provisions for forced conversions (or
 sometimes even unforced ones).
 }
 \seealso{
-Other Bond Coupon Acceleration: \code{\link{accelerated_coupon_value}}
-
 Other Bond Coupons: \code{\link{accelerated_coupon_value}},
   \code{\link{value_from_prior_coupons}}
-}
 
+Other Bond Coupon Acceleration: \code{\link{accelerated_coupon_value}}
+}
+\concept{Bond Coupon Acceleration}
+\concept{Bond Coupons}

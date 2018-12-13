@@ -34,7 +34,7 @@ knitr::opts_chunk$set(fig.width=6.5, fig.height=4, fig.path='Figs/',
 
 ## Introduction
 
-**ragtop** prices equity derivatives are priced on variants of the famous Black-Scholes model, with special attention paid to the case of American and European exercise options and to convertible bonds.  Convertible bonds are one of the few types of derivative securities straddling asset classes, and whose valuation must be linked to reasonable models of *multiple* asset types, involving equity valuations, fixed income and sometimes foreign exchange.
+**ragtop** prices equity derivatives on variants of the famous Black-Scholes model, with special attention paid to the case of American and European exercise options and to convertible bonds.  Convertible bonds are one of the few types of derivative securities straddling asset classes, and whose valuation must be linked to reasonable models of *multiple* asset types, involving equity valuations, fixed income and sometimes foreign exchange.
 
 A **convertible bond** is similar to a corporate bond^[A standard corporate bond is often called a *straight* bond], promising coupons and notional payments at some known set of future dates, but with a twist.  The bond holder, who has effectively lent money to the issuer, can choose to *convert* the bond into equity (subject to some restrictions), in a varying amount known as the *conversion value*.  The bond value therefore depends on three major processes:
 

@@ -5,9 +5,10 @@
 \title{Find jump process volatility with a given default risk from a straight Black-Scholes volatility}
 \usage{
 equivalent_jump_vola_to_bs(bs_vola, time, const_short_rate = 0,
-  const_default_intensity = 0, discount_factor_fcn = function(T, t, ...) {  
-    exp(-const_short_rate * (T - t)) }, survival_probability_fcn = function(T,
-  t, ...) {     exp(-const_default_intensity * (T - t)) }, dividends = NULL,
+  const_default_intensity = 0, discount_factor_fcn = function(T, t,
+  ...) {     exp(-const_short_rate * (T - t)) },
+  survival_probability_fcn = function(T, t, ...) {    
+  exp(-const_default_intensity * (T - t)) }, dividends = NULL,
   borrow_cost = 0, dividend_rate = 0, relative_tolerance = 1e-06,
   max.iter = 100)
 }
@@ -31,10 +32,9 @@ arguments \code{T}, \code{t} and \code{T>t}.}
 
 \item{dividends}{A \code{data.frame} with columns \code{time}, \code{fixed},
 and \code{proportional}.  Dividend size at the given \code{time} is
-then expected to be equal to \code{fixed + proportional * S / S0}.  Fixed
-dividends will be converted to proportional for purposes of this algorithm.}
+then expected to be equal to \code{fixed + proportional * S / S0}}
 
-\item{borrow_cost}{A continuous rate for stock borrow costs}
+\item{borrow_cost}{Stock borrow cost, affecting the drift rate}
 
 \item{dividend_rate}{A continuous accumulation rate for the stock, affecting the drift}
 
@@ -51,6 +51,15 @@ Find default-free volatility (i.e. volatility of a Wiener process with a
   and at-the-money put option at the given tenor to set the standard price.
 }
 \seealso{
+Other Implied Volatilities: \code{\link{american_implied_volatility}},
+  \code{\link{equivalent_bs_vola_to_jump}},
+  \code{\link{fit_variance_cumulation}},
+  \code{\link{implied_jump_process_volatility}},
+  \code{\link{implied_volatilities_with_rates_struct}},
+  \code{\link{implied_volatilities}},
+  \code{\link{implied_volatility_with_term_struct}},
+  \code{\link{implied_volatility}}
+
 Other Equity Independent Default Intensity: \code{\link{american_implied_volatility}},
   \code{\link{american}},
   \code{\link{black_scholes_on_term_structures}},
@@ -60,14 +69,6 @@ Other Equity Independent Default Intensity: \code{\link{american_implied_volatil
   \code{\link{implied_volatilities}},
   \code{\link{implied_volatility_with_term_struct}},
   \code{\link{implied_volatility}}
-
-Other Implied Volatilities: \code{\link{american_implied_volatility}},
-  \code{\link{equivalent_bs_vola_to_jump}},
-  \code{\link{fit_variance_cumulation}},
-  \code{\link{implied_jump_process_volatility}},
-  \code{\link{implied_volatilities_with_rates_struct}},
-  \code{\link{implied_volatilities}},
-  \code{\link{implied_volatility_with_term_struct}},
-  \code{\link{implied_volatility}}
 }
-
+\concept{Equity Independent Default Intensity}
+\concept{Implied Volatilities}
