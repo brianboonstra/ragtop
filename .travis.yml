@@ -1,5 +1,6 @@
-# Sample .travis.yml for R projects
+#  .travis.yml for ragtop
 
 language: r
 warnings_are_errors: true
 sudo: required
+r_build_args: '--compact-vignettes="gs+qpdf"'
