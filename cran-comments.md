@@ -1,18 +1,14 @@
 ## Submission comments
-DOI information added for references, per request
+Version raised to 1.0, no bugs in over 2 years.  One minor enhancement: the recovery_rate variable previously had no effect, but is now used in the calculations.
 
 ## Test environments
-* local OS X install, R 3.2.3
-* ubuntu 12.04 (on travis-ci), R 3.3.1
-* win-builder
+* local MacOS 10.14.1 install, Anaconda R 3.5.1
+* Ubuntu 14.04.5 LTS (on travis-ci), R 3.5.1
+* win-builder, R unstable 2018-12-13 r75848
 
 ## R CMD check results
-There were no ERRORs or WARNINGs. 
+There were no ERRORs, WARNINGs or NOTEs. 
 
-There was 1 NOTE:
-
-Maintainer: ‘Brian K. Boonstra <ragtop@boonstra.org>’
-New submission
 
 ## Downstream dependencies
 There are currently no downstream dependencies for this package
