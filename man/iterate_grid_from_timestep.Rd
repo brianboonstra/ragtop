@@ -11,7 +11,7 @@ iterate_grid_from_timestep(starting_time_step, time_pts, z, S0,
 }
 \arguments{
 \item{starting_time_step}{The index into time_pts of the first timestep
-to be implied.  This must be no larger than the length of time_pts, minus one}
+to be emplyed.  This must be no larger than the length of time_pts, minus one}
 
 \item{time_pts}{Time nodes to be treated on the grid}
 

@@ -10,9 +10,9 @@ fit_variance_cumulation(S0, eq_options, mid_prices, spreads = NULL,
   num_time_steps = 40, const_short_rate = 0,
   const_default_intensity = 0, discount_factor_fcn = function(T, t,
   ...) {     exp(-const_short_rate * (T - t)) },
-  survival_probability_fcn = function(T, t, ...) {
+  survival_probability_fcn = function(T, t, ...) {    
   exp(-const_default_intensity * (T - t)) },
-  default_intensity_fcn = function(t, S, ...) {
+  default_intensity_fcn = function(t, S, ...) {    
   const_default_intensity + 0 * S }, dividends = NULL, borrow_cost = 0,
   dividend_rate = 0, ...)
 }
@@ -64,7 +64,7 @@ and \code{proportional}.  Dividend size at the given \code{time} is}
 
 \item{dividend_rate}{Continuous dividend rate, affecting the drift rate}
 
-\item{...}{Further arguments to \code{\link{find_present_value}}}
+\item{...}{Futher arguments to \code{\link{find_present_value}}}
 }
 \value{
 A list with two elements, \code{volatilities} and \code{cumulation_function}.  The \code{cumulation_function} will
