@@ -153,4 +153,29 @@ if (is.element('R.cache', utils::installed.packages()[,1])) {
   Quandl_df_fcn_UST = R.cache::addMemoization(Quandl_df_fcn_UST_raw)
 }
 
-
+#' Convert output of BondValuation::AnnivDates to inputd for Bond
+#'
+#' The BondValuation package provides day count convention treatments superior
+#'  to quantmod or any other R package known (as of May 2019).  This function
+#'  takes output from BondValuation::AnnivDates(...) and parses it into
+#'  notionals, maturity time, and coupon times and sizes.
+#'
+#' Note: volatilities used in `ragtop` must have compatible time units to these times.
+#'
+#' @param anvdates Output of BondValuation::AnnivDates(), which must have included a `Coup` argument so that the resulting list contains an entry for `PaySched`
+#' @param as_of Date or time from whose perspective times should be computed
+#' @param normalization_factor Factor by which raw R time differences should be multiplied.  If volatilites are going to be annualized, then this should typically be 365 or so.
+#' @return A list with some of the arguments appropriate for defining a Bond as follows:
+#'             maturity - maturity
+#'             notional - notional amount
+#'             coupons - `data.frame` with `payment_time`, `payment_size`
+#' @export detail_from_AnnivDates
+detail_from_AnnivDates = function(anvdates, as_of=Sys.time(), normalization_factor=365.25) {
+  as_of = as.POSIXct(as_of)
+  payment_time = as.numeric(as.POSIXct(anvdates$PaySched$CoupDates) - as_of)/normalization_factor
+  payment_size = anvdates$PaySched$CoupPayments
+  coupons = data.frame(payment_time=payment_time, payment_size=payment_size)
+  maturity_time = as.numeric(as.POSIXct(anvdates$Traits$Mat) - as_of)/normalization_factor
+  parity = anvdates$Traits$Par
+  list(notional=parity, coupons=coupons, maturity=maturity_time)
+}

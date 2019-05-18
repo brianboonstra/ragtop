@@ -263,3 +263,41 @@ cbplot = ( ggplot(cbgrid,
 )
 cbplot
 
+## ----twitter_cb_via_BondValuation, echo=TRUE, comment=""-----------------
+twitter_bv = BondValuation::AnnivDates(
+    Em=as.Date('2018-06-11'),    # Issue date
+    Mat=as.Date('2024-06-15'), 
+    CpY=2, 
+    FIPD=as.Date('2018-12-15'),   # First coupon
+    FIAD=as.Date('2018-06-15'),   # Beginning of first coupon accrual
+    RV=1000,   # Notional
+    Coup=0.25, 
+    DCC=which(BondValuation::List.DCC$DCC.Name=='30/360'),  # 30/360 daycount convention
+    EOM=0
+  )
+
+twitter_specs = ragtop::detail_from_AnnivDates(
+    twitter_bv, 
+    as_of=as.Date('2018-02-15')
+  )
+
+twtr_cb = ragtop::ConvertibleBond(
+    maturity=twitter_specs$maturity, 
+    conversion_ratio=17.5001, 
+    notional=twitter_specs$notional,
+    coupons=twitter_specs$coupons,
+    discount_factor_fcn = disct_fcn,
+    name='TwitterConvertWithGreenshoe'
+  )
+
+pvs = ragtop::find_present_value(
+    S0=33.06,
+    num_time_steps=200,
+    instruments=list(TWTR=twtr_cb),
+    const_volatility=0.47,
+    const_default_intensity=0.01,
+    discount_factor_fcn=disct_fcn,
+  )
+
+paste("Twitter bond value is", pvs$TWTR)
+

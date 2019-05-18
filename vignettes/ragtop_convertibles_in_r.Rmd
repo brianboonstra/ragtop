@@ -105,7 +105,7 @@ implied_volatility(option_price = TSLAMarket$options[400,'ask'],
                    time = TSLAMarket$options[400,'time'])
 ```
 
-For puts, we need to use a pricing algorithm that accounts for early exercise.  **ragtop** uses a control variate scheme on top of an implicity PDE solver to achieve reasonable performance
+For puts, we need to use a pricing algorithm that accounts for early exercise.  **ragtop** uses a control variate scheme on top of an implicit PDE solver to achieve reasonable performance
 
 ```{r amer, echo=TRUE, comment=""}
 american(
@@ -150,7 +150,7 @@ american_implied_volatility(option_price = 19.1,
 
 ### Including Term Structures
 
-If we have full term structures, we can use the associated parameters of incovenience
+If we have full term structures, we can use the associated parameters of inconvenience
 
 ```{r ts_fcns, echo=TRUE, comment=""}
 ## Dividends
@@ -417,6 +417,48 @@ cbplot = ( ggplot(cbgrid,
 cbplot
 ```
 
+## Daycount Conventions
+
+For dealing with daycount conventions (Act/360, Act/Act, 30/360 and many more), `ragtop` provides no facilities directly.  These computations can be outsourced to `quantmod`, though the `BondValuation` package is both lighter in footprint and higher in accuracy.  To that end, we can use the helper function `detail_from_AnnivDates()`
+
+```{r twitter_cb_via_BondValuation, echo=TRUE, comment=""}
+twitter_bv = BondValuation::AnnivDates(
+    Em=as.Date('2018-06-11'),    # Issue date
+    Mat=as.Date('2024-06-15'), 
+    CpY=2, 
+    FIPD=as.Date('2018-12-15'),   # First coupon
+    FIAD=as.Date('2018-06-15'),   # Beginning of first coupon accrual
+    RV=1000,   # Notional
+    Coup=0.25, 
+    DCC=which(BondValuation::List.DCC$DCC.Name=='30/360'),  # 30/360 daycount convention
+    EOM=0
+  )
+
+twitter_specs = ragtop::detail_from_AnnivDates(
+    twitter_bv, 
+    as_of=as.Date('2018-02-15')
+  )
+
+twtr_cb = ragtop::ConvertibleBond(
+    maturity=twitter_specs$maturity, 
+    conversion_ratio=17.5001, 
+    notional=twitter_specs$notional,
+    coupons=twitter_specs$coupons,
+    discount_factor_fcn = disct_fcn,
+    name='TwitterConvertWithGreenshoe'
+  )
+
+pvs = ragtop::find_present_value(
+    S0=33.06,
+    num_time_steps=200,
+    instruments=list(TWTR=twtr_cb),
+    const_volatility=0.47,
+    const_default_intensity=0.01,
+    discount_factor_fcn=disct_fcn,
+  )
+
+paste("Twitter bond value is", pvs$TWTR)
+```
 
 ## References
 
