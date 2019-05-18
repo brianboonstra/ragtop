@@ -31,6 +31,7 @@ Suggests:
     ggplot2,
     MASS,
     RColorBrewer,
+    BondValuation,
     R.cache,
     Quandl
 License: GPL (>= 2)
