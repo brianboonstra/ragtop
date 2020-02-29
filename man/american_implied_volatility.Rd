@@ -4,13 +4,24 @@
 \alias{american_implied_volatility}
 \title{Implied volatility of an american option with equity-independent term structures}
 \usage{
-american_implied_volatility(option_price, callput, S0, K, time,
-  const_default_intensity = 0, survival_probability_fcn = function(T,
-  t, ...) {     exp(-const_default_intensity * (T - t)) },
-  default_intensity_fcn = function(t, S, ...) {    
-  const_default_intensity + 0 * S }, ..., num_time_steps = 30,
-  structure_constant = 2, std_devs_width = 5,
-  relative_tolerance = 1e-04, max.iter = 100, max_vola = 4)
+american_implied_volatility(
+  option_price,
+  callput,
+  S0,
+  K,
+  time,
+  const_default_intensity = 0,
+  survival_probability_fcn = function(T, t, ...) {     exp(-const_default_intensity * (T
+    - t)) },
+  default_intensity_fcn = function(t, S, ...) {     const_default_intensity + 0 * S },
+  ...,
+  num_time_steps = 30,
+  structure_constant = 2,
+  std_devs_width = 5,
+  relative_tolerance = 1e-04,
+  max.iter = 100,
+  max_vola = 4
+)
 }
 \arguments{
 \item{option_price}{Option price to match}
@@ -72,27 +83,30 @@ american_implied_volatility(25,-1,100,100,2.2,
   of European options under the same conditions, \code{\link{american}} for the
   underlying pricing algorithm
 
-Other Implied Volatilities: \code{\link{equivalent_bs_vola_to_jump}},
-  \code{\link{equivalent_jump_vola_to_bs}},
-  \code{\link{fit_variance_cumulation}},
-  \code{\link{implied_jump_process_volatility}},
-  \code{\link{implied_volatilities_with_rates_struct}},
-  \code{\link{implied_volatilities}},
-  \code{\link{implied_volatility_with_term_struct}},
-  \code{\link{implied_volatility}}
+Other Implied Volatilities: 
+\code{\link{equivalent_bs_vola_to_jump}()},
+\code{\link{equivalent_jump_vola_to_bs}()},
+\code{\link{fit_variance_cumulation}()},
+\code{\link{implied_jump_process_volatility}()},
+\code{\link{implied_volatilities_with_rates_struct}()},
+\code{\link{implied_volatilities}()},
+\code{\link{implied_volatility_with_term_struct}()},
+\code{\link{implied_volatility}()}
 
-Other Equity Independent Default Intensity: \code{\link{american}},
-  \code{\link{black_scholes_on_term_structures}},
-  \code{\link{blackscholes}},
-  \code{\link{equivalent_bs_vola_to_jump}},
-  \code{\link{equivalent_jump_vola_to_bs}},
-  \code{\link{implied_volatilities_with_rates_struct}},
-  \code{\link{implied_volatilities}},
-  \code{\link{implied_volatility_with_term_struct}},
-  \code{\link{implied_volatility}}
+Other Equity Independent Default Intensity: 
+\code{\link{american}()},
+\code{\link{black_scholes_on_term_structures}()},
+\code{\link{blackscholes}()},
+\code{\link{equivalent_bs_vola_to_jump}()},
+\code{\link{equivalent_jump_vola_to_bs}()},
+\code{\link{implied_volatilities_with_rates_struct}()},
+\code{\link{implied_volatilities}()},
+\code{\link{implied_volatility_with_term_struct}()},
+\code{\link{implied_volatility}()}
 
-Other American Exercise Equity Options: \code{\link{american}},
-  \code{\link{control_variate_pairs}}
+Other American Exercise Equity Options: 
+\code{\link{american}()},
+\code{\link{control_variate_pairs}()}
 }
 \concept{American Exercise Equity Options}
 \concept{Equity Independent Default Intensity}

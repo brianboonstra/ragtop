@@ -4,8 +4,12 @@
 \alias{accelerated_coupon_value}
 \title{Present value of coupons according to an acceleration schedule}
 \usage{
-accelerated_coupon_value(t, coupons_df, discount_factor_fcn,
-  acceleration_t = Inf)
+accelerated_coupon_value(
+  t,
+  coupons_df,
+  discount_factor_fcn,
+  acceleration_t = Inf
+)
 }
 \arguments{
 \item{t}{The time toward which all coupons should be present valued}
@@ -24,10 +28,12 @@ case of accelerated coupon provisions for forced conversions (or
 sometimes even unforced ones).
 }
 \seealso{
-Other Bond Coupons: \code{\link{coupon_value_at_exercise}},
-  \code{\link{value_from_prior_coupons}}
+Other Bond Coupons: 
+\code{\link{coupon_value_at_exercise}()},
+\code{\link{value_from_prior_coupons}()}
 
-Other Bond Coupon Acceleration: \code{\link{coupon_value_at_exercise}}
+Other Bond Coupon Acceleration: 
+\code{\link{coupon_value_at_exercise}()}
 }
 \concept{Bond Coupon Acceleration}
 \concept{Bond Coupons}

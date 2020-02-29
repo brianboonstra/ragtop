@@ -4,15 +4,23 @@
 \alias{find_present_value}
 \title{Use a model to estimate the present value of financial derivatives}
 \usage{
-find_present_value(S0, num_time_steps, instruments,
-  const_volatility = 0.5, const_short_rate = 0,
-  const_default_intensity = 0, override_Tmax = NA,
-  discount_factor_fcn = function(T, t, ...) {     exp(-const_short_rate *
-  (T - t)) }, default_intensity_fcn = function(t, S, ...) {    
-  const_default_intensity + 0 * S },
-  variance_cumulation_fcn = function(T, t) {     const_volatility^2 * (T
-  - t) }, dividends = NULL, borrow_cost = 0, dividend_rate = 0,
-  structure_constant = 2, std_devs_width = 3)
+find_present_value(
+  S0,
+  num_time_steps,
+  instruments,
+  const_volatility = 0.5,
+  const_short_rate = 0,
+  const_default_intensity = 0,
+  override_Tmax = NA,
+  discount_factor_fcn = function(T, t, ...) {     exp(-const_short_rate * (T - t)) },
+  default_intensity_fcn = function(t, S, ...) {     const_default_intensity + 0 * S },
+  variance_cumulation_fcn = function(T, t) {     const_volatility^2 * (T - t) },
+  dividends = NULL,
+  borrow_cost = 0,
+  dividend_rate = 0,
+  structure_constant = 2,
+  std_devs_width = 3
+)
 }
 \arguments{
 \item{S0}{An initial stock price, for setting grid scale}
@@ -69,18 +77,20 @@ Use a finite difference scheme to form estimates of present values for a variety
  value of each instrument at the present stock price \code{S0}
 }
 \seealso{
-Other Equity Dependent Default Intensity: \code{\link{fit_to_option_market_df}},
-  \code{\link{fit_variance_cumulation}},
-  \code{\link{form_present_value_grid}},
-  \code{\link{implied_jump_process_volatility}}
+Other Equity Dependent Default Intensity: 
+\code{\link{fit_to_option_market_df}()},
+\code{\link{fit_variance_cumulation}()},
+\code{\link{form_present_value_grid}()},
+\code{\link{implied_jump_process_volatility}()}
 
-Other Implicit Grid Solver: \code{\link{construct_implicit_grid_structure}},
-  \code{\link{form_present_value_grid}},
-  \code{\link{infer_conforming_time_grid}},
-  \code{\link{integrate_pde}},
-  \code{\link{iterate_grid_from_timestep}},
-  \code{\link{take_implicit_timestep}},
-  \code{\link{timestep_instruments}}
+Other Implicit Grid Solver: 
+\code{\link{construct_implicit_grid_structure}()},
+\code{\link{form_present_value_grid}()},
+\code{\link{infer_conforming_time_grid}()},
+\code{\link{integrate_pde}()},
+\code{\link{iterate_grid_from_timestep}()},
+\code{\link{take_implicit_timestep}()},
+\code{\link{timestep_instruments}()}
 }
 \concept{Equity Dependent Default Intensity}
 \concept{Implicit Grid Solver}

@@ -21,7 +21,8 @@ second half consists of EuropeanOption objects
 having the same exercise specification
 }
 \seealso{
-Other American Exercise Equity Options: \code{\link{american_implied_volatility}},
-  \code{\link{american}}
+Other American Exercise Equity Options: 
+\code{\link{american_implied_volatility}()},
+\code{\link{american}()}
 }
 \concept{American Exercise Equity Options}

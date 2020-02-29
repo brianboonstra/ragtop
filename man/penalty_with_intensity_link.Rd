@@ -4,13 +4,25 @@
 \alias{penalty_with_intensity_link}
 \title{Helper function (volatility-normalized pricing error) for calibration of equity-linked default intensity}
 \usage{
-penalty_with_intensity_link(p, s, h, variance_instruments,
-  variance_instrument_prices, variance_instrument_spreads, fit_instruments,
-  fit_instrument_prices, fit_instrument_spreads, fit_instrument_weights,
-  S0, num_time_steps = 30, const_short_rate = 0,
-  discount_factor_fcn = function(T, t) {     exp(-const_short_rate * (T -
-  t)) }, ..., relative_spread_tolerance = 0.15,
-  num_variance_time_steps = 30)
+penalty_with_intensity_link(
+  p,
+  s,
+  h,
+  variance_instruments,
+  variance_instrument_prices,
+  variance_instrument_spreads,
+  fit_instruments,
+  fit_instrument_prices,
+  fit_instrument_spreads,
+  fit_instrument_weights,
+  S0,
+  num_time_steps = 30,
+  const_short_rate = 0,
+  discount_factor_fcn = function(T, t) {     exp(-const_short_rate * (T - t)) },
+  ...,
+  relative_spread_tolerance = 0.15,
+  num_variance_time_steps = 30
+)
 }
 \arguments{
 \item{p}{Power of default intensity}

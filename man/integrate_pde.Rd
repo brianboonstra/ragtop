@@ -4,9 +4,18 @@
 \alias{integrate_pde}
 \title{Numerically integrate the pricing differential equation}
 \usage{
-integrate_pde(z, min_num_time_steps, S0, Tmax, instruments,
-  stock_level_fcn, discount_factor_fcn, default_intensity_fcn,
-  variance_cumulation_fcn, dividends = NULL)
+integrate_pde(
+  z,
+  min_num_time_steps,
+  S0,
+  Tmax,
+  instruments,
+  stock_level_fcn,
+  discount_factor_fcn,
+  default_intensity_fcn,
+  variance_cumulation_fcn,
+  dividends = NULL
+)
 }
 \arguments{
 \item{z}{Space grid value morphable to stock prices using \code{stock_level_fcn}}
@@ -52,12 +61,13 @@ the pricing differential equation for each of the given instruments,
 backwardating from time \code{Tmax} to time 0.
 }
 \seealso{
-Other Implicit Grid Solver: \code{\link{construct_implicit_grid_structure}},
-  \code{\link{find_present_value}},
-  \code{\link{form_present_value_grid}},
-  \code{\link{infer_conforming_time_grid}},
-  \code{\link{iterate_grid_from_timestep}},
-  \code{\link{take_implicit_timestep}},
-  \code{\link{timestep_instruments}}
+Other Implicit Grid Solver: 
+\code{\link{construct_implicit_grid_structure}()},
+\code{\link{find_present_value}()},
+\code{\link{form_present_value_grid}()},
+\code{\link{infer_conforming_time_grid}()},
+\code{\link{iterate_grid_from_timestep}()},
+\code{\link{take_implicit_timestep}()},
+\code{\link{timestep_instruments}()}
 }
 \concept{Implicit Grid Solver}

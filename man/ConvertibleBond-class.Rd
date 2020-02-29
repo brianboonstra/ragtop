@@ -25,7 +25,12 @@ Convertible bond with exercise into stock
 
 \item{\code{terminal_values(v, ...)}}{Return a terminal value. defaults to simply calling {optionality_fcn}.}
 
-\item{\code{update_cashflows(small_t, big_t, discount_factor_fctn = discount_factor_fcn,
-  include_notional = TRUE, ...)}}{Update last_computed_cash and return cashflow information for the given time period, valued at big_t}
+\item{\code{update_cashflows(
+  small_t,
+  big_t,
+  discount_factor_fctn = discount_factor_fcn,
+  include_notional = TRUE,
+  ...
+)}}{Update last_computed_cash and return cashflow information for the given time period, valued at big_t}
 }}
 

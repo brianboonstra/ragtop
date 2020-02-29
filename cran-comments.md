@@ -5,8 +5,8 @@ One minor bugfix: remove extraneous inheritParams from Roxygen docs.
 
 ## Test environments
 * local MacOS 10.15.3 install, R 3.6.2
-* Ubuntu 14.04.5 LTS (on travis-ci), R 3.6.0
-* win-builder, R unstable 2019-05-16 r76519
+* Ubuntu 16.04.6 LTS (on travis-ci), R 3.6.2
+* win-builder, R 3.6.2 2019-12-12
 
 ## R CMD check results
 There were no ERRORs, WARNINGs or NOTEs. 

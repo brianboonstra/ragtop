@@ -4,8 +4,17 @@
 \alias{construct_implicit_grid_structure}
 \title{Structure of implicit numerical integration grid}
 \usage{
-construct_implicit_grid_structure(tenors, M, S0, K, c, sigma,
-  structure_constant, std_devs_width, min_z_width = 0)
+construct_implicit_grid_structure(
+  tenors,
+  M,
+  S0,
+  K,
+  c,
+  sigma,
+  structure_constant,
+  std_devs_width,
+  min_z_width = 0
+)
 }
 \arguments{
 \item{tenors}{Tenors of instruments to be treated on this grid}
@@ -56,12 +65,13 @@ Cases with pathologically low volatility may go awry (in the sense of
  than the width in standard deviations.
 }
 \seealso{
-Other Implicit Grid Solver: \code{\link{find_present_value}},
-  \code{\link{form_present_value_grid}},
-  \code{\link{infer_conforming_time_grid}},
-  \code{\link{integrate_pde}},
-  \code{\link{iterate_grid_from_timestep}},
-  \code{\link{take_implicit_timestep}},
-  \code{\link{timestep_instruments}}
+Other Implicit Grid Solver: 
+\code{\link{find_present_value}()},
+\code{\link{form_present_value_grid}()},
+\code{\link{infer_conforming_time_grid}()},
+\code{\link{integrate_pde}()},
+\code{\link{iterate_grid_from_timestep}()},
+\code{\link{take_implicit_timestep}()},
+\code{\link{timestep_instruments}()}
 }
 \concept{Implicit Grid Solver}

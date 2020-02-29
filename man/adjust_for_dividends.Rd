@@ -36,7 +36,8 @@ Analyze \code{dividends} to find ones paid in the interval \code{(t,t+dt]}. Form
  to adjust instrument values accordingly.
 }
 \seealso{
-Other Dividends: \code{\link{shift_for_dividends}},
-  \code{\link{time_adj_dividends}}
+Other Dividends: 
+\code{\link{shift_for_dividends}()},
+\code{\link{time_adj_dividends}()}
 }
 \concept{Dividends}

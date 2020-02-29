@@ -4,10 +4,20 @@
 \alias{iterate_grid_from_timestep}
 \title{Iterate over a set of timesteps to integrate the pricing differential equation}
 \usage{
-iterate_grid_from_timestep(starting_time_step, time_pts, z, S0,
-  instruments, stock_level_fcn, discount_factor_fcn, default_intensity_fcn,
-  variance_cumulation_fcn, dividends = NULL, grid = NULL,
-  original_grid_values = as.matrix(grid[1 + starting_time_step, , ]))
+iterate_grid_from_timestep(
+  starting_time_step,
+  time_pts,
+  z,
+  S0,
+  instruments,
+  stock_level_fcn,
+  discount_factor_fcn,
+  default_intensity_fcn,
+  variance_cumulation_fcn,
+  dividends = NULL,
+  grid = NULL,
+  original_grid_values = as.matrix(grid[1 + starting_time_step, , ])
+)
 }
 \arguments{
 \item{starting_time_step}{The index into time_pts of the first timestep
@@ -59,12 +69,13 @@ the pricing differential equation for each of the given instruments,
 backwardating from time \code{Tmax} to time 0.
 }
 \seealso{
-Other Implicit Grid Solver: \code{\link{construct_implicit_grid_structure}},
-  \code{\link{find_present_value}},
-  \code{\link{form_present_value_grid}},
-  \code{\link{infer_conforming_time_grid}},
-  \code{\link{integrate_pde}},
-  \code{\link{take_implicit_timestep}},
-  \code{\link{timestep_instruments}}
+Other Implicit Grid Solver: 
+\code{\link{construct_implicit_grid_structure}()},
+\code{\link{find_present_value}()},
+\code{\link{form_present_value_grid}()},
+\code{\link{infer_conforming_time_grid}()},
+\code{\link{integrate_pde}()},
+\code{\link{take_implicit_timestep}()},
+\code{\link{timestep_instruments}()}
 }
 \concept{Implicit Grid Solver}

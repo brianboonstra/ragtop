@@ -2,7 +2,7 @@ Package: ragtop
 Type: Package
 Title: Pricing Equity Derivatives with Extensions of Black-Scholes
 Version: 1.1.1
-Date: 2019-05-18
+Date: 2020-02-29
 Author: Brian K. Boonstra
 Maintainer: Brian K. Boonstra <ragtop@boonstra.org>
 Description: Algorithms to price American and European
@@ -38,4 +38,4 @@ License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: TRUE
 VignetteBuilder: knitr
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
