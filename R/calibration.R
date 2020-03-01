@@ -136,7 +136,6 @@ implied_volatility = function(option_price, callput, S0, K, r, time,
 #' Find default-free volatilities based on known interest rates and hazard rates, using
 #'   a given option price.
 #'
-#' @param ... Arguments passed to \code{\link{implied_volatility}}
 #' @param option_price Present option values (may be a vector)
 #' @param callput 1 for calls, -1 for puts (may be a vector)
 #' @param S0 initial underlying price (may be a vector)
