@@ -4,13 +4,23 @@
 \alias{fit_to_option_market}
 \title{Calibrate volatilities and equity-linked default intensity}
 \usage{
-fit_to_option_market(variance_instruments, variance_instrument_prices,
-  variance_instrument_spreads, fit_instruments, fit_instrument_prices,
-  fit_instrument_spreads, fit_instrument_weights, S0,
-  num_time_steps = 30, const_short_rate = 0,
-  discount_factor_fcn = function(T, t) {     exp(-const_short_rate * (T -
-  t)) }, ..., base_default_intensity = 0.05,
-  relative_spread_tolerance = 0.15, num_variance_time_steps = 30)
+fit_to_option_market(
+  variance_instruments,
+  variance_instrument_prices,
+  variance_instrument_spreads,
+  fit_instruments,
+  fit_instrument_prices,
+  fit_instrument_spreads,
+  fit_instrument_weights,
+  S0,
+  num_time_steps = 30,
+  const_short_rate = 0,
+  discount_factor_fcn = function(T, t) {     exp(-const_short_rate * (T - t)) },
+  ...,
+  base_default_intensity = 0.05,
+  relative_spread_tolerance = 0.15,
+  num_variance_time_steps = 30
+)
 }
 \arguments{
 \item{variance_instruments}{A list of instruments in strictly increasing order

@@ -4,8 +4,11 @@
 \alias{detail_from_AnnivDates}
 \title{Convert output of BondValuation::AnnivDates to inputd for Bond}
 \usage{
-detail_from_AnnivDates(anvdates, as_of = Sys.time(),
-  normalization_factor = 365.25)
+detail_from_AnnivDates(
+  anvdates,
+  as_of = Sys.time(),
+  normalization_factor = 365.25
+)
 }
 \arguments{
 \item{anvdates}{Output of BondValuation::AnnivDates(), which must have included a `Coup` argument so that the resulting list contains an entry for `PaySched`}

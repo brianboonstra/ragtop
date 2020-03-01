@@ -4,10 +4,19 @@
 \alias{take_implicit_timestep}
 \title{Backwardate grid values one timestep}
 \usage{
-take_implicit_timestep(t, S, full_discount_factor, local_discount_factor,
-  discount_factor_fcn, prev_grid_values, survival_probabilities,
-  tridiag_matrix_entries, instrument = NULL, dividends = NULL,
-  instr_name = "this instrument")
+take_implicit_timestep(
+  t,
+  S,
+  full_discount_factor,
+  local_discount_factor,
+  discount_factor_fcn,
+  prev_grid_values,
+  survival_probabilities,
+  tridiag_matrix_entries,
+  instrument = NULL,
+  dividends = NULL,
+  instr_name = "this instrument"
+)
 }
 \arguments{
 \item{t}{Time after this timestep has been taken}
@@ -50,12 +59,13 @@ Grid values for the instrument after taking the implicit timestep
 Take one timestep of an implicit solver for a given instrument
 }
 \seealso{
-Other Implicit Grid Solver: \code{\link{construct_implicit_grid_structure}},
-  \code{\link{find_present_value}},
-  \code{\link{form_present_value_grid}},
-  \code{\link{infer_conforming_time_grid}},
-  \code{\link{integrate_pde}},
-  \code{\link{iterate_grid_from_timestep}},
-  \code{\link{timestep_instruments}}
+Other Implicit Grid Solver: 
+\code{\link{construct_implicit_grid_structure}()},
+\code{\link{find_present_value}()},
+\code{\link{form_present_value_grid}()},
+\code{\link{infer_conforming_time_grid}()},
+\code{\link{integrate_pde}()},
+\code{\link{iterate_grid_from_timestep}()},
+\code{\link{timestep_instruments}()}
 }
 \concept{Implicit Grid Solver}

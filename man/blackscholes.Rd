@@ -4,8 +4,18 @@
 \alias{blackscholes}
 \title{Vectorized Black-Scholes pricing of european-exercise options}
 \usage{
-blackscholes(callput, S0, K, r, time, vola, default_intensity = 0,
-  divrate = 0, borrow_cost = 0, dividends = NULL)
+blackscholes(
+  callput,
+  S0,
+  K,
+  r,
+  time,
+  vola,
+  default_intensity = 0,
+  divrate = 0,
+  borrow_cost = 0,
+  dividends = NULL
+)
 }
 \arguments{
 \item{callput}{1 for calls, -1 for puts}
@@ -54,21 +64,23 @@ blackscholes(callput=-1, S0=100, K=90, r=0.03, time=1, # -1 is a PUT
              vola=0.5, default_intensity=0.07)
 }
 \seealso{
-Other European Options: \code{\link{black_scholes_on_term_structures}},
-  \code{\link{implied_volatilities_with_rates_struct}},
-  \code{\link{implied_volatilities}},
-  \code{\link{implied_volatility_with_term_struct}},
-  \code{\link{implied_volatility}}
+Other European Options: 
+\code{\link{black_scholes_on_term_structures}()},
+\code{\link{implied_volatilities_with_rates_struct}()},
+\code{\link{implied_volatilities}()},
+\code{\link{implied_volatility_with_term_struct}()},
+\code{\link{implied_volatility}()}
 
-Other Equity Independent Default Intensity: \code{\link{american_implied_volatility}},
-  \code{\link{american}},
-  \code{\link{black_scholes_on_term_structures}},
-  \code{\link{equivalent_bs_vola_to_jump}},
-  \code{\link{equivalent_jump_vola_to_bs}},
-  \code{\link{implied_volatilities_with_rates_struct}},
-  \code{\link{implied_volatilities}},
-  \code{\link{implied_volatility_with_term_struct}},
-  \code{\link{implied_volatility}}
+Other Equity Independent Default Intensity: 
+\code{\link{american_implied_volatility}()},
+\code{\link{american}()},
+\code{\link{black_scholes_on_term_structures}()},
+\code{\link{equivalent_bs_vola_to_jump}()},
+\code{\link{equivalent_jump_vola_to_bs}()},
+\code{\link{implied_volatilities_with_rates_struct}()},
+\code{\link{implied_volatilities}()},
+\code{\link{implied_volatility_with_term_struct}()},
+\code{\link{implied_volatility}()}
 }
 \concept{Equity Independent Default Intensity}
 \concept{European Options}

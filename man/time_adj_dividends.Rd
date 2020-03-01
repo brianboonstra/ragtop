@@ -29,7 +29,8 @@ For each of the N elements of \code{S/h} find the sum of the
 given M dividends, discounted to \code{t_final} by \code{r} and \code{h}
 }
 \seealso{
-Other Dividends: \code{\link{adjust_for_dividends}},
-  \code{\link{shift_for_dividends}}
+Other Dividends: 
+\code{\link{adjust_for_dividends}()},
+\code{\link{shift_for_dividends}()}
 }
 \concept{Dividends}

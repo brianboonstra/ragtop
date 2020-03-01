@@ -4,9 +4,15 @@
 \alias{implied_jump_process_volatility}
 \title{Implied volatility of any instrument}
 \usage{
-implied_jump_process_volatility(instrument_price, instrument, ...,
-  starting_volatility_estimate = 0.85, relative_tolerance = 0.005,
-  max.iter = 100, max_vola = 4)
+implied_jump_process_volatility(
+  instrument_price,
+  instrument,
+  ...,
+  starting_volatility_estimate = 0.85,
+  relative_tolerance = 0.005,
+  max.iter = 100,
+  max_vola = 4
+)
 }
 \arguments{
 \item{instrument_price}{Target price for root finder}
@@ -52,19 +58,21 @@ implied_jump_process_volatility(
   pricing algorithm, \code{\link{implied_volatility_with_term_struct}} for European options
   without equity dependence of default intensity, \code{\link{american_implied_volatility}} for the same on American options
 
-Other Implied Volatilities: \code{\link{american_implied_volatility}},
-  \code{\link{equivalent_bs_vola_to_jump}},
-  \code{\link{equivalent_jump_vola_to_bs}},
-  \code{\link{fit_variance_cumulation}},
-  \code{\link{implied_volatilities_with_rates_struct}},
-  \code{\link{implied_volatilities}},
-  \code{\link{implied_volatility_with_term_struct}},
-  \code{\link{implied_volatility}}
+Other Implied Volatilities: 
+\code{\link{american_implied_volatility}()},
+\code{\link{equivalent_bs_vola_to_jump}()},
+\code{\link{equivalent_jump_vola_to_bs}()},
+\code{\link{fit_variance_cumulation}()},
+\code{\link{implied_volatilities_with_rates_struct}()},
+\code{\link{implied_volatilities}()},
+\code{\link{implied_volatility_with_term_struct}()},
+\code{\link{implied_volatility}()}
 
-Other Equity Dependent Default Intensity: \code{\link{find_present_value}},
-  \code{\link{fit_to_option_market_df}},
-  \code{\link{fit_variance_cumulation}},
-  \code{\link{form_present_value_grid}}
+Other Equity Dependent Default Intensity: 
+\code{\link{find_present_value}()},
+\code{\link{fit_to_option_market_df}()},
+\code{\link{fit_variance_cumulation}()},
+\code{\link{form_present_value_grid}()}
 }
 \concept{Equity Dependent Default Intensity}
 \concept{Implied Volatilities}

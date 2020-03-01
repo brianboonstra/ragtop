@@ -1,3 +1,7 @@
+# ragtop 1.1.1 (CRAN)
+
+Version 1.1.1 fixes extraneous parameter inheritance in documenation.
+
 # ragtop 1.1.0 (CRAN)
 
 Version 1.1.0 adds the `detail_from_AnnivDates()` function to make it simple for bond definitions to take advantage of the excellent daycount convention treatments coded into the `BondValuation` package.  A few typos in documentation were also fixed.

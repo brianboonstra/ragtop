@@ -4,10 +4,20 @@
 \alias{price_with_intensity_link}
 \title{Helper function (instrument pricing) for calibration of equity-linked default intensity}
 \usage{
-price_with_intensity_link(p, s, h, variance_instruments,
-  variance_instrument_prices, variance_instrument_spreads, fit_instruments,
-  S0, num_time_steps = 30, ..., relative_spread_tolerance = 0.15,
-  num_variance_time_steps = 30)
+price_with_intensity_link(
+  p,
+  s,
+  h,
+  variance_instruments,
+  variance_instrument_prices,
+  variance_instrument_spreads,
+  fit_instruments,
+  S0,
+  num_time_steps = 30,
+  ...,
+  relative_spread_tolerance = 0.15,
+  num_variance_time_steps = 30
+)
 }
 \arguments{
 \item{p}{Power of default intensity}

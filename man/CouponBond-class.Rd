@@ -26,10 +26,18 @@ columns \code{payment_time} and \code{payment_size}.}
 
 \item{\code{optionality_fcn(v, S, t, ...)}}{Return the notional value in the shape of {S} at any time on or after maturity, otherwise just return {v}}
 
-\item{\code{total_coupon_values_between(small_t, big_t,
-  discount_factor_fctn = discount_factor_fcn)}}{Compute the sum (as of {big_t}) of present values of coupons paid between small_t and big_t}
+\item{\code{total_coupon_values_between(
+  small_t,
+  big_t,
+  discount_factor_fctn = discount_factor_fcn
+)}}{Compute the sum (as of {big_t}) of present values of coupons paid between small_t and big_t}
 
-\item{\code{update_cashflows(small_t, big_t, discount_factor_fctn = discount_factor_fcn,
-  include_notional = TRUE, ...)}}{Update last_computed_cash and return cashflow information for the given time period, valued at big_t}
+\item{\code{update_cashflows(
+  small_t,
+  big_t,
+  discount_factor_fctn = discount_factor_fcn,
+  include_notional = TRUE,
+  ...
+)}}{Update last_computed_cash and return cashflow information for the given time period, valued at big_t}
 }}
 

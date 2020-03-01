@@ -20,7 +20,8 @@ columns \code{payment_time} and \code{payment_size}.}
 Present value as of time \code{t} for coupons paid since the \code{model_t}
 }
 \seealso{
-Other Bond Coupons: \code{\link{accelerated_coupon_value}},
-  \code{\link{coupon_value_at_exercise}}
+Other Bond Coupons: 
+\code{\link{accelerated_coupon_value}()},
+\code{\link{coupon_value_at_exercise}()}
 }
 \concept{Bond Coupons}

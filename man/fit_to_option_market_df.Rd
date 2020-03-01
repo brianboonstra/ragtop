@@ -4,11 +4,15 @@
 \alias{fit_to_option_market_df}
 \title{Calibrate volatilities and equity-linked default intensity making many assumptions}
 \usage{
-fit_to_option_market_df(S0 = ragtop::TSLAMarket$S0,
+fit_to_option_market_df(
+  S0 = ragtop::TSLAMarket$S0,
   discount_factor_fcn = spot_to_df_fcn(ragtop::TSLAMarket$risk_free_rates),
-  options_df = ragtop::TSLAMarket$options, min_maturity = 1/12,
-  min_moneyness = 0.8, max_moneyness = 1.2,
-  base_default_intensity = 0.05)
+  options_df = ragtop::TSLAMarket$options,
+  min_maturity = 1/12,
+  min_moneyness = 0.8,
+  max_moneyness = 1.2,
+  base_default_intensity = 0.05
+)
 }
 \arguments{
 \item{S0}{Current underlying price}
@@ -38,9 +42,10 @@ This is a convenience function for calibrating variance cumulation (the
 \seealso{
 \code{\link{fit_to_option_market}} the underlying fit algorithm
 
-Other Equity Dependent Default Intensity: \code{\link{find_present_value}},
-  \code{\link{fit_variance_cumulation}},
-  \code{\link{form_present_value_grid}},
-  \code{\link{implied_jump_process_volatility}}
+Other Equity Dependent Default Intensity: 
+\code{\link{find_present_value}()},
+\code{\link{fit_variance_cumulation}()},
+\code{\link{form_present_value_grid}()},
+\code{\link{implied_jump_process_volatility}()}
 }
 \concept{Equity Dependent Default Intensity}

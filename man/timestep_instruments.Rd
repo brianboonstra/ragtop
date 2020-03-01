@@ -4,9 +4,19 @@
 \alias{timestep_instruments}
 \title{Take an implicit timestep for all the given instruments}
 \usage{
-timestep_instruments(z, prev_grid_values, t, dt, S0, instruments,
-  stock_level_fcn, discount_factor_fcn, default_intensity_fcn,
-  variance_cumulation_fcn, dividends = NULL)
+timestep_instruments(
+  z,
+  prev_grid_values,
+  t,
+  dt,
+  S0,
+  instruments,
+  stock_level_fcn,
+  discount_factor_fcn,
+  default_intensity_fcn,
+  variance_cumulation_fcn,
+  dividends = NULL
+)
 }
 \arguments{
 \item{z}{Space grid value morphable to stock prices using \code{stock_level_fcn}}
@@ -50,12 +60,13 @@ Backwardate grid values for all the given instruments from a set of grid
   of time \code{t}.
 }
 \seealso{
-Other Implicit Grid Solver: \code{\link{construct_implicit_grid_structure}},
-  \code{\link{find_present_value}},
-  \code{\link{form_present_value_grid}},
-  \code{\link{infer_conforming_time_grid}},
-  \code{\link{integrate_pde}},
-  \code{\link{iterate_grid_from_timestep}},
-  \code{\link{take_implicit_timestep}}
+Other Implicit Grid Solver: 
+\code{\link{construct_implicit_grid_structure}()},
+\code{\link{find_present_value}()},
+\code{\link{form_present_value_grid}()},
+\code{\link{infer_conforming_time_grid}()},
+\code{\link{integrate_pde}()},
+\code{\link{iterate_grid_from_timestep}()},
+\code{\link{take_implicit_timestep}()}
 }
 \concept{Implicit Grid Solver}

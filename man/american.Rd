@@ -4,14 +4,22 @@
 \alias{american}
 \title{Price one or more american-exercise options}
 \usage{
-american(callput, S0, K, time, const_short_rate = 0,
-  const_default_intensity = 0, discount_factor_fcn = function(T, t,
-  ...) {     exp(-const_short_rate * (T - t)) },
-  survival_probability_fcn = function(T, t, ...) {    
-  exp(-const_default_intensity * (T - t)) },
-  default_intensity_fcn = function(t, S, ...) {    
-  const_default_intensity + 0 * S }, ..., num_time_steps = 100,
-  structure_constant = 2, std_devs_width = 5)
+american(
+  callput,
+  S0,
+  K,
+  time,
+  const_short_rate = 0,
+  const_default_intensity = 0,
+  discount_factor_fcn = function(T, t, ...) {     exp(-const_short_rate * (T - t)) },
+  survival_probability_fcn = function(T, t, ...) {     exp(-const_default_intensity * (T
+    - t)) },
+  default_intensity_fcn = function(t, S, ...) {     const_default_intensity + 0 * S },
+  ...,
+  num_time_steps = 100,
+  structure_constant = 2,
+  std_devs_width = 5
+)
 }
 \arguments{
 \item{callput}{1 for calls, -1 for puts (may be a vector of the same)}
@@ -75,18 +83,20 @@ american(callput=-1, S0=100, K=90, time=1, const_short_rate=0.025,
          })
 }
 \seealso{
-Other Equity Independent Default Intensity: \code{\link{american_implied_volatility}},
-  \code{\link{black_scholes_on_term_structures}},
-  \code{\link{blackscholes}},
-  \code{\link{equivalent_bs_vola_to_jump}},
-  \code{\link{equivalent_jump_vola_to_bs}},
-  \code{\link{implied_volatilities_with_rates_struct}},
-  \code{\link{implied_volatilities}},
-  \code{\link{implied_volatility_with_term_struct}},
-  \code{\link{implied_volatility}}
+Other Equity Independent Default Intensity: 
+\code{\link{american_implied_volatility}()},
+\code{\link{black_scholes_on_term_structures}()},
+\code{\link{blackscholes}()},
+\code{\link{equivalent_bs_vola_to_jump}()},
+\code{\link{equivalent_jump_vola_to_bs}()},
+\code{\link{implied_volatilities_with_rates_struct}()},
+\code{\link{implied_volatilities}()},
+\code{\link{implied_volatility_with_term_struct}()},
+\code{\link{implied_volatility}()}
 
-Other American Exercise Equity Options: \code{\link{american_implied_volatility}},
-  \code{\link{control_variate_pairs}}
+Other American Exercise Equity Options: 
+\code{\link{american_implied_volatility}()},
+\code{\link{control_variate_pairs}()}
 }
 \concept{American Exercise Equity Options}
 \concept{Equity Independent Default Intensity}
