@@ -4,7 +4,9 @@
 \name{CALL}
 \alias{CALL}
 \title{Constant CALL for defining option contracts}
-\format{An object of class \code{numeric} of length 1.}
+\format{
+An object of class \code{numeric} of length 1.
+}
 \usage{
 CALL
 }

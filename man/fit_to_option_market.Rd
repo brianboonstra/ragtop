@@ -15,7 +15,9 @@ fit_to_option_market(
   S0,
   num_time_steps = 30,
   const_short_rate = 0,
-  discount_factor_fcn = function(T, t) {     exp(-const_short_rate * (T - t)) },
+  discount_factor_fcn = function(T, t) {
+     exp(-const_short_rate * (T - t))
+ },
   ...,
   base_default_intensity = 0.05,
   relative_spread_tolerance = 0.15,

@@ -66,21 +66,21 @@ blackscholes(callput=-1, S0=100, K=90, r=0.03, time=1, # -1 is a PUT
 \seealso{
 Other European Options: 
 \code{\link{black_scholes_on_term_structures}()},
-\code{\link{implied_volatilities_with_rates_struct}()},
 \code{\link{implied_volatilities}()},
-\code{\link{implied_volatility_with_term_struct}()},
-\code{\link{implied_volatility}()}
+\code{\link{implied_volatilities_with_rates_struct}()},
+\code{\link{implied_volatility}()},
+\code{\link{implied_volatility_with_term_struct}()}
 
 Other Equity Independent Default Intensity: 
-\code{\link{american_implied_volatility}()},
 \code{\link{american}()},
+\code{\link{american_implied_volatility}()},
 \code{\link{black_scholes_on_term_structures}()},
 \code{\link{equivalent_bs_vola_to_jump}()},
 \code{\link{equivalent_jump_vola_to_bs}()},
-\code{\link{implied_volatilities_with_rates_struct}()},
 \code{\link{implied_volatilities}()},
-\code{\link{implied_volatility_with_term_struct}()},
-\code{\link{implied_volatility}()}
+\code{\link{implied_volatilities_with_rates_struct}()},
+\code{\link{implied_volatility}()},
+\code{\link{implied_volatility_with_term_struct}()}
 }
 \concept{Equity Independent Default Intensity}
 \concept{European Options}

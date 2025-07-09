@@ -49,8 +49,6 @@ dividends will be converted to proprtional for purposes of this algorithm.}
 \item{max.iter}{Number of iterations to try before abandoning the search}
 
 \item{max_vola}{Maximum volatility to try in the search}
-
-\item{...}{Arguments passed to \code{\link{implied_volatility}}}
 }
 \value{
 Scalar volatilities
@@ -67,26 +65,26 @@ Other Implied Volatilities:
 \code{\link{fit_variance_cumulation}()},
 \code{\link{implied_jump_process_volatility}()},
 \code{\link{implied_volatilities_with_rates_struct}()},
-\code{\link{implied_volatility_with_term_struct}()},
-\code{\link{implied_volatility}()}
+\code{\link{implied_volatility}()},
+\code{\link{implied_volatility_with_term_struct}()}
 
 Other European Options: 
 \code{\link{black_scholes_on_term_structures}()},
 \code{\link{blackscholes}()},
 \code{\link{implied_volatilities_with_rates_struct}()},
-\code{\link{implied_volatility_with_term_struct}()},
-\code{\link{implied_volatility}()}
+\code{\link{implied_volatility}()},
+\code{\link{implied_volatility_with_term_struct}()}
 
 Other Equity Independent Default Intensity: 
-\code{\link{american_implied_volatility}()},
 \code{\link{american}()},
+\code{\link{american_implied_volatility}()},
 \code{\link{black_scholes_on_term_structures}()},
 \code{\link{blackscholes}()},
 \code{\link{equivalent_bs_vola_to_jump}()},
 \code{\link{equivalent_jump_vola_to_bs}()},
 \code{\link{implied_volatilities_with_rates_struct}()},
-\code{\link{implied_volatility_with_term_struct}()},
-\code{\link{implied_volatility}()}
+\code{\link{implied_volatility}()},
+\code{\link{implied_volatility_with_term_struct}()}
 }
 \concept{Equity Independent Default Intensity}
 \concept{European Options}

@@ -1,8 +1,8 @@
 Package: ragtop
 Type: Package
 Title: Pricing Equity Derivatives with Extensions of Black-Scholes
-Version: 1.1.1
-Date: 2020-02-29
+Version: 1.2.0
+Date: 2025-07-09
 Author: Brian K. Boonstra
 Maintainer: Brian K. Boonstra <ragtop@boonstra.org>
 Description: Algorithms to price American and European
@@ -17,9 +17,9 @@ Description: Algorithms to price American and European
     Buffum (2002) <doi:10.2139/ssrn.355308> and
     Linetsky (2006) <doi:10.1111/j.1467-9965.2006.00271.x>.
 Depends:
-    limSolve (>= 1.5.5.1),
+    limSolve (>= 2.0.1),
     futile.logger (>= 1.4.1),
-    R (>= 2.10),
+    R (>= 3.5),
     methods (>= 3.2.2)
 Suggests:
     testthat,
@@ -33,9 +33,10 @@ Suggests:
     RColorBrewer,
     BondValuation,
     R.cache,
-    Quandl
+    lubridate,
+    treasury
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: TRUE
 VignetteBuilder: knitr
-RoxygenNote: 7.0.2
+RoxygenNote: 7.3.2

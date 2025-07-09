@@ -61,7 +61,7 @@ relative accuracy when the ratio of timesteps to voltime
 
 Cases with pathologically low volatility may go awry (in the sense of
  yielding ultimately inaccurate PDE solutions), as the
- {structure_constant} will force a step in {z} space much bigger
+ \code{structure_constant} will force a step in \code{z} space much bigger
  than the width in standard deviations.
 }
 \seealso{

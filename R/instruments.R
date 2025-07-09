@@ -57,18 +57,18 @@ GridPricedInstrument = setRefClass(
                 name = "character"),
   methods = list(
     recovery_fcn = function(v,S,t,...) {
-      "Return recovery value, given non-default values {v} at time {t}.  Subclasses may be more elaborate, this method simply returns 0.0."
+      "Return recovery value, given non-default values \\code{v} at time \\code{t}.  Subclasses may be more elaborate, this method simply returns 0.0."
       0.0
     },
     optionality_fcn = function(v,...) {
       # To be overridden by subclasses, which must update last_computed_grid
-      "Return a version of {v} at time {t} corrected for any optionality conditions."
+      "Return a version of \\code{v} at time \\code{t} corrected for any optionality conditions."
       last_computed_grid <<- as.vector(v)
       v
     },
     terminal_values = function(v,...) {
       # To be overridden by subclasses
-      "Return a terminal value. defaults to simply calling {optionality_fcn}."
+      "Return a terminal value. defaults to simply calling \\code{optionality_fcn}."
       optionality_fcn(v,...)
     }
   )
@@ -144,7 +144,7 @@ AmericanOption = setRefClass(
       recovery
     },
     optionality_fcn = function(v,S,t,...) {
-      "Return the greater of hold value {v} or early exercise value at each stock price level in {S} up to maturity time.  Return exercise value after that time."
+      "Return the greater of hold value \\code{v} or early exercise value at each stock price level in \\code{S} up to maturity time.  Return exercise value after that time."
       if (t < maturity) {
         exer_value = callput * (S - strike)
         exer_value[exer_value < 0] = 0
@@ -176,7 +176,7 @@ ZeroCouponBond = setRefClass(
               discount_factor_fcn="function"),
   methods = list(
     optionality_fcn = function(v,S,t,...) {
-      "Return the notional value in the shape of {S} at any time on or after maturity, otherwise just return {v}"
+      "Return the notional value in the shape of \\code{S} at any time on or after maturity, otherwise just return \\code{v}"
       if (t >= maturity) {
         v = 0.0*(v+S) + notional
         flog.info("Timestep t=%s for %s is at or beyond maturity.  Using notional %s.",
@@ -215,7 +215,7 @@ CouponBond = setRefClass(
   fields=list(coupons="data.frame", last_computed_cash="numeric"),
   methods = list(
     accumulate_coupon_values_before = function(t, discount_factor_fctn=discount_factor_fcn) {
-      "Compute the sum of coupon present values as of {t} according to {discount_factor_fctn}"
+      "Compute the sum of coupon present values as of \\code{t} according to \\code{discount_factor_fctn}"
       ac = 0
       paid_coupon_ix = (coupons$payment_time<=t+maturity*TIME_RESOLUTION_FACTOR)
       if (sum(paid_coupon_ix) >= 1) {
@@ -229,7 +229,7 @@ CouponBond = setRefClass(
       ac
     },
     total_coupon_values_between = function(small_t, big_t, discount_factor_fctn=discount_factor_fcn) {
-      "Compute the sum (as of {big_t}) of present values of coupons paid between small_t and big_t"
+      "Compute the sum (as of \\code{big_t}) of present values of coupons paid between \\code{small_t} and \\code{big_t}"
       ac = 0
       paid_coupon_ix = ( coupons$payment_time>small_t & coupons$payment_time<=big_t )
       if (sum(paid_coupon_ix) >= 1) {
@@ -252,7 +252,7 @@ CouponBond = setRefClass(
       ctimes
     },
     update_cashflows = function(small_t, big_t, discount_factor_fctn=discount_factor_fcn, include_notional=TRUE, ...) {
-      "Update last_computed_cash and return cashflow information for the given time period, valued at big_t"
+      "Update last_computed_cash and return cashflow information for the given time period, valued at \\code{big_t}"
       if (is.blank(last_computed_cash)) {
         last_computed_cash <<- 0
       }
@@ -277,7 +277,7 @@ CouponBond = setRefClass(
       cashflows
     },
     optionality_fcn = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
-      "Return the greater of hold value {v} or exercise value at each stock price level in {S}.  If the given date is beyond maturity, return value at maturity."
+      "Return the greater of hold value \\code{v} or exercise value at each stock price level in \\code{S}.  If the given date is beyond maturity, return value at maturity."
       if (t >= maturity) {
         accumulated_past_coupons = accumulate_coupon_values_before(maturity, discount_factor_fctn=discount_factor_fctn)
         last_computed_cash <<- notional + accumulated_past_coupons
@@ -296,10 +296,10 @@ CouponBond = setRefClass(
 
 #' Callable (and putable) corporate or government bond.
 #'
-#' When a bond is emph{callable}, the issuer may choose to pay the call
+#' When a bond is \emph{callable}, the issuer may choose to pay the call
 #' price to the bond holder and end the life of the contract.
 #'
-#' When a bond is emph{putable}, the bond holder may choose to force the
+#' When a bond is \emph{putable}, the bond holder may choose to force the
 #' issuer pay the put price to the bond holder thus ending the life of the contract.
 #'
 #' @field calls A data.frame of details for each call.  It should have the columns \code{call_price} and \code{effective_time}.
@@ -394,7 +394,7 @@ ConvertibleBond = setRefClass(
       last_computed_exercise_value
     },
     exercise_decision = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
-      "Find indexes where hold value {v} will be inferior to conversion value at each stock price level in {S}, adjusted to include all past coupons"
+      "Find indexes where hold value \\code{v} will be inferior to conversion value at each stock price level in \\code{S}, adjusted to include all past coupons"
       # Memoize for efficiency
       if (is.blank(last_used_S) || anyNA(last_used_S) || is.blank(last_used_t) || any(S!=last_used_S) || t!=last_used_t) {
         compute_exercise_decision(v, S, t, discount_factor_fctn=discount_factor_fctn, ...)
@@ -423,7 +423,7 @@ ConvertibleBond = setRefClass(
       cashflows
     },
     optionality_fcn = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
-      "Return the greater of hold value {v} or conversion value at each stock price level in {S}, adjusted to include all past coupons"
+      "Return the greater of hold value \\code{v} or conversion value at each stock price level in \\code{S}, adjusted to include all past coupons"
       exer = exercise_decision(v,S,t,discount_factor_fctn=discount_factor_fctn,...)
       ev = as.vector(v)
       flog.info("Last computed exer values for %s have %s cases of early exercise",

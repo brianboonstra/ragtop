@@ -12,9 +12,15 @@ find_present_value(
   const_short_rate = 0,
   const_default_intensity = 0,
   override_Tmax = NA,
-  discount_factor_fcn = function(T, t, ...) {     exp(-const_short_rate * (T - t)) },
-  default_intensity_fcn = function(t, S, ...) {     const_default_intensity + 0 * S },
-  variance_cumulation_fcn = function(T, t) {     const_volatility^2 * (T - t) },
+  discount_factor_fcn = function(T, t, ...) {
+     exp(-const_short_rate * (T - t))
+ },
+  default_intensity_fcn = function(t, S, ...) {
+     const_default_intensity + 0 * S
+ },
+  variance_cumulation_fcn = function(T, t) {
+     const_volatility^2 * (T - t)
+ },
   dividends = NULL,
   borrow_cost = 0,
   dividend_rate = 0,

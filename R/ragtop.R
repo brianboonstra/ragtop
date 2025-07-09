@@ -25,13 +25,13 @@
 #'
 #' @section Important Features:
 #'
-#' \itemize{
-#'  \item{\emph{Black-Scholes}: }{The standard model is automatically supported as a special case, but also has optimized routines}
-#'  \item{\emph{Term Structures}: }{The package allows for any kind of instrument to be priced with time-varying rates, volatility and default intensity}
-#'  \item{\emph{Dividends}: }{Allows for discrete dividends in an arbitrary combination of fixed and proportional amounts.  The difference between fixed and proprtional can be up to 10 percent in implied volatility terms.}
-#'  \item{\emph{Calibration}: }{Model calibration routines are included}
-#'  \item{\emph{Bankruptcy Realism}: }{A parsimonious deterministic model of default intensity gives rich behavior and conforms reasonably well to observed market data}
-#'  \item{\emph{Algorithm Parameters}: }{Default parameters for the algorithm work well for a very wide variety of pricing and implied volatility scenarios}
+#' \describe{
+#'  \item{\emph{Black-Scholes} }{The standard model is automatically supported as a special case, but also has optimized routines}
+#'  \item{\emph{Term Structures} }{The package allows for any kind of instrument to be priced with time-varying rates, volatility and default intensity}
+#'  \item{\emph{Dividends} }{Allows for discrete dividends in an arbitrary combination of fixed and proportional amounts.  The difference between fixed and proprtional can be up to 10 percent in implied volatility terms.}
+#'  \item{\emph{Calibration} }{Model calibration routines are included}
+#'  \item{\emph{Bankruptcy Realism} }{A parsimonious deterministic model of default intensity gives rich behavior and conforms reasonably well to observed market data}
+#'  \item{\emph{Algorithm Parameters} }{Default parameters for the algorithm work well for a very wide variety of pricing and implied volatility scenarios}
 #'  }
 #'
 #'

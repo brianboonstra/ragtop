@@ -21,8 +21,8 @@ A simple contract paying the \code{notional} amount at the \code{maturity}
 \section{Methods}{
 
 \describe{
-\item{\code{optionality_fcn(v, ...)}}{Return a version of {v} at time {t} corrected for any optionality conditions.}
+\item{\code{optionality_fcn(v, ...)}}{Return a version of \code{v} at time \code{t} corrected for any optionality conditions.}
 
-\item{\code{recovery_fcn(v, S, t, ...)}}{Return recovery value, given non-default values {v} at time {t}.  Subclasses may be more elaborate, this method simply returns 0.0.}
+\item{\code{recovery_fcn(v, S, t, ...)}}{Return recovery value, given non-default values \code{v} at time \code{t}.  Subclasses may be more elaborate, this method simply returns 0.0.}
 }}
 

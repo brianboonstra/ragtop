@@ -63,10 +63,10 @@ Other Implied Volatilities:
 \code{\link{equivalent_bs_vola_to_jump}()},
 \code{\link{equivalent_jump_vola_to_bs}()},
 \code{\link{fit_variance_cumulation}()},
-\code{\link{implied_volatilities_with_rates_struct}()},
 \code{\link{implied_volatilities}()},
-\code{\link{implied_volatility_with_term_struct}()},
-\code{\link{implied_volatility}()}
+\code{\link{implied_volatilities_with_rates_struct}()},
+\code{\link{implied_volatility}()},
+\code{\link{implied_volatility_with_term_struct}()}
 
 Other Equity Dependent Default Intensity: 
 \code{\link{find_present_value}()},

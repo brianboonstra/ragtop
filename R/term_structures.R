@@ -1,6 +1,6 @@
 ## ragtop -- convertibles pricing in R
 ##
-## Copyright (C) 2016  Brian Boonstra <ragtop@boonstra.org>
+## Copyright (C) 2016-2025  Brian Boonstra <ragtop@boonstra.org>
 ##
 ## This file is part of the ragtop package for GNU R.
 ## It is made available under the terms of the GNU General Public
@@ -121,18 +121,23 @@ spot_to_df_fcn = function(yield_curve) {
 
 #' Get a US Treasury curve discount factor function
 #'
-#' @param on_date Date for which to query Quandl for the curve
+#' @param on_date Date for which to query for the curve, year-month-day format
 #' @return A function taking two time arguments, which returns the discount factor from the second to the first
-#' @export Quandl_df_fcn_UST_raw
-Quandl_df_fcn_UST_raw = function(on_date) {
-  if (is.element('R.cache', utils::installed.packages()[,1])) {
-    yield_curve_elems = Quandl::Quandl("USTREASURY/YIELD", start_date=on_date, end_date=on_date)
-    yield_curve_elems$Date = NULL
+#' @export treasury_df_raw
+treasury_df_raw = function(on_date) {
+  if (is.element('treasury', utils::installed.packages()[,1])) {
+    on_date = lubridate::ymd(on_date)
+    yield_curve_df = treasury::tr_yield_curve(date=format(on_date, "%Y%m"))
+    maturities_used = c("1 month", "3 month", "6 month", "1 year", "2 year", "3 year", "5 year", "7 year", "10 year", "20 year", "30 year")
+    ix_rows = ((yield_curve_df$date == format(on_date, "%Y-%m-%d") )
+               & (yield_curve_df$maturity %in% maturities_used))
+    order_rows = match(yield_curve_df$maturity[ix_rows], maturities_used)
+    yield_curve_elems = yield_curve_df$rate[ix_rows][order(order_rows)]
     yc_rates = as.numeric(yield_curve_elems)/100  # Values are reported as percent
     yield_curve = data.frame(time=c(0, 30/360, 90/360, 1/2, 1,2,3,5,7,10,20,30), rate=c(0,yc_rates))
     df_frame = spot_to_df_fcn(yield_curve)
   } else {
-    flog.error('Quandl package not available for treasury curve queries')
+    flog.error('treasury package not available for treasury curve queries')
     df_frame = data.frame()
   }
   df_frame
@@ -140,17 +145,17 @@ Quandl_df_fcn_UST_raw = function(on_date) {
 
 #' Get a US Treasury curve discount factor function
 #'
-#' This is a caching wrapper for \code{\link{Quandl_df_fcn_UST_raw}}
+#' This is a caching wrapper for \code{\link{treasury_df_raw}}
 #'
-#' @param ... Arguments passed to \code{\link{Quandl_df_fcn_UST_raw}}
-#' @param envir Environment passed to \code{\link{Quandl_df_fcn_UST_raw}}
-#' @return A function taking two time arguments, which returns the discount factor from the second to the first
-#' @export Quandl_df_fcn_UST
-Quandl_df_fcn_UST = function(...,envir=parent.frame()) {
-  Quandl_df_fcn_UST_raw(...)
+#' @param ... Arguments passed to \code{\link{treasury_df_raw}}
+#' @param envir Environment passed to \code{\link{treasury_df_raw}}
+#' @return A function taking two time arguments, which returns the discount factor from the second to the first (see \code{spot_to_df_fcn})
+#' @export treasury_df
+treasury_df = function(...,envir=parent.frame()) {
+  treasury_df_raw(...)
 }
 if (is.element('R.cache', utils::installed.packages()[,1])) {
-  Quandl_df_fcn_UST = R.cache::addMemoization(Quandl_df_fcn_UST_raw)
+  treasury_df = R.cache::addMemoization(treasury_df_raw)
 }
 
 #' Convert output of BondValuation::AnnivDates to inputd for Bond

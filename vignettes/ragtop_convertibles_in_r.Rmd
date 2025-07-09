@@ -1,20 +1,20 @@
 ---
-title: "ragtop: Complex Derivatives Pricing"
+title: "ragtop: Pricing Equity Derivatives with Extensions of Black-Scholes"
 header-includes: \usepackage{amsmath}
 author: "Brian K. Boonstra"
 date: "First Version: May 20, 2016  This Version: `r Sys.Date()`"
 output:
+  rmarkdown::html_vignette:
+    keep_md: yes
   pdf_document:
     toc: true
     toc_depth: 2
     keep_tex: true
-  rmarkdown::html_vignette:
-    keep_md: yes
 bibliography: converts.bib
 vignette: >
-  %\VignetteIndexEntry{ragtop: Pricing equity derivatives with extensions of Black-Scholes}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteIndexEntry{ragtop: Pricing Equity Derivatives with Extensions of Black-Scholes}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 ```{r global_options, include=FALSE}
 library(ragtop)

@@ -6,11 +6,11 @@
 \alias{CallableBond}
 \title{Callable (and putable) corporate or government bond.}
 \description{
-When a bond is emph{callable}, the issuer may choose to pay the call
+When a bond is \emph{callable}, the issuer may choose to pay the call
 price to the bond holder and end the life of the contract.
 }
 \details{
-When a bond is emph{putable}, the bond holder may choose to force the
+When a bond is \emph{putable}, the bond holder may choose to force the
 issuer pay the put price to the bond holder thus ending the life of the contract.
 }
 \section{Fields}{

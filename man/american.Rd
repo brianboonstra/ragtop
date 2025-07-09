@@ -11,10 +11,16 @@ american(
   time,
   const_short_rate = 0,
   const_default_intensity = 0,
-  discount_factor_fcn = function(T, t, ...) {     exp(-const_short_rate * (T - t)) },
-  survival_probability_fcn = function(T, t, ...) {     exp(-const_default_intensity * (T
-    - t)) },
-  default_intensity_fcn = function(t, S, ...) {     const_default_intensity + 0 * S },
+  discount_factor_fcn = function(T, t, ...) {
+     exp(-const_short_rate * (T - t))
+ },
+  survival_probability_fcn = function(T, t, ...) {
+     exp(-const_default_intensity * (T
+    - t))
+ },
+  default_intensity_fcn = function(t, S, ...) {
+     const_default_intensity + 0 * S
+ },
   ...,
   num_time_steps = 100,
   structure_constant = 2,
@@ -89,10 +95,10 @@ Other Equity Independent Default Intensity:
 \code{\link{blackscholes}()},
 \code{\link{equivalent_bs_vola_to_jump}()},
 \code{\link{equivalent_jump_vola_to_bs}()},
-\code{\link{implied_volatilities_with_rates_struct}()},
 \code{\link{implied_volatilities}()},
-\code{\link{implied_volatility_with_term_struct}()},
-\code{\link{implied_volatility}()}
+\code{\link{implied_volatilities_with_rates_struct}()},
+\code{\link{implied_volatility}()},
+\code{\link{implied_volatility_with_term_struct}()}
 
 Other American Exercise Equity Options: 
 \code{\link{american_implied_volatility}()},

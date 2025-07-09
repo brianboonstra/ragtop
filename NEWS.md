@@ -1,6 +1,12 @@
+# ragtop 1.2.0 (CRAN)
+
+Version 1.2.0 recovers from deprecation / archiving which happened due to CI finding test failures in its limSolve dependency.  limSolve has now resolved those problems.
+
+Version 1.2.0 also switches from Quandl to the treasury package for optional US interest rate downloads, and improves documentation formatting.
+
 # ragtop 1.1.1 (CRAN)
 
-Version 1.1.1 fixes extraneous parameter inheritance in documenation.
+Version 1.1.1 fixes extraneous parameter inheritance in documentation.
 
 # ragtop 1.1.0 (CRAN)
 

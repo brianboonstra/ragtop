@@ -5,7 +5,9 @@
 \alias{TIME_RESOLUTION_FACTOR}
 \title{Constant to define when times are considered so close to each other
  that they should be treated as simultaneous}
-\format{An object of class \code{numeric} of length 1.}
+\format{
+An object of class \code{numeric} of length 1.
+}
 \usage{
 TIME_RESOLUTION_FACTOR
 }

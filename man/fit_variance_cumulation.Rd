@@ -16,10 +16,16 @@ fit_variance_cumulation(
   num_time_steps = 40,
   const_short_rate = 0,
   const_default_intensity = 0,
-  discount_factor_fcn = function(T, t, ...) {     exp(-const_short_rate * (T - t)) },
-  survival_probability_fcn = function(T, t, ...) {     exp(-const_default_intensity * (T
-    - t)) },
-  default_intensity_fcn = function(t, S, ...) {     const_default_intensity + 0 * S },
+  discount_factor_fcn = function(T, t, ...) {
+     exp(-const_short_rate * (T - t))
+ },
+  survival_probability_fcn = function(T, t, ...) {
+     exp(-const_default_intensity * (T
+    - t))
+ },
+  default_intensity_fcn = function(t, S, ...) {
+     const_default_intensity + 0 * S
+ },
   dividends = NULL,
   borrow_cost = 0,
   dividend_rate = 0,
@@ -74,11 +80,11 @@ and \code{proportional}.  Dividend size at the given \code{time} is}
 
 \item{dividend_rate}{Continuous dividend rate, affecting the drift rate}
 
-\item{...}{Futher arguments to \code{\link{find_present_value}}}
+\item{...}{Further arguments to \code{\link{find_present_value}}}
 }
 \value{
 A list with two elements, \code{volatilities} and \code{cumulation_function}.  The \code{cumulation_function} will
-  be a 2-parameter function giving cumulated variances, as created by code{\link{variance_cumulation_from_vols}}
+  be a 2-parameter function giving cumulated variances, as created by \code{\link{variance_cumulation_from_vols}}
 }
 \description{
 Given a set of equity options with increasing tenors, along with
@@ -101,10 +107,10 @@ Other Implied Volatilities:
 \code{\link{equivalent_bs_vola_to_jump}()},
 \code{\link{equivalent_jump_vola_to_bs}()},
 \code{\link{implied_jump_process_volatility}()},
-\code{\link{implied_volatilities_with_rates_struct}()},
 \code{\link{implied_volatilities}()},
-\code{\link{implied_volatility_with_term_struct}()},
-\code{\link{implied_volatility}()}
+\code{\link{implied_volatilities_with_rates_struct}()},
+\code{\link{implied_volatility}()},
+\code{\link{implied_volatility_with_term_struct}()}
 
 Other Equity Dependent Default Intensity: 
 \code{\link{find_present_value}()},

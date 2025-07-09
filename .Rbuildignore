@@ -16,4 +16,7 @@
 ^data/skew_by_power.csv$
 ^data/vol_by_fixed_div_proportion.csv$
 
-^\.travis\.yml$
+^CRAN-RELEASE$
+^\.github$
+^doc$
+^Meta$

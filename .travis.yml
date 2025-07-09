@@ -1,4 +1,0 @@
-language: r
-warnings_are_errors: yes
-sudo: required
-r_build_args: --compact-vignettes="gs+qpdf"

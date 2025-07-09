@@ -19,11 +19,11 @@ Convertible bond with exercise into stock
 \section{Methods}{
 
 \describe{
-\item{\code{exercise_decision(v, S, t, discount_factor_fctn = discount_factor_fcn, ...)}}{Find indexes where hold value {v} will be inferior to conversion value at each stock price level in {S}, adjusted to include all past coupons}
+\item{\code{exercise_decision(v, S, t, discount_factor_fctn = discount_factor_fcn, ...)}}{Find indexes where hold value \code{v} will be inferior to conversion value at each stock price level in \code{S}, adjusted to include all past coupons}
 
-\item{\code{optionality_fcn(v, S, t, discount_factor_fctn = discount_factor_fcn, ...)}}{Return the greater of hold value {v} or exercise value at each stock price level in {S}.  If the given date is beyond maturity, return value at maturity.}
+\item{\code{optionality_fcn(v, S, t, discount_factor_fctn = discount_factor_fcn, ...)}}{Return the greater of hold value \code{v} or exercise value at each stock price level in \code{S}.  If the given date is beyond maturity, return value at maturity.}
 
-\item{\code{terminal_values(v, ...)}}{Return a terminal value. defaults to simply calling {optionality_fcn}.}
+\item{\code{terminal_values(v, ...)}}{Return a terminal value. defaults to simply calling \code{optionality_fcn}.}
 
 \item{\code{update_cashflows(
   small_t,
@@ -31,6 +31,6 @@ Convertible bond with exercise into stock
   discount_factor_fctn = discount_factor_fcn,
   include_notional = TRUE,
   ...
-)}}{Update last_computed_cash and return cashflow information for the given time period, valued at big_t}
+)}}{Update last_computed_cash and return cashflow information for the given time period, valued at \code{big_t}}
 }}
 

@@ -1,4 +1,20 @@
-## ----global_options, include=FALSE---------------------------------------
+---
+title: "ragtop: Pricing Equity Derivatives with Extensions of Black-Scholes"
+header-includes: \usepackage{amsmath}
+author: "Brian K. Boonstra"
+date: "First Version: May 20, 2016  This Version: `r Sys.Date()`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    keep_tex: true
+bibliography: converts.bib
+vignette: >
+  %\VignetteEncoding{UTF-8}
+  %\VignetteIndexEntry{ragtop: Pricing Equity Derivatives with Extensions of Black-Scholes}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+```{r global_options, include=FALSE}
 library(ragtop)
 library(futile.logger)
 library(ggplot2)
@@ -12,61 +28,129 @@ flog.threshold(ERROR, name='ragtop.implicit.setup.width')
 knitr::opts_chunk$set(fig.width=6.5, fig.height=4, fig.path='Figs/',
                       echo=FALSE, warning=FALSE, message=FALSE, comment=FALSE)
 
+```
 
-## ----show_TSLA_S0, comment="", echo=TRUE---------------------------------
+## Introduction
+
+**ragtop** prices equity derivatives on variants of the famous Black-Scholes model, with special attention paid to the case of American and European exercise options and to convertible bonds.  Convertible bonds are one of the few types of derivative securities straddling asset classes, and whose valuation must be linked to reasonable models of *multiple* asset types, involving equity valuations, fixed income and sometimes foreign exchange.
+
+A **convertible bond** is similar to a corporate bond^[A standard corporate bond is often called a *straight* bond], promising coupons and notional payments at some known set of future dates, but with a twist.  The bond holder, who has effectively lent money to the issuer, can choose to *convert* the bond into equity (subject to some restrictions), in a varying amount known as the *conversion value*.  The bond value therefore depends on three major processes:
+
+- *equity* value affecting conversion value
+- *default* of the issuer wiping out equity, coupons and notional
+- *interest rates* affecting the discounted value of future coupons and notional
+
+Of these processes, the changes in equity value are most important, followed closely by issuer default^[One might wonder how a fixed-income security could be relatively insensitive to stochastic interest rates.  Most convertibles are issued in countries with stable economies, so the rates are generally far less variable and far smaller than the credit spreads of the bond issuers.].  We perform derivative pricing and calibration based on simply linked models of equities and corporate defaults.  
+
+## Stochastic Model
+
+Our basic stochastic model links equity values $S_t$ with *hazard rate* or default intensity $h$
+$$
+	\frac{dS_t}{S_t}=(r+h-q) dt + \sigma dZ - dJ
+$$
+
+and can be converted to a PDE satisfied by any derivative of $S$ that lacks cashflows
+
+$$
+{{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} t}}} -rV + h(\delta-V) + \left(r-q+h\right)S{{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S}}}+\frac12 \sigma^2 S^2 {{\frac{\partial^2 \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S^2}}}=0.
+$$
+
+**ragtop** numerically integrates this PDE using an implicit scheme, forming solutions $v^{(m)}_n$ on a grid of times $t^{(m)}, m=0,\dots,M$ and stock prices $S_n, n=-N,\dots,N$.  The present value of our derivative is represented by the entry $v^{(M)}_0$.
+
+For further details, please see the [technical paper](http://thureoscapital.com/ragtop.pdf).
+
+## Option Market Data
+
+We have included some option market data in **ragtop**, consisting of a set of several hundred option details for Tesla Motor in April 2016.  This includes an underlying price
+
+```{r show_TSLA_S0, comment="", echo=TRUE}
 TSLAMarket$S0
+```
 
-## ----show_TSLA_rf, comment="", echo=TRUE---------------------------------
+A set of risk-free rates
+
+```{r show_TSLA_rf, comment="", echo=TRUE}
 knitr::kable(TSLAMarket$risk_free_rates, digits=3, row.names = F)
+```
 
-## ---- results='asis', comment=""-----------------------------------------
+and some option price data, excerpted here:
+
+```{r, results='asis', comment=""}
 knitr::kable(TSLAMarket$options[c(200,300,400,500,600, 800),], digits=3, row.names = F)
+```
 
-## ----blackscholes, comment=""--------------------------------------------
+## Pricing Options
+
+Tesla does not pay any dividends, so we can evaluate calls using the Black Scholes model
+
+```{r blackscholes, comment=""}
 blackscholes(TSLAMarket$options[500,'callput'], 
              TSLAMarket$S0, 
              TSLAMarket$options[500,'K'], 
              0.005, 
              TSLAMarket$options[500,'time'], 
              0.50)
+```
 
-## ----implied_volatility, echo=TRUE, comment=""---------------------------
+or better yet find the implied Black-Scholes volatility
+
+```{r implied_volatility, echo=TRUE, comment=""}
 implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
                    S0 = TSLAMarket$S0, 
                    callput = TSLAMarket$options[400,'callput'], 
                    K=TSLAMarket$options[400,'K'], 
                    r = 0.005, 
                    time = TSLAMarket$options[400,'time'])
+```
 
-## ----amer, echo=TRUE, comment=""-----------------------------------------
+For puts, we need to use a pricing algorithm that accounts for early exercise.  **ragtop** uses a control variate scheme on top of an implicit PDE solver to achieve reasonable performance
+
+```{r amer, echo=TRUE, comment=""}
 american(
        callput = TSLAMarket$options[400,'callput'], 
        S0 = TSLAMarket$S0, 
        K=TSLAMarket$options[400,'K'], 
        const_short_rate = 0.005, 
        time = TSLAMarket$options[400,'time'])
+```
 
-## ----american_implied_volatility, echo=TRUE, comment=""------------------
+This is also the underlying scheme for implied volatility
+
+```{r american_implied_volatility, echo=TRUE, comment=""}
 american_implied_volatility(option_price = TSLAMarket$options[400,'ask'], 
      S0 = TSLAMarket$S0, 
      callput = TSLAMarket$options[400,'callput'], 
      K=TSLAMarket$options[400,'K'], 
      const_short_rate = 0.005, 
      time = TSLAMarket$options[400,'time'])
+```
 
-## ----implied_volatility_def, comment="", echo=TRUE-----------------------
+
+### Including Default Intensities
+
+We can correct for constant intensities of default with parameters of convenience, both for European exercise
+
+```{r implied_volatility_def, comment="", echo=TRUE}
 implied_volatility(option_price = 17, 
                    S0 = 250, callput = CALL,  K=245,
                    r = 0.005, time = 2,
                    const_default_intensity = 0.03)
+```
 
-## ----american_implied_volatility_def, comment="", echo=T-----------------
+and for American exercise
+
+```{r american_implied_volatility_def, comment="", echo=T}
 american_implied_volatility(option_price = 19.1, 
      S0 = 223.17, callput = PUT, K=220, 
      const_short_rate = 0.005, time = 1.45,
      const_default_intensity = 0.0200)
+```
 
-## ----ts_fcns, echo=TRUE, comment=""--------------------------------------
+### Including Term Structures
+
+If we have full term structures, we can use the associated parameters of inconvenience
+
+```{r ts_fcns, echo=TRUE, comment=""}
 ## Dividends
 divs = data.frame(time=seq(from=0.11, to=2, by=0.25),
                   fixed=seq(1.5, 1, length.out=8),
@@ -87,8 +171,11 @@ vc = variance_cumulation_from_vols(
    data.frame(time=c(0.1,2,3),
               volatility=c(0.2,0.5,1.2)))
 paste0("Cumulated variance to 18 months is ", vc(1.5, 0))
+```
 
-## ----blackscholes_ts, comment="", echo=TRUE------------------------------
+to modify our estimates accordingly, including on vanilla option prices
+
+```{r blackscholes_ts, comment="", echo=TRUE}
 black_scholes_on_term_structures(
    callput=TSLAMarket$options[500,'callput'], 
    S0=TSLAMarket$S0, 
@@ -98,8 +185,12 @@ black_scholes_on_term_structures(
    survival_probability_fcn=surv_prob_fcn,
    variance_cumulation_fcn=vc,
    dividends=divs)
+```
 
-## ----amer_ts, echo=TRUE, comment=""--------------------------------------
+
+American exercise option prices
+
+```{r amer_ts, echo=TRUE, comment=""}
 american(
     callput = TSLAMarket$options[400,'callput'], 
     S0 = TSLAMarket$S0, 
@@ -109,8 +200,11 @@ american(
     survival_probability_fcn=surv_prob_fcn,
     variance_cumulation_fcn=vc,
     dividends=divs)
+```
 
-## ----implied_bs_volatility_def_ts, comment="", echo =T-------------------
+and of course volatilities of European exercise options
+
+```{r implied_bs_volatility_def_ts, comment="", echo =T}
 implied_volatility_with_term_struct(
    option_price = TSLAMarket$options[400,'ask'], 
    S0 = TSLAMarket$S0, 
@@ -120,8 +214,11 @@ implied_volatility_with_term_struct(
    time = TSLAMarket$options[400,'time'],
    survival_probability_fcn=surv_prob_fcn,
    dividends=divs)
+```
 
-## ----amer_ts_iv, echo=TRUE, comment=""-----------------------------------
+as well as American exercise options
+
+```{r amer_ts_iv, echo=TRUE, comment=""}
 american_implied_volatility(
     option_price=TSLAMarket$options[400,'ask'], 
     callput = TSLAMarket$options[400,'callput'], 
@@ -131,13 +228,22 @@ american_implied_volatility(
     time = TSLAMarket$options[400,'time'],
     survival_probability_fcn=surv_prob_fcn,
     dividends=divs)
+```
 
-## ----def_int_fav, echo=TRUE, comment=""----------------------------------
+
+## Fitting Term Structures of Volatility
+
+Let's say we have a some favored picture of our default intensity as a function of stock price and time.
+```{r def_int_fav, echo=TRUE, comment=""}
   def_ints_fcn = function(t, S, ...){
     0.09+0.01*(S0/S)^1.5
     }
+```
 
-## ----impl_curve_elems, echo=TRUE, comment=""-----------------------------
+
+Let's further postulate a set of financial instruments with known prices.  If those instruments all have different maturities, then (generically) there is a unique piecewise constant volatility term structure that will reproduce those prices.
+
+```{r impl_curve_elems, echo=TRUE, comment=""}
   options_df = TSLAMarket$options
   S0 = TSLAMarket$S0
   make_option = function(x) {
@@ -152,8 +258,11 @@ american_implied_volatility(
 
   atm_put_prices = options_df$mid[atm_put_ix]
   knitr::kable(options_df[atm_put_ix,], digits=3, row.names = F)
+```
 
-## ----varfit, echo=TRUE, comment=""---------------------------------------
+Once we have those instruments, we can successively fit our volatility term structure to longer-and-longer dated securities.  This is done for us in the `fit_variance_cumulation` function
+
+```{r varfit, echo=TRUE, comment=""}
 vcm = fit_variance_cumulation(S0, eq_options=atm_puts,
        mid_prices=atm_put_prices,
        spreads=0.01*atm_put_prices,
@@ -162,8 +271,22 @@ vcm = fit_variance_cumulation(S0, eq_options=atm_puts,
        default_intensity_fcn = def_ints_fcn,
        num_time_steps=100)
 vcm$volatilities
+```
 
-## ----fit_elems, echo=FALSE, comment=""-----------------------------------
+
+## Fitting Default Intensity
+
+True default intensities are unobservable, even retrospectively, so it is nearly impossible to form an historical time series of them.  One may try by using credit spreads, but even then an historical calibration may be fairly unreliable for extension into the future.  Our model requires those future default intensities, so choosing a reasonable functional form requires close attention.  Our choice will generally arise from fitting to available market information.
+
+Since a full fit of the model requires calibration of both variance cumulation and default intensity, our optimization algorithm must work in two phases.  It begins with a functional form of the user's choice, such as
+
+$$
+h(S) = h_0 \left(  s+(1-s)  \left( \frac{S_0}{S} \right)^p  \right)
+$$
+
+and then takes a set of options, such as these
+
+```{r fit_elems, echo=FALSE, comment=""}
   h0 = 0.05
   fit_target_ix = ((options_df$K==210 | options_df$K==220 ) & (options_df$callput==PUT)
                 & (options_df$time>6/12))
@@ -171,8 +294,17 @@ vcm$volatilities
 
   fit_target_prices = options_df$mid[atm_put_ix]
   knitr::kable(options_df[fit_target_ix,], digits=3, row.names = F)
+```
 
-## ----fit_pen, echo=TRUE, comment=""--------------------------------------
+and tries to match their prices with the best possible choice of $p$ and $s$, while still matching the volatility term structure as required above.
+
+To that end, we define an objective (or penalty) function comparing instrument prices $P_i$ to model prices $\tilde{P}_i$
+
+$$
+\pi(p,s) = \sum \left( \tilde{P}_i-\tilde{P}_i \right)^2
+$$
+
+```{r fit_pen, echo=TRUE, comment=""}
   h0 = 0.05
   fit_penalty = function(p, s) {
   def_intens_f = function(t,S,...) {h0 * (s + (1-s) * (S0/S)^p)}
@@ -195,8 +327,12 @@ vcm$volatilities
   pensum
 }
 fit_penalty(1, 0.5)
+```
 
-## ----define_cb, echo=TRUE, comment=""------------------------------------
+
+We can apply our favorite optimizer to this penalty function in order to optimize the model parameters.  **ragtop** includes one such fitting algorithm in `fit_to_option_market` and its simpler but less featureful companion `fit_to_option_market_df`.  Let's say we have decided $h_0=0.04$, $s=0.75$ and $p=5/2$.  We may have some other instrument we wish to price consistent with this calibration, such as a convertible bond
+
+```{r define_cb, echo=TRUE, comment=""}
 cb = ragtop::ConvertibleBond(
   maturity=2.87, conversion_ratio=2.7788, notional=1000,
   coupons=data.frame(payment_time=seq(2.8,0, by=-0.25),
@@ -208,8 +344,11 @@ cb = ragtop::ConvertibleBond(
 s = 0.75
 h0 = 0.04
 p = 2.5
+```
 
-## ----associated_f, echo=TRUE, comment=""---------------------------------
+of course we then need to make sure we have set up the associated variance accumulator function
+
+```{r associated_f, echo=TRUE, comment=""}
 calibrated_intensity_f = function(t, S, ...){
   0.03+0.01*(S0/S)^1.5
 }
@@ -223,8 +362,13 @@ calib_varnce = fit_variance_cumulation(
               discount_factor_fcn=disct_fcn, 
               num_time_steps=100)
 calib_varnce$volatilities
+```
 
-## ----price_cb, echo=TRUE, comment=""-------------------------------------
+
+Now we simply need to run our pricing algorithm
+
+
+```{r price_cb, echo=TRUE, comment=""}
 cb_value = form_present_value_grid(
   S0=S0, grid_center=S0,
   instruments=list(Convertible=cb),
@@ -232,8 +376,11 @@ cb_value = form_present_value_grid(
   default_intensity_fcn=calibrated_intensity_f,
   discount_factor_fcn = disct_fcn,
   variance_cumulation_fcn=calib_varnce$cumulation_function)
+```
 
-## ----grid_cb_delta, echo=TRUE, comment=""--------------------------------
+For convenience, **ragtop** also exposes the full grid from its solver, allowing us to calculate delta and gamma
+
+```{r grid_cb_delta, echo=TRUE, comment=""}
 cbprices = ragtop::form_present_value_grid(
   S0=S0, grid_center=S0,
   instruments=list(Convertible=cb),
@@ -250,8 +397,12 @@ present_value_interp = splinefun(
 
 delta = present_value_interp(S0, deriv=1)
 delta
+```
 
-## ----grid_cb_plot, echo=TRUE, comment=""---------------------------------
+
+or to make a plot
+
+```{r grid_cb_plot, echo=TRUE, comment=""}
 present_value = present_value_interp(S0)
 cbplot = ( ggplot(cbgrid,
                   aes(x=Underlying,y=Convertible)) +
@@ -262,8 +413,13 @@ cbplot = ( ggplot(cbgrid,
              labs(title="Convertible Bond Value")
 )
 cbplot
+```
 
-## ----twitter_cb_via_BondValuation, echo=TRUE, comment=""-----------------
+## Daycount Conventions
+
+For dealing with daycount conventions (Act/360, Act/Act, 30/360 and many more), `ragtop` provides no facilities directly.  These computations can be outsourced to `quantmod`, though the `BondValuation` package is both lighter in footprint and higher in accuracy.  To that end, we can use the helper function `detail_from_AnnivDates()`
+
+```{r twitter_cb_via_BondValuation, echo=TRUE, comment=""}
 twitter_bv = BondValuation::AnnivDates(
     Em=as.Date('2018-06-11'),    # Issue date
     Mat=as.Date('2024-06-15'), 
@@ -300,4 +456,8 @@ pvs = ragtop::find_present_value(
   )
 
 paste("Twitter bond value is", pvs$TWTR)
+```
+
+## References
+
 
