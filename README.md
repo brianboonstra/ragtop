@@ -147,7 +147,7 @@ Technical Documentation
 =======================
 
 The source for the technical paper is in this repository. You can also
-find the pdf [here](http://thureoscapital.com/ragtop.pdf)
+find the pdf [here](https://thureoscapital.com/ragtop.pdf)
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/brianboonstra/ragtop/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/brianboonstra/ragtop/actions/workflows/R-CMD-check.yaml)
