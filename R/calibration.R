@@ -1228,7 +1228,7 @@ fit_to_option_market = function(variance_instruments,
               s,
               name='ragtop.calibration.fit_to_option_market.apply')
   }
-  best = pens_found[pens_found$penalty<=1.01*min(pens_found$penalty, na.rm=T),][1,]
+  best = pens_found[pens_found$penalty<=1.01*min(pens_found$penalty, na.rm=TRUE),][1,]
   # TODO: Use some GP Kriging
   best_p = best['p'][[1]]
   best_s = best['s'][[1]]
