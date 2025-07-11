@@ -21,6 +21,8 @@ Depends:
     futile.logger (>= 1.4.1),
     R (>= 3.5),
     methods (>= 3.2.2)
+Imports:
+    stats
 Suggests:
     testthat,
     roxygen2,
