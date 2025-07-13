@@ -1182,7 +1182,7 @@ fit_to_option_market = function(variance_instruments,
   flog.info("Will populate penalties table:\n%s",
             paste(utils::capture.output(pens_found), "\n", sep=""),
             name='ragtop.calibration.fit_to_option_market')
-  for (ix_s in (1:length(ss))) {
+  for (ix_s in seq_along(ss)) {
     s = ss[[ix_s]]
     pen = function(p) {
       flog.info("About to compute penalty with p=%s, s=%s, h=%s, ix_s=%s",
@@ -1219,7 +1219,7 @@ fit_to_option_market = function(variance_instruments,
                 name='ragtop.calibration.fit_to_option_market.compute')
       pen_result
     }
-    for (ix_p in (1:length(test_p))) {
+    for (ix_p in seq_along(test_p)) {
       p = test_p[[ix_p]]
       pen_s_p = pen(p)
       pens_found$penalty[pens_found$s==ss[[ix_s]] & pens_found$p==p] = pen_s_p

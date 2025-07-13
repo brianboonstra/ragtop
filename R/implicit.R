@@ -281,7 +281,7 @@ timestep_instruments = function(z, prev_grid_values,
   flog.info("Structure constant at %s for dt=%s is %s.", t, dt, structure_constant,
             name='ragtop.implicit.timestep')
   matrix_entries = construct_tridiagonals(sigma, structure_constant, drift=h*dt/dz)
-  for (k in (1:length(instruments))) {
+  for (k in seq_along(instruments)) {
     instrument = instruments[[k]]
     instr_name = names(instruments)[[k]]
     prev_instr_grid_values = div_adj_grid_values[,k]
@@ -348,7 +348,7 @@ infer_conforming_time_grid = function(min_num_time_steps, Tmax, instruments=NULL
   time_grid = seq(from=0, to=Tmax, length.out=1+min_num_time_steps)
   if (!is.blank(instruments)) {
     # Cycle through instruments, include their maturities and critical times
-    for (k in (1:length(instruments))) {
+    for (k in seq_along(instruments)) {
       instrument = instruments[[k]]
       time_grid = c(time_grid, instrument$maturity)
       instr_name = names(instruments)[[k]]
@@ -428,7 +428,7 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
   flog.info("Discount factor to Tmax=%s is %s", Tmax, df_final, name='ragtop.implicit.setup')
   # Set the initial condition for the PDE from instrument values at
   #  maximum time, discounted by df_final according to our change of variables
-  for (k in (1:length(instruments))) {
+  for (k in seq_along(instruments)) {
     instrument = instruments[[k]]
     instr_name = names(instruments)[[k]]
     if (instrument$maturity>=Tmax) {
@@ -576,7 +576,7 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
   }
   K = S0
   # Get a strike and maximum maturity from the instruments
-  for (k in (1:length(instruments))) {
+  for (k in seq_along(instruments)) {
     instrument = instruments[[k]]
     instr_name = names(instruments)[[k]]
     instr_fields = instrument$getRefClass()$fields()
@@ -692,7 +692,7 @@ find_present_value = function(S0, num_time_steps, instruments,
                                                structure_constant=structure_constant,
                                                std_devs_width=std_devs_width)
   present_values = list()
-  for (k in (1:length(instruments))) {
+  for (k in seq_along(instruments)) {
     instrument = instruments[[k]]
     instr_name = names(instruments)[[k]]
     present_values[[instr_name]] = stats::spline(
