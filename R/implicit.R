@@ -432,7 +432,7 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
       undisc_terminal_vals = instrument$terminal_values(0*S_final, S=S_final,
                                                         t=instrument$maturity,
                                                         discount_factor_fctn=discount_factor_fcn)
-      if (any(is.na(undisc_terminal_vals))) {  # Make sure nobody gave us a crazy instrument object
+      if (anyNA(undisc_terminal_vals)) {  # Make sure nobody gave us a crazy instrument object
         flog.error("Bug in instrument class.  Terminal values at Tmax=%s for %s returned NA in %s of %s cases",
                    Tmax, instr_name, sum(is.na(undisc_terminal_vals)),
                    length(undisc_terminal_vals),
