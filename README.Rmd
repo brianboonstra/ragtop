@@ -1,8 +1,9 @@
 ---
-output:
-  md_document:
-    variant: markdown_github
+output: github_document
 ---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 ```{r global_options, include=FALSE}
 library(ragtop)
 library(futile.logger)
@@ -14,28 +15,36 @@ flog.threshold(ERROR, name='ragtop.calibration.implied_volatility.lowprice')
 flog.threshold(ERROR, name='ragtop.calibration.implied_volatility_with_term_struct')
 flog.threshold(ERROR, name='ragtop.implicit.setup.width')
 
-knitr::opts_chunk$set(fig.width=6.5, fig.height=4, fig.path='Figs/',
-                      echo=FALSE, warning=FALSE, message=FALSE, comment=FALSE)
-
-```
-
-<!-- README.md is generated from README.Rmd. Please edit that file -->
-
-```{r, echo = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = "README-"
+  fig.path = "man/figures/README-",
+  out.width = "100%"
 )
 ```
 
+# ragtop
 
-# Description And Installation
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/brianboonstra/ragtop/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/brianboonstra/ragtop/actions/workflows/R-CMD-check.yaml)
+[![CRAN status](https://www.r-pkg.org/badges/version/ragtop)](https://CRAN.R-project.org/package=ragtop)
+<!-- badges: end -->
 
-**ragtop** prices equity derivatives using variants of the famous Black-Scholes model, with special attention paid to the case of American and European exercise options and to convertible bonds.  To install the development version, use the command
+**ragtop** prices equity derivatives using variants of the famous Black-Scholes model, with special attention paid to the case of American and European exercise options and to convertible bonds.
 
-```{r, echo=TRUE}
-devtools::install_github('brianboonstra/ragtop')
+# Installation
+
+You can install the released version of ragtop from [CRAN](https://CRAN.R-project.org) with:
+
+```{r, eval = FALSE}
+install.packages("ragtop")
+```
+
+And the development version from [GitHub](https://github.com/) with:
+
+```{r, eval = FALSE}
+# install.packages("pak")
+pak::pak("brianboonstra/ragtop")
 ```
 
 # Usage
@@ -141,7 +150,3 @@ You can also find more complete calibration routines in **ragtop**.  See the vig
 # Technical Documentation
 
 The source for the technical paper is in this repository.  You can also find the pdf [here](https://thureoscapital.com/ragtop.pdf)
-
-<!-- badges: start -->
-[![R-CMD-check](https://github.com/brianboonstra/ragtop/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/brianboonstra/ragtop/actions/workflows/R-CMD-check.yaml)
-<!-- badges: end -->
