@@ -31,8 +31,6 @@
 ## syntax is close or identical so a change to R6 should be
 ## easy.
 
-## Logging
-library(futile.logger)
 
 # TODO: Allow initialization of some instruments from QuantLib classes
 # TODO: Handle daycount conventions and dates, perhaps using Quantlib

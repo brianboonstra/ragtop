@@ -1,5 +1,3 @@
-library(futile.logger)
-
 #' Constant to define when times are considered so close to each other
 #'  that they should be treated as simultaneous, in terms of significant
 #'  digits

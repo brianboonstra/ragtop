@@ -19,11 +19,11 @@ Description: Algorithms to price American and European
     Buffum (2002) <doi:10.2139/ssrn.355308> and
     Linetsky (2006) <doi:10.1111/j.1467-9965.2006.00271.x>.
 Depends:
-    limSolve (>= 2.0.1),
-    futile.logger (>= 1.4.1),
-    R (>= 3.5),
-    methods (>= 3.2.2)
+    R (>= 3.5)
 Imports:
+    futile.logger (>= 1.4.1),
+    limSolve (>= 2.0.1),
+    methods (>= 3.2.2),
     stats
 Suggests:
     testthat,
