@@ -39,7 +39,7 @@ individually, or in groups. In the simplest case that looks like this
 for European exercise
 
 ``` r
-blackscholes(c(CALL, PUT), S0=100, K=c(100,110), time=0.77, r = 0.06, vola=0.20)
+blackscholes(c(CALL, PUT), S0 = 100, K = c(100, 110), time = 0.77, r = 0.06, vola = 0.20)
 #> $Price
 #> [1] 9.326839 9.963285
 #> 
@@ -53,7 +53,7 @@ blackscholes(c(CALL, PUT), S0=100, K=c(100,110), time=0.77, r = 0.06, vola=0.20)
 and like this for American exercise
 
 ``` r
-american(PUT, S0=100, K=c(100,110), time=0.77, const_short_rate = 0.06, const_volatility=0.20)
+american(PUT, S0 = 100, K = c(100, 110), time = 0.77, const_short_rate = 0.06, const_volatility = 0.20)
 #> A100_281_0 A110_281_0 
 #>    5.24386   11.27715
 ```
@@ -68,13 +68,13 @@ nontrivial term structures and dividends
 
 ``` r
 ## Dividends
-divs = data.frame(time=seq(from=0.11, to=2, by=0.25),
-                  fixed=seq(1.5, 1, length.out=8),
-                  proportional = seq(1, 1.5, length.out=8))
+divs = data.frame(time = seq(from = 0.11, to = 2, by = 0.25),
+                  fixed = seq(1.5, 1, length.out = 8),
+                  proportional = seq(1, 1.5, length.out = 8))
 
 ## Interest rates
-disct_fcn = ragtop::spot_to_df_fcn(data.frame(time=c(1, 5, 10), 
-                                              rate=c(0.01, 0.02, 0.035)))
+disct_fcn = ragtop::spot_to_df_fcn(data.frame(time = c(1, 5, 10),
+                                              rate = c(0.01, 0.02, 0.035)))
 
 ## Default intensity
 disc_factor_fcn = function(T, t, ...) {
@@ -84,8 +84,8 @@ surv_prob_fcn = function(T, t, ...) {
 
 ## Variance cumulation / volatility term structure
 vc = variance_cumulation_from_vols(
-   data.frame(time=c(0.1,2,3),
-              volatility=c(0.2,0.5,1.2)))
+   data.frame(time = c(0.1, 2, 3),
+              volatility = c(0.2, 0.5, 1.2)))
 paste0("Cumulated variance to 18 months is ", vc(1.5, 0))
 [1] "Cumulated variance to 18 months is 0.369473684210526"
 ```
@@ -94,13 +94,13 @@ then we can price vanilla options
 
 ``` r
 black_scholes_on_term_structures(
-   callput=TSLAMarket$options[500,'callput'], 
-   S0=TSLAMarket$S0, 
-   K=TSLAMarket$options[500,'K'], 
-   discount_factor_fcn=disct_fcn, 
-   time=TSLAMarket$options[500,'time'], 
-   variance_cumulation_fcn=vc,
-   dividends=divs)
+   callput = TSLAMarket$options[500, 'callput'],
+   S0 = TSLAMarket$S0,
+   K = TSLAMarket$options[500, 'K'],
+   discount_factor_fcn = disct_fcn,
+   time = TSLAMarket$options[500,'time'],
+   variance_cumulation_fcn = vc,
+   dividends = divs)
 $Price
 [1] 62.55998
 
@@ -115,14 +115,14 @@ American exercise options
 
 ``` r
 american(
-    callput = TSLAMarket$options[400,'callput'], 
-    S0 = TSLAMarket$S0, 
-    K=TSLAMarket$options[400,'K'], 
-    discount_factor_fcn=disct_fcn, 
-    time = TSLAMarket$options[400,'time'],
-    survival_probability_fcn=surv_prob_fcn,
-    variance_cumulation_fcn=vc,
-    dividends=divs)
+    callput = TSLAMarket$options[400, 'callput'],
+    S0 = TSLAMarket$S0,
+    K = TSLAMarket$options[400, 'K'],
+    discount_factor_fcn = disct_fcn,
+    time = TSLAMarket$options[400, 'time'],
+    survival_probability_fcn = surv_prob_fcn,
+    variance_cumulation_fcn = vc,
+    dividends = divs)
 A360_137_2 
   2.894296 
 ```
@@ -131,12 +131,12 @@ We can also find volatilities of European exercise options
 
 ``` r
 implied_volatility_with_term_struct(
-    option_price=19, callput = PUT, 
-    S0 = 185.17,K=182.50, 
-    discount_factor_fcn=disct_fcn, 
+    option_price = 19, callput = PUT,
+    S0 = 185.17, K = 182.50,
+    discount_factor_fcn = disct_fcn,
     time = 1.12,
-    survival_probability_fcn=surv_prob_fcn,
-    dividends=divs)
+    survival_probability_fcn = surv_prob_fcn,
+    dividends = divs)
 [1] 0.1133976
 ```
 
@@ -144,12 +144,12 @@ as well as American exercise options
 
 ``` r
 american_implied_volatility(
-    option_price=19, callput = PUT, 
-    S0 = 185.17,K=182.50, 
-    discount_factor_fcn=disct_fcn, 
+    option_price = 19, callput = PUT,
+    S0 = 185.17, K = 182.50,
+    discount_factor_fcn = disct_fcn,
     time = 1.12,
-    survival_probability_fcn=surv_prob_fcn,
-    dividends=divs)
+    survival_probability_fcn = surv_prob_fcn,
+    dividends = divs)
 [1] 0.113407
 ```
 
