@@ -6,8 +6,11 @@
 #'
 #' The TSLAMarket list contains three elements:
 #' \describe{
-#' \item{\code{S0} }{The stock price as of snapshot time}
-#' \item{\code{risk_free_rates} }{The spot risk-free rate curve as of snapshot time}
+#' \item{\code{S0}}{The stock price as of snapshot time}
+#' \item{\code{risk_free_rates}}{The spot risk-free rate curve as of snapshot time}
 #' \item{\code{options}}{A data frame with details of the options market}
 #' }
+#' @docType data
+#' @usage data(TSLAMarket)
+#' @format A list with these prices and rates
 "TSLAMarket"

@@ -5,9 +5,8 @@ ragtop version 1.2.0 recovers from deprecation / archiving which happened due to
 
 Details:
   - Quandl was purchased by NASDAQ, term structure queries updated to use treasury package instead
-  - bugfix in dependency limSolve allow sus to recover from deprecation
+  - bugfix in dependency limSolve allows us to recover from deprecation
   - documentation formatting fixes
-  - switches from Quandl to the treasury package for optional US interest rate downloads
 
 ## Test environments
 * local MacOS 15.5 24F74 install, R 4.4.2

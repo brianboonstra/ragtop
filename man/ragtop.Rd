@@ -110,3 +110,7 @@ print(vfit$volatilities)
 }
 
 }
+\author{
+\strong{Maintainer}: Brian K. Boonstra \email{ragtop@boonstra.org}
+
+}

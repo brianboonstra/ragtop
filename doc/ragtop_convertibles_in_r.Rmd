@@ -4,6 +4,8 @@ header-includes: \usepackage{amsmath}
 author: "Brian K. Boonstra"
 date: "First Version: May 20, 2016  This Version: `r Sys.Date()`"
 output:
+  rmarkdown::html_vignette:
+    keep_md: yes
   pdf_document:
     toc: true
     toc_depth: 2

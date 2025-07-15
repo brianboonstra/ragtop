@@ -5,10 +5,10 @@
 \alias{TSLAMarket}
 \title{Market information snapshot for TSLA options}
 \format{
-An object of class \code{list} of length 3.
+A list with these prices and rates
 }
 \usage{
-TSLAMarket
+data(TSLAMarket)
 }
 \description{
 A dataset containing option contract details and a
@@ -18,8 +18,8 @@ A dataset containing option contract details and a
 \details{
 The TSLAMarket list contains three elements:
 \describe{
-\item{\code{S0} }{The stock price as of snapshot time}
-\item{\code{risk_free_rates} }{The spot risk-free rate curve as of snapshot time}
+\item{\code{S0}}{The stock price as of snapshot time}
+\item{\code{risk_free_rates}}{The spot risk-free rate curve as of snapshot time}
 \item{\code{options}}{A data frame with details of the options market}
 }
 }

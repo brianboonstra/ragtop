@@ -3,8 +3,10 @@ Type: Package
 Title: Pricing Equity Derivatives with Extensions of Black-Scholes
 Version: 1.2.0
 Date: 2025-07-09
-Author: Brian K. Boonstra
-Maintainer: Brian K. Boonstra <ragtop@boonstra.org>
+Authors@R: person(given = c("Brian", "K."),
+                   family = "Boonstra",
+                   role = c("aut", "cre"),
+                   email = "ragtop@boonstra.org")
 Description: Algorithms to price American and European
     equity options, convertible bonds and a
     variety of other financial derivatives. It uses an
