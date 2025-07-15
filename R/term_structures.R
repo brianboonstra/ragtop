@@ -125,7 +125,7 @@ spot_to_df_fcn = function(yield_curve) {
 #' @return A function taking two time arguments, which returns the discount factor from the second to the first
 #' @export treasury_df_raw
 treasury_df_raw = function(on_date) {
-  if (is.element('treasury', utils::installed.packages()[,1])) {
+  if (requireNamespace('treasury', quietly = TRUE)) {
     on_date = lubridate::ymd(on_date)
     yield_curve_df = treasury::tr_yield_curve(date=format(on_date, "%Y%m"))
     maturities_used = c("1 month", "3 month", "6 month", "1 year", "2 year", "3 year", "5 year", "7 year", "10 year", "20 year", "30 year")
@@ -154,7 +154,7 @@ treasury_df_raw = function(on_date) {
 treasury_df = function(...,envir=parent.frame()) {
   treasury_df_raw(...)
 }
-if (is.element('R.cache', utils::installed.packages()[,1])) {
+if (requireNamespace('R.cache', quietly = TRUE)) {
   treasury_df = R.cache::addMemoization(treasury_df_raw)
 }
 
