@@ -369,11 +369,7 @@ implied_volatilities_with_rates_struct = function(option_price, callput, S0, K, 
                                                   max.iter=100,
                                                   max_vola=4.00)
 {
-  get_r = function(tm) {
-    r = -log(discount_factor_fcn(tm,0))/tm
-    r
-  }
-  r = sapply(time, get_r)
+  r = vapply(time, function(tm) -log(discount_factor_fcn(tm, 0)) / tm, numeric(1))
   flog.info("Calculated %s short rates for getting impvols", length(r),
             name='ragtop.calibration.implied_volatilities_with_rates_struct')
   df = data.frame(option_price=option_price, callput=callput, S0=S0, K=K, r=r, time=time,
@@ -1178,7 +1174,7 @@ fit_to_option_market = function(variance_instruments,
                           p=rep(test_p, each=length(ss)),
                           penalty=rep(NA, length(ss)*length(test_p)))
   flog.info("Will populate penalties table:\n%s",
-            paste(utils::capture.output(pens_found), "\n", sep=""),
+            paste0(utils::capture.output(pens_found), "\n"),
             name='ragtop.calibration.fit_to_option_market')
   for (ix_s in seq_along(ss)) {
     s = ss[[ix_s]]
@@ -1213,7 +1209,7 @@ fit_to_option_market = function(variance_instruments,
                 pen_result, p,s,h,ix_s,
                 name='ragtop.calibration.fit_to_option_market')
       flog.info("Found penalties are now:\n%s",
-                paste(utils::capture.output(pens_found), "\n", sep=""),
+                paste0(utils::capture.output(pens_found), "\n"),
                 name='ragtop.calibration.fit_to_option_market.compute')
       pen_result
     }
@@ -1292,7 +1288,7 @@ fit_to_option_market_df = function(
   }
 
   dfrow_bsimpvol = function(x, tgt_field='mid') {
-    if (any(is.na(x))) {
+    if (anyNA(x)) {
       iv = NA
     } else {
       iv = implied_volatility_with_term_struct(x[tgt_field], x['callput'],
