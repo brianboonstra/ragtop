@@ -72,13 +72,13 @@ TSLAMarket$S0
 A set of risk-free rates
 
 ```{r show_TSLA_rf, comment="", echo=TRUE}
-knitr::kable(TSLAMarket$risk_free_rates, digits=3, row.names = F)
+knitr::kable(TSLAMarket$risk_free_rates, digits=3, row.names = FALSE)
 ```
 
 and some option price data, excerpted here:
 
 ```{r, results='asis', comment=""}
-knitr::kable(TSLAMarket$options[c(200,300,400,500,600, 800),], digits=3, row.names = F)
+knitr::kable(TSLAMarket$options[c(200,300,400,500,600, 800),], digits=3, row.names = FALSE)
 ```
 
 ## Pricing Options
@@ -259,7 +259,7 @@ Let's further postulate a set of financial instruments with known prices.  If th
   atm_puts = apply(options_df[atm_put_ix,], 1, make_option)
 
   atm_put_prices = options_df$mid[atm_put_ix]
-  knitr::kable(options_df[atm_put_ix,], digits=3, row.names = F)
+  knitr::kable(options_df[atm_put_ix,], digits=3, row.names = FALSE)
 ```
 
 Once we have those instruments, we can successively fit our volatility term structure to longer-and-longer dated securities.  This is done for us in the `fit_variance_cumulation` function
@@ -295,7 +295,7 @@ and then takes a set of options, such as these
   fit_targets = apply(options_df[atm_put_ix,], 1, make_option)
 
   fit_target_prices = options_df$mid[atm_put_ix]
-  knitr::kable(options_df[fit_target_ix,], digits=3, row.names = F)
+  knitr::kable(options_df[fit_target_ix,], digits=3, row.names = FALSE)
 ```
 
 and tries to match their prices with the best possible choice of $p$ and $s$, while still matching the volatility term structure as required above.
