@@ -1,21 +1,38 @@
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-Description And Installation
-============================
+
+# ragtop
+
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/brianboonstra/ragtop/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/brianboonstra/ragtop/actions/workflows/R-CMD-check.yaml)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/ragtop)](https://CRAN.R-project.org/package=ragtop)
+<!-- badges: end -->
 
 **ragtop** prices equity derivatives using variants of the famous
 Black-Scholes model, with special attention paid to the case of American
-and European exercise options and to convertible bonds. To install the
-development version, use the command
+and European exercise options and to convertible bonds.
+
+# Installation
+
+You can install the released version of ragtop from
+[CRAN](https://CRAN.R-project.org) with:
 
 ``` r
-devtools::install_github('brianboonstra/ragtop')
+install.packages("ragtop")
 ```
 
-Usage
-=====
+And the development version from [GitHub](https://github.com/) with:
 
-Basic Usage
------------
+``` r
+# install.packages("pak")
+pak::pak("brianboonstra/ragtop")
+```
+
+# Usage
+
+## Basic Usage
 
 You can price american and european exercise options, either
 individually, or in groups. In the simplest case that looks like this
@@ -136,19 +153,13 @@ american_implied_volatility(
 [1] 0.113407
 ```
 
-More Sophisticated Calibration
-------------------------------
+## More Sophisticated Calibration
 
 You can also find more complete calibration routines in **ragtop**. See
-the vignette or the documentation for *fit\_variance\_cumulation* and
-*fit\_to\_option\_market*.
+the vignette or the documentation for *fit_variance_cumulation* and
+*fit_to_option_market*.
 
-Technical Documentation
-=======================
+# Technical Documentation
 
 The source for the technical paper is in this repository. You can also
 find the pdf [here](https://thureoscapital.com/ragtop.pdf)
-
-<!-- badges: start -->
-[![R-CMD-check](https://github.com/brianboonstra/ragtop/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/brianboonstra/ragtop/actions/workflows/R-CMD-check.yaml)
-<!-- badges: end -->
