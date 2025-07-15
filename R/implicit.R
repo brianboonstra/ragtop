@@ -15,8 +15,6 @@
 ##
 ## You should have received a copy of the GNU General Public License
 ## along with ragtop.  If not, see <http://www.gnu.org/licenses/>.
-library(futile.logger)
-
 
 # TODO: Should we stop using t and T as variables since they could
 #       be confused with the transpose function?

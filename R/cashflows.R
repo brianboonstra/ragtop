@@ -16,8 +16,6 @@
 ## You should have received a copy of the GNU General Public License
 ## along with ragtop.  If not, see <http://www.gnu.org/licenses/>.
 
-library(futile.logger)
-
 #' Shift a set of grid values for dividends paid, using spline interpolation
 #'
 #' @param grid_values_before_shift Values on grid before accounting for
