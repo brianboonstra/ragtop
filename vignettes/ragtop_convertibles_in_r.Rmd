@@ -59,7 +59,7 @@ $$
 
 **ragtop** numerically integrates this PDE using an implicit scheme, forming solutions $v^{(m)}_n$ on a grid of times $t^{(m)}, m=0,\dots,M$ and stock prices $S_n, n=-N,\dots,N$.  The present value of our derivative is represented by the entry $v^{(M)}_0$.
 
-For further details, please see the [technical paper](http://thureoscapital.com/ragtop.pdf).
+For further details, please see the [technical paper](https://thureoscapital.com/ragtop.pdf).
 
 ## Option Market Data
 

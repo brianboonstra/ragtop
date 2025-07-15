@@ -13,5 +13,4 @@
 #' @docType data
 #' @usage data(TSLAMarket)
 #' @format A list with these prices and rates
-#' @export
 "TSLAMarket"

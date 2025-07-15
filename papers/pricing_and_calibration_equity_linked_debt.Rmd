@@ -202,7 +202,7 @@ ggplot(data=unlinked_skews, aes(y=mid_volatility,x=strike,color=as.factor(defaul
 
 ```
 
-If we price options of various strikes $K$ in our model using a constant $\sigma$, and then compute the corresponding *volatility skew curve* of $\sigma^{\text{impl}}_{\text{BS}}(K)$, we can see how much of the empirical volatility skew can be explained by equity-linked jump to default^[We do not argue here that equity-linked default intensity is truly the most important contributor to volatility skew.  Skew at short tenors is associated with other kinds of price jumps, and at long tenors is associated with stochastic volatility.].  To the extent the curves our similar, we regard our model as pricing all derivatives in a manner logically consistent with empirical volatility skew.
+If we price options of various strikes $K$ in our model using a constant $\sigma$, and then compute the corresponding *volatility skew curve* of $\sigma^{\text{impl}}_{\text{BS}}(K)$, we can see how much of the empirical volatility skew can be explained by equity-linked jump to default^[We do not argue here that equity-linked default intensity is always the most important contributor to volatility skew.  Skew at short tenors is associated with other kinds of price jumps, and skew at long tenors is associated with stochastic volatility.].  To the extent the curves our similar, we regard our model as pricing all derivatives in a manner logically consistent with empirical volatility skew.
 
 ```{r plot_skew_by_power, cache=TRUE, fig.width=6, fig.height=4}
   skew_for_power = function(p,h=0.05,strikes=c(50,100,200)) {
@@ -285,7 +285,7 @@ This backward parabolic PDE is amenable to numerical integration, which we speci
 
 ### Boundary Conditions
 
-As discussed above, every derivative provides us with terminal values at expiration or maturity date. This provides us with a vector of values $\vec{v}^{(0)}$ to use as an initial boundary condition.  For boundary conditions at the edge of our solution space, where $S \rightarrow 0$ or $S \rightarrow \infty$ we have a choice of boundary conditions, some wiser than others.
+As discussed above, every derivative has known terminal values on its expiration or maturity date. This provides us with a vector of values $\vec{v}^{(0)}$ to use as an initial boundary condition.  For boundary conditions at the edge of our solution space, where $S \rightarrow 0$ or $S \rightarrow \infty$ we have a choice of boundary conditions, some wiser than others.
 
 
 #### Coupons and Dividends
@@ -386,7 +386,7 @@ Though mathematically we express our pricing algorithm in terms of grid values f
 
 ### Contract Differencing
 
-Similarly to the way in which control variates are use to improve the constant factor in Monte Carlo estimation error, we can use contract differencing to improve price accuracy for options priced on grids.  Consider, for example, pricing an American option and its European equivalent on the grid, obtaining present values $V_A$ and $V_E$.  We also enjoy a closed-form variation of the Black-Scholes formula $BS()$ for pricing European options, so we know the magnitude and direction of error our grid made for the European option to be
+Similar to the way in which control variates are used by practitioners to improve the constant factor in Monte Carlo estimation error, we can use contract differencing to improve price accuracy for options priced on grids.  Consider, for example, pricing an American option and its European equivalent on the grid, obtaining present values $V_A$ and $V_E$.  We also enjoy a closed-form variation of the Black-Scholes formula $BS()$ for pricing European options, so we know the magnitude and direction of error our grid made for the European option to be
 $$
 \text{Err}_E = BS(E,\dots) - V_E.
 $$

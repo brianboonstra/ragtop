@@ -96,7 +96,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 {{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} t}}} -rV + h(\delta-V) + \left(r-q+h\right)S{{\frac{\partial \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S}}}+\frac12 \sigma^2 S^2 {{\frac{\partial^2 \mspace{-1.0mu} V}{\partial \mspace{-1.0mu} S^2}}}=0.
 \]</span></p>
 <p><strong>ragtop</strong> numerically integrates this PDE using an implicit scheme, forming solutions <span class="math inline">\(v^{(m)}_n\)</span> on a grid of times <span class="math inline">\(t^{(m)}, m=0,\dots,M\)</span> and stock prices <span class="math inline">\(S_n, n=-N,\dots,N\)</span>. The present value of our derivative is represented by the entry <span class="math inline">\(v^{(M)}_0\)</span>.</p>
-<p>For further details, please see the <a href="http://thureoscapital.com/ragtop.pdf">technical paper</a>.</p>
+<p>For further details, please see the <a href="https://thureoscapital.com/ragtop.pdf">technical paper</a>.</p>
 </div>
 <div id="option-market-data" class="section level2">
 <h2>Option Market Data</h2>
@@ -226,41 +226,41 @@ $Delta
 $Vega
 [1] 51.65849</code></pre>
 <p>or better yet find the implied Black-Scholes volatility</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">implied_volatility</span>(<span class="dt">option_price =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'ask'</span>], 
-                   <span class="dt">S0 =</span> TSLAMarket$S0, 
-                   <span class="dt">callput =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'callput'</span>], 
-                   <span class="dt">K=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'K'</span>], 
-                   <span class="dt">r =</span> <span class="fl">0.005</span>, 
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">implied_volatility</span>(<span class="dt">option_price =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'ask'</span>],
+                   <span class="dt">S0 =</span> TSLAMarket$S0,
+                   <span class="dt">callput =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'callput'</span>],
+                   <span class="dt">K=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'K'</span>],
+                   <span class="dt">r =</span> <span class="fl">0.005</span>,
                    <span class="dt">time =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'time'</span>])</code></pre></div>
 <pre><code>[1] 0.4151244</code></pre>
 <p>For puts, we need to use a pricing algorithm that accounts for early exercise. <strong>ragtop</strong> uses a control variate scheme on top of an implicity PDE solver to achieve reasonable performance</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">american</span>(
-       <span class="dt">callput =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'callput'</span>], 
-       <span class="dt">S0 =</span> TSLAMarket$S0, 
-       <span class="dt">K=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'K'</span>], 
-       <span class="dt">const_short_rate =</span> <span class="fl">0.005</span>, 
+       <span class="dt">callput =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'callput'</span>],
+       <span class="dt">S0 =</span> TSLAMarket$S0,
+       <span class="dt">K=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'K'</span>],
+       <span class="dt">const_short_rate =</span> <span class="fl">0.005</span>,
        <span class="dt">time =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'time'</span>])</code></pre></div>
-<pre><code>A360_137_2 
+<pre><code>A360_137_2
   4.149565 </code></pre>
 <p>This is also the underlying scheme for implied volatility</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">american_implied_volatility</span>(<span class="dt">option_price =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'ask'</span>], 
-     <span class="dt">S0 =</span> TSLAMarket$S0, 
-     <span class="dt">callput =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'callput'</span>], 
-     <span class="dt">K=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'K'</span>], 
-     <span class="dt">const_short_rate =</span> <span class="fl">0.005</span>, 
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">american_implied_volatility</span>(<span class="dt">option_price =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'ask'</span>],
+     <span class="dt">S0 =</span> TSLAMarket$S0,
+     <span class="dt">callput =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'callput'</span>],
+     <span class="dt">K=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'K'</span>],
+     <span class="dt">const_short_rate =</span> <span class="fl">0.005</span>,
      <span class="dt">time =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'time'</span>])</code></pre></div>
 <pre><code>[1] 0.415125</code></pre>
 <div id="including-default-intensities" class="section level3">
 <h3>Including Default Intensities</h3>
 <p>We can correct for constant intensities of default with parameters of convenience, both for European exercise</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">implied_volatility</span>(<span class="dt">option_price =</span> <span class="dv">17</span>, 
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">implied_volatility</span>(<span class="dt">option_price =</span> <span class="dv">17</span>,
                    <span class="dt">S0 =</span> <span class="dv">250</span>, <span class="dt">callput =</span> CALL,  <span class="dt">K=</span><span class="dv">245</span>,
                    <span class="dt">r =</span> <span class="fl">0.005</span>, <span class="dt">time =</span> <span class="dv">2</span>,
                    <span class="dt">const_default_intensity =</span> <span class="fl">0.03</span>)</code></pre></div>
 <pre><code>[1] NA</code></pre>
 <p>and for American exercise</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">american_implied_volatility</span>(<span class="dt">option_price =</span> <span class="fl">19.1</span>, 
-     <span class="dt">S0 =</span> <span class="fl">223.17</span>, <span class="dt">callput =</span> PUT, <span class="dt">K=</span><span class="dv">220</span>, 
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">american_implied_volatility</span>(<span class="dt">option_price =</span> <span class="fl">19.1</span>,
+     <span class="dt">S0 =</span> <span class="fl">223.17</span>, <span class="dt">callput =</span> PUT, <span class="dt">K=</span><span class="dv">220</span>,
      <span class="dt">const_short_rate =</span> <span class="fl">0.005</span>, <span class="dt">time =</span> <span class="fl">1.45</span>,
      <span class="dt">const_default_intensity =</span> <span class="fl">0.0200</span>)</code></pre></div>
 <pre><code>[1] 0.1701377</code></pre>
@@ -291,11 +291,11 @@ vc =<span class="st"> </span><span class="kw">variance_cumulation_from_vols</spa
 <pre><code>[1] &quot;Cumulated variance to 18 months is 0.369473684210526&quot;</code></pre>
 <p>to modify our estimates accordingly, including on vanilla option prices</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">black_scholes_on_term_structures</span>(
-   <span class="dt">callput=</span>TSLAMarket$options[<span class="dv">500</span>,<span class="st">'callput'</span>], 
-   <span class="dt">S0=</span>TSLAMarket$S0, 
-   <span class="dt">K=</span>TSLAMarket$options[<span class="dv">500</span>,<span class="st">'K'</span>], 
-   <span class="dt">discount_factor_fcn=</span>disct_fcn, 
-   <span class="dt">time=</span>TSLAMarket$options[<span class="dv">500</span>,<span class="st">'time'</span>], 
+   <span class="dt">callput=</span>TSLAMarket$options[<span class="dv">500</span>,<span class="st">'callput'</span>],
+   <span class="dt">S0=</span>TSLAMarket$S0,
+   <span class="dt">K=</span>TSLAMarket$options[<span class="dv">500</span>,<span class="st">'K'</span>],
+   <span class="dt">discount_factor_fcn=</span>disct_fcn,
+   <span class="dt">time=</span>TSLAMarket$options[<span class="dv">500</span>,<span class="st">'time'</span>],
    <span class="dt">survival_probability_fcn=</span>surv_prob_fcn,
    <span class="dt">variance_cumulation_fcn=</span>vc,
    <span class="dt">dividends=</span>divs)</code></pre></div>
@@ -309,34 +309,34 @@ $Vega
 [1] 47.06523</code></pre>
 <p>American exercise option prices</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">american</span>(
-    <span class="dt">callput =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'callput'</span>], 
-    <span class="dt">S0 =</span> TSLAMarket$S0, 
-    <span class="dt">K=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'K'</span>], 
-    <span class="dt">discount_factor_fcn=</span>disct_fcn, 
+    <span class="dt">callput =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'callput'</span>],
+    <span class="dt">S0 =</span> TSLAMarket$S0,
+    <span class="dt">K=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'K'</span>],
+    <span class="dt">discount_factor_fcn=</span>disct_fcn,
     <span class="dt">time =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'time'</span>],
     <span class="dt">survival_probability_fcn=</span>surv_prob_fcn,
     <span class="dt">variance_cumulation_fcn=</span>vc,
     <span class="dt">dividends=</span>divs)</code></pre></div>
-<pre><code>A360_137_2 
+<pre><code>A360_137_2
   2.894296 </code></pre>
 <p>and of course volatilities of European exercise options</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">implied_volatility_with_term_struct</span>(
-   <span class="dt">option_price =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'ask'</span>], 
-   <span class="dt">S0 =</span> TSLAMarket$S0, 
-   <span class="dt">callput =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'callput'</span>], 
-   <span class="dt">K=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'K'</span>], 
-   <span class="dt">discount_factor_fcn=</span>disct_fcn, 
+   <span class="dt">option_price =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'ask'</span>],
+   <span class="dt">S0 =</span> TSLAMarket$S0,
+   <span class="dt">callput =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'callput'</span>],
+   <span class="dt">K=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'K'</span>],
+   <span class="dt">discount_factor_fcn=</span>disct_fcn,
    <span class="dt">time =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'time'</span>],
    <span class="dt">survival_probability_fcn=</span>surv_prob_fcn,
    <span class="dt">dividends=</span>divs)</code></pre></div>
 <pre><code>[1] 0.4112688</code></pre>
 <p>as well as American exercise options</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">american_implied_volatility</span>(
-    <span class="dt">option_price=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'ask'</span>], 
-    <span class="dt">callput =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'callput'</span>], 
-    <span class="dt">S0 =</span> TSLAMarket$S0, 
-    <span class="dt">K=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'K'</span>], 
-    <span class="dt">discount_factor_fcn=</span>disct_fcn, 
+    <span class="dt">option_price=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'ask'</span>],
+    <span class="dt">callput =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'callput'</span>],
+    <span class="dt">S0 =</span> TSLAMarket$S0,
+    <span class="dt">K=</span>TSLAMarket$options[<span class="dv">400</span>,<span class="st">'K'</span>],
+    <span class="dt">discount_factor_fcn=</span>disct_fcn,
     <span class="dt">time =</span> TSLAMarket$options[<span class="dv">400</span>,<span class="st">'time'</span>],
     <span class="dt">survival_probability_fcn=</span>surv_prob_fcn,
     <span class="dt">dividends=</span>divs)</code></pre></div>
@@ -429,7 +429,7 @@ $Vega
        <span class="dt">mid_prices=</span>atm_put_prices,
        <span class="dt">spreads=</span><span class="fl">0.01</span>*atm_put_prices,
        <span class="dt">use_impvol=</span><span class="ot">TRUE</span>,
-       <span class="dt">discount_factor_fcn=</span>disct_fcn, 
+       <span class="dt">discount_factor_fcn=</span>disct_fcn,
        <span class="dt">default_intensity_fcn =</span> def_ints_fcn,
        <span class="dt">num_time_steps=</span><span class="dv">100</span>)
 vcm$volatilities</code></pre></div>
@@ -526,7 +526,7 @@ h(S) = h_0 \left(  s+(1-s)  \left( \frac{S_0}{S} \right)^p  \right)
               <span class="dt">spreads=</span><span class="fl">0.01</span>*atm_put_prices,
               <span class="dt">use_impvol=</span><span class="ot">TRUE</span>,
               <span class="dt">default_intensity_fcn =</span> def_intens_f,
-              <span class="dt">discount_factor_fcn=</span>disct_fcn, 
+              <span class="dt">discount_factor_fcn=</span>disct_fcn,
               <span class="dt">num_time_steps=</span><span class="dv">100</span>)
   pvs_list =<span class="st"> </span><span class="kw">find_present_value</span>(
               <span class="dt">S0=</span>S0, <span class="dt">instruments=</span>fit_targets,
@@ -563,7 +563,7 @@ calib_varnce =<span class="st"> </span><span class="kw">fit_variance_cumulation<
               <span class="dt">spreads=</span><span class="fl">0.01</span>*atm_put_prices,
               <span class="dt">use_impvol=</span><span class="ot">TRUE</span>,
               <span class="dt">default_intensity_fcn =</span> calibrated_intensity_f,
-              <span class="dt">discount_factor_fcn=</span>disct_fcn, 
+              <span class="dt">discount_factor_fcn=</span>disct_fcn,
               <span class="dt">num_time_steps=</span><span class="dv">100</span>)
 calib_varnce$volatilities</code></pre></div>
 <pre><code>[1] 0.4802569 0.4572752 0.4574770 0.4483994 0.4478110</code></pre>
