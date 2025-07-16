@@ -58,7 +58,6 @@
 #'   \item{\code{N}}{The number of space points}
 #'   \item{\code{z}}{Locations of space points}
 #' }
-#' @import futile.logger
 construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structure_constant, std_devs_width,
                                              min_z_width=0)
 {
@@ -100,7 +99,6 @@ construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structu
 #' @return A list with elements \code{super}, \code{diag} and \code{sub}
 #'   containing the superdiagonal, diagonal and subdiagonal of the implicit
 #'   timestep differencing matrix
-#' @import futile.logger
 #' @export construct_tridiagonals
 construct_tridiagonals = function(sigma, structure_constant, drift)
 {

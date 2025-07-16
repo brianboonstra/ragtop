@@ -2,7 +2,6 @@
 % Please edit documentation in R/ragtop.R
 \docType{package}
 \name{ragtop}
-\alias{ragtop-package}
 \alias{ragtop}
 \title{Pricing schemes for derivatives using equity-linked default intensity}
 \description{

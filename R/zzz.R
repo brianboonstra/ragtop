@@ -1,3 +1,7 @@
+#' @keywords internal
+#' @import futile.logger
+"_PACKAGE"
+
 # Setup standard logging
 .onLoad = function(libname, pkgname) {
   futile.logger::flog.threshold(futile.logger::WARN, name="ragtop")
