@@ -52,7 +52,7 @@
 #' @family Implied Volatilities
 #' @family Equity Independent Default Intensity
 #' @family European Options
-#' @export implied_volatility
+#' @export
 implied_volatility = function(option_price, callput, S0, K, r, time,
                               const_default_intensity=0, divrate=0, borrow_cost=0,
                               dividends=NULL,
@@ -151,7 +151,7 @@ implied_volatility = function(option_price, callput, S0, K, r, time,
 #' @family Implied Volatilities
 #' @family European Options
 #' @family Equity Independent Default Intensity
-#' @export implied_volatilities
+#' @export
 implied_volatilities = Vectorize(implied_volatility)
 #
 #' Find jump process volatility with a given default risk from a straight Black-Scholes volatility
@@ -179,7 +179,7 @@ implied_volatilities = Vectorize(implied_volatility)
 #' @return A scalar volatility
 #' @family Implied Volatilities
 #' @family Equity Independent Default Intensity
-#' @export equivalent_jump_vola_to_bs
+#' @export
 equivalent_jump_vola_to_bs = function(bs_vola, time,
                                           const_short_rate=0, const_default_intensity=0,
                                           discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
@@ -270,7 +270,7 @@ equivalent_jump_vola_to_bs = function(bs_vola, time,
 #' @return A scalar defaultable volatility of an option
 #' @family Implied Volatilities
 #' @family Equity Independent Default Intensity
-#' @export equivalent_bs_vola_to_jump
+#' @export
 equivalent_bs_vola_to_jump = function(jump_process_vola, time,
                                             const_short_rate=0, const_default_intensity=0,
                                             discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
@@ -358,7 +358,7 @@ equivalent_bs_vola_to_jump = function(jump_process_vola, time,
 #' @family Implied Volatilities
 #' @family European Options
 #' @family Equity Independent Default Intensity
-#' @export implied_volatilities_with_rates_struct
+#' @export
 implied_volatilities_with_rates_struct = function(option_price, callput, S0, K, discount_factor_fcn, time,
                                                   const_default_intensity=0, divrate=0, borrow_cost=0,
                                                   dividends=NULL,
@@ -432,7 +432,7 @@ implied_volatilities_with_rates_struct = function(option_price, callput, S0, K, 
 #' @family Implied Volatilities
 #' @family Equity Independent Default Intensity
 #' @family European Options
-#' @export implied_volatility_with_term_struct
+#' @export
 implied_volatility_with_term_struct = function(option_price, callput, S0, K, time,
                                                ...,
                                                starting_volatility_estimate=0.5,
@@ -542,7 +542,7 @@ implied_volatility_with_term_struct = function(option_price, callput, S0, K, tim
 #' df25 = function(T,t){df250(T)/df250(t)} # Relative discount factors
 #' american_implied_volatility(25,-1,100,100,2.2,
 #'   discount_factor_fcn=df25, num_time_steps=5)
-#' @export american_implied_volatility
+#' @export
 american_implied_volatility = function(option_price, callput, S0, K, time,
                                        const_default_intensity = 0,
                                        survival_probability_fcn = function(T, t, ...){exp(-const_default_intensity*(T-t))},
@@ -672,7 +672,7 @@ american_implied_volatility = function(option_price, callput, S0, K, time,
 #'     25, AmericanOption(maturity=1.1, strike=100, callput=-1),
 #'     S0=100, num_time_steps=50, relative_tolerance=1.e-3)
 #'
-#' @export implied_jump_process_volatility
+#' @export
 implied_jump_process_volatility = function(instrument_price, instrument,
                                          ...,
                                          starting_volatility_estimate=0.85,
@@ -788,7 +788,7 @@ implied_jump_process_volatility = function(instrument_price, instrument,
 #' @family Implied Volatilities
 #' @family Equity Dependent Default Intensity
 #'
-#' @export fit_variance_cumulation
+#' @export
 fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
                                    initial_vols_guess=0.55 + 0*mid_prices,
                                    use_impvol=TRUE,
@@ -993,7 +993,7 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
 #'   \code{\link{find_present_value}}
 #' @param h Base default intensity
 #' @inheritParams fit_to_option_market
-#' @export price_with_intensity_link
+#' @export
 price_with_intensity_link = function(p, s, h,
                                      variance_instruments,
                                      variance_instrument_prices,
@@ -1043,7 +1043,7 @@ price_with_intensity_link = function(p, s, h,
 #' @inheritParams price_with_intensity_link
 #' @inheritParams find_present_value
 #' @seealso \code{\link{price_with_intensity_link}} for the pricing function
-#' @export penalty_with_intensity_link
+#' @export
 penalty_with_intensity_link = function(p, s, h,
                                        variance_instruments,
                                        variance_instrument_prices,
@@ -1144,7 +1144,7 @@ penalty_with_intensity_link = function(p, s, h,
 #' @param ... Further arguments passed to \code{\link{penalty_with_intensity_link}}
 #' @seealso \code{\link{penalty_with_intensity_link}} for the penalty function used
 #'   as an optimization target
-#' @export fit_to_option_market
+#' @export
 fit_to_option_market = function(variance_instruments,
                                 variance_instrument_prices,
                                 variance_instrument_spreads,
@@ -1265,7 +1265,7 @@ fit_to_option_market = function(variance_instruments,
 #'   arguments \code{T}, \code{t}
 #' @family Equity Dependent Default Intensity
 #' @seealso \code{\link{fit_to_option_market}} the underlying fit algorithm
-#' @export fit_to_option_market_df
+#' @export
 fit_to_option_market_df = function(
   S0 = ragtop::TSLAMarket$S0,
   discount_factor_fcn = spot_to_df_fcn(ragtop::TSLAMarket$risk_free_rates),

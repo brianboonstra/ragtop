@@ -99,7 +99,7 @@ construct_implicit_grid_structure = function(tenors, M, S0, K, c, sigma, structu
 #' @return A list with elements \code{super}, \code{diag} and \code{sub}
 #'   containing the superdiagonal, diagonal and subdiagonal of the implicit
 #'   timestep differencing matrix
-#' @export construct_tridiagonals
+#' @export
 construct_tridiagonals = function(sigma, structure_constant, drift)
 {
   N = length(drift)
@@ -156,7 +156,7 @@ construct_tridiagonals = function(sigma, structure_constant, drift)
 #' @import limSolve
 #' @return Grid values for the instrument after taking the implicit timestep
 #' @family Implicit Grid Solver
-#' @export take_implicit_timestep
+#' @export
 take_implicit_timestep = function(t, S, full_discount_factor,
                                   local_discount_factor,
                                   discount_factor_fcn,
@@ -404,7 +404,7 @@ infer_conforming_time_grid = function(min_num_time_steps, Tmax, instruments=NULL
 #' @return A grid of present values of derivative prices, adapted to \code{z} at
 #'   each timestep.  Time zero value will appear in the first index.
 #' @family Implicit Grid Solver
-#' @export integrate_pde
+#' @export
 integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
                             stock_level_fcn,
                             discount_factor_fcn,
@@ -483,7 +483,7 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
 #'   of values at the first time point, adapted to \code{z} at
 #'   each timestep.  Time zero value will appear in the first index of any grid.
 #' @family Implicit Grid Solver
-#' @export iterate_grid_from_timestep
+#' @export
 iterate_grid_from_timestep = function(starting_time_step, time_pts, z, S0, instruments,
                                       stock_level_fcn,
                                       discount_factor_fcn,
@@ -550,7 +550,7 @@ iterate_grid_from_timestep = function(starting_time_step, time_pts, z, S0, instr
 #' @family Equity Dependent Default Intensity
 #' @family Implicit Grid Solver
 #'
-#' @export form_present_value_grid
+#' @export
 form_present_value_grid = function(S0, num_time_steps, instruments,
                               const_volatility=0.5, const_short_rate=0,
                               const_default_intensity=0, override_Tmax=NA,
@@ -650,7 +650,7 @@ form_present_value_grid = function(S0, num_time_steps, instruments,
 #' @family Equity Dependent Default Intensity
 #' @family Implicit Grid Solver
 #'
-#' @export find_present_value
+#' @export
 find_present_value = function(S0, num_time_steps, instruments,
                                    const_volatility=0.5, const_short_rate=0, const_default_intensity=0, override_Tmax=NA,
                                    discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},
