@@ -1,5 +1,3 @@
-library(ragtop)
-library(futile.logger)
 context("Grid solver")
 
 flog.threshold(WARN, name="ragtop")

@@ -1,5 +1,3 @@
-library(ragtop)
-library(futile.logger)
 context("Cash flow treatments")
 
 flog.threshold(WARN, name="ragtop")

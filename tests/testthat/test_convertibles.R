@@ -1,5 +1,3 @@
-library(ragtop)
-library(futile.logger)
 context("Convertibles")
 
 flog.threshold(WARN, name="ragtop")

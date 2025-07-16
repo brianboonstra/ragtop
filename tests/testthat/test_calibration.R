@@ -1,5 +1,3 @@
-library(ragtop)
-library(futile.logger)
 context("Calibration")
 
 flog.threshold(WARN, name="ragtop")

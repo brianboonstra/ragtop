@@ -1,5 +1,3 @@
-library(ragtop)
-library(futile.logger)
 context("Equity Options")
 
 flog.threshold(WARN)
