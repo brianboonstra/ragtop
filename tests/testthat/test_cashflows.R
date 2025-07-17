@@ -1,5 +1,3 @@
-context("Cash flow treatments")
-
 flog.threshold(WARN, name="ragtop")
 flog.threshold(WARN)
 

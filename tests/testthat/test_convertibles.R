@@ -1,5 +1,3 @@
-context("Convertibles")
-
 flog.threshold(WARN, name="ragtop")
 flog.threshold(WARN)
 flog.threshold(ERROR, name='ragtop.implicit.setup.width')

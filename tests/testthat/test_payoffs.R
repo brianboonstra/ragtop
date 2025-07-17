@@ -1,5 +1,3 @@
-context("Payoffs")
-
 flog.threshold(WARN, name="ragtop")
 flog.threshold(WARN)
 
