@@ -88,7 +88,6 @@ control_variate_pairs = function(callput, K, time)
 #'          variance_cumulation_fcn = function(T, t) {  # Term structure of vola
 #'              0.45 ^ 2 * (T - t) + 0.15^2 * max(0, T-0.25)
 #'          })
-#' @import futile.logger
 #' @export american
 american = function(callput, S0, K, time,
                     const_short_rate=0, const_default_intensity=0,
