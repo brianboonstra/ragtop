@@ -88,7 +88,7 @@ control_variate_pairs = function(callput, K, time)
 #'          variance_cumulation_fcn = function(T, t) {  # Term structure of vola
 #'              0.45 ^ 2 * (T - t) + 0.15^2 * max(0, T-0.25)
 #'          })
-#' @export american
+#' @export
 american = function(callput, S0, K, time,
                     const_short_rate=0, const_default_intensity=0,
                     discount_factor_fcn = function(T, t, ...){exp(-const_short_rate*(T-t))},

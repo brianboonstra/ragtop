@@ -15,7 +15,7 @@
 #'
 #' @param x Argument to test
 #' @param false.triggers Whether to allow nonempty vectors of all FALSE to trigger this condition
-#' @export is.blank
+#' @export
 is.blank <- function(x, false.triggers=FALSE){
   if(is.function(x) || typeof(x)=="S4") return(FALSE) # Some of the tests below trigger
   # warnings when used on functions

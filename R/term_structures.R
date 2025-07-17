@@ -34,7 +34,7 @@
 #'   volatility=c(0.2,0.5,1.2)))
 #' vc(1.5, 0)
 #'
-#' @export variance_cumulation_from_vols
+#' @export
 variance_cumulation_from_vols = function(vols_df)
 {
   N = nrow(vols_df)
@@ -95,7 +95,7 @@ variance_cumulation_from_vols = function(vols_df)
 #'   data.frame(time=c(1, 5, 10, 15),
 #'              rate=c(0.01, 0.02, 0.03, 0.05)))
 #' print(disct_fcn(1, 0.5))
-#' @export spot_to_df_fcn
+#' @export
 spot_to_df_fcn = function(yield_curve) {
   yield_curve$dfs = exp(-yield_curve$time*yield_curve$rate)
   later = yield_curve$dfs[2:length(yield_curve$dfs)]
@@ -122,7 +122,7 @@ spot_to_df_fcn = function(yield_curve) {
 #'
 #' @param on_date Date for which to query for the curve, year-month-day format
 #' @return A function taking two time arguments, which returns the discount factor from the second to the first
-#' @export treasury_df_raw
+#' @export
 treasury_df_raw = function(on_date) {
   if (requireNamespace('treasury', quietly = TRUE)) {
     on_date = lubridate::ymd(on_date)
@@ -149,7 +149,7 @@ treasury_df_raw = function(on_date) {
 #' @param ... Arguments passed to \code{\link{treasury_df_raw}}
 #' @param envir Environment passed to \code{\link{treasury_df_raw}}
 #' @return A function taking two time arguments, which returns the discount factor from the second to the first (see \code{spot_to_df_fcn})
-#' @export treasury_df
+#' @export
 treasury_df = function(...,envir=parent.frame()) {
   treasury_df_raw(...)
 }
@@ -173,7 +173,7 @@ if (requireNamespace('R.cache', quietly = TRUE)) {
 #'             maturity - maturity
 #'             notional - notional amount
 #'             coupons - `data.frame` with `payment_time`, `payment_size`
-#' @export detail_from_AnnivDates
+#' @export
 detail_from_AnnivDates = function(anvdates, as_of=Sys.time(), normalization_factor=365.25) {
   as_of = as.POSIXct(as_of)
   payment_time = as.numeric(as.POSIXct(anvdates$PaySched$CoupDates) - as_of)/normalization_factor

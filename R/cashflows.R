@@ -58,7 +58,7 @@ shift_for_dividends = function(grid_values_before_shift, stock_prices, div_sum)
 #' @inheritParams blackscholes
 #' @family Dividends
 #' @return Sum of dividends, at each grid node
-#' @export time_adj_dividends
+#' @export
 time_adj_dividends = function(relevant_divs, t_final, r, h, S, S0)
 {
   ## Returns a vector with one dividend sum per entry in S
@@ -98,7 +98,7 @@ time_adj_dividends = function(relevant_divs, t_final, r, h, S, S0)
 #'   then expected to be equal to \code{fixed + proportional * S / S0}
 #' @return An object like \code{grid_values} with entries modified according to the dividends
 #' @family Dividends
-#' @export adjust_for_dividends
+#' @export
 adjust_for_dividends = function(grid_values, t, dt, r, h, S, S0, dividends)
 {
   ## Grid values are expected to come from f[k,m-1,]
@@ -178,7 +178,7 @@ value_from_prior_coupons = function(t, coupons_df, discount_factor_fcn, model_t=
 #'   columns \code{payment_time} and \code{payment_size}.
 #' @family Bond Coupons
 #' @family Bond Coupon Acceleration
-#' @export accelerated_coupon_value
+#' @export
 accelerated_coupon_value = function(t, coupons_df, discount_factor_fcn,
                                     acceleration_t=Inf)
 {
@@ -204,7 +204,7 @@ accelerated_coupon_value = function(t, coupons_df, discount_factor_fcn,
 #' @return A scalar equal to the present value
 #' @family Bond Coupons
 #' @family Bond Coupon Acceleration
-#' @export coupon_value_at_exercise
+#' @export
 coupon_value_at_exercise = function(t, coupons_df, discount_factor_fcn, model_t=0,
                                     accelerate_future_coupons=FALSE,
                                     acceleration_discount_factor_fcn=discount_factor_fcn,
