@@ -1,5 +1,3 @@
-library(ragtop)
-library(futile.logger)
 context("Black-Scholes Modeling")
 
 flog.threshold(WARN, name="ragtop")
