@@ -1,5 +1,3 @@
-context("Calibration")
-
 flog.threshold(WARN, name="ragtop")
 flog.threshold(ERROR, name='ragtop.implicit.setup.width')
 flog.threshold(WARN)

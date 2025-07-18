@@ -1,5 +1,3 @@
-context("Black-Scholes Modeling")
-
 flog.threshold(WARN, name="ragtop")
 flog.threshold(WARN)
 
