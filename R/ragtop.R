@@ -101,7 +101,6 @@
 #' print(vfit$volatilities)
 #' }
 #'
-#' @docType package
-#' @name ragtop
+#' @keywords internal
+#' @import futile.logger
 "_PACKAGE"
-#> [1] "_PACKAGE"
