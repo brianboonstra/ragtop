@@ -87,7 +87,7 @@ vc = variance_cumulation_from_vols(
    data.frame(time = c(0.1, 2, 3),
               volatility = c(0.2, 0.5, 1.2)))
 paste0("Cumulated variance to 18 months is ", vc(1.5, 0))
-[1] "Cumulated variance to 18 months is 0.369473684210526"
+#> [1] "Cumulated variance to 18 months is 0.369473684210526"
 ```
 
 then we can price vanilla options
@@ -101,14 +101,14 @@ black_scholes_on_term_structures(
    time = TSLAMarket$options[500,'time'],
    variance_cumulation_fcn = vc,
    dividends = divs)
-$Price
-[1] 62.55998
-
-$Delta
-[1] 0.7977684
-
-$Vega
-[1] 52.21925
+#> $Price
+#> [1] 62.55998
+#> 
+#> $Delta
+#> [1] 0.7977684
+#> 
+#> $Vega
+#> [1] 52.21925
 ```
 
 American exercise options
@@ -123,8 +123,8 @@ american(
     survival_probability_fcn = surv_prob_fcn,
     variance_cumulation_fcn = vc,
     dividends = divs)
-A360_137_2 
-  2.894296 
+#> A360_137_2 
+#>   2.894296
 ```
 
 We can also find volatilities of European exercise options
@@ -137,7 +137,7 @@ implied_volatility_with_term_struct(
     time = 1.12,
     survival_probability_fcn = surv_prob_fcn,
     dividends = divs)
-[1] 0.1133976
+#> [1] 0.1133976
 ```
 
 as well as American exercise options
@@ -150,7 +150,7 @@ american_implied_volatility(
     time = 1.12,
     survival_probability_fcn = surv_prob_fcn,
     dividends = divs)
-[1] 0.113407
+#> [1] 0.113407
 ```
 
 ## More Sophisticated Calibration

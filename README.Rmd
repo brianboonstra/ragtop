@@ -53,13 +53,13 @@ pak::pak("brianboonstra/ragtop")
 
 You can price american and european exercise options, either individually, or in groups.  In the simplest case that looks like this for European exercise
 
-```{r bs, echo=TRUE}
+```{r bs}
 blackscholes(c(CALL, PUT), S0 = 100, K = c(100, 110), time = 0.77, r = 0.06, vola = 0.20)
 ```
 
 and like this for American exercise
 
-```{r bsa, echo=TRUE}
+```{r bsa}
 american(PUT, S0 = 100, K = c(100, 110), time = 0.77, const_short_rate = 0.06, const_volatility = 0.20)
 ```
 
@@ -67,7 +67,7 @@ american(PUT, S0 = 100, K = c(100, 110), time = 0.77, const_short_rate = 0.06, c
 
 There are zillions of implementations of the Black-Scholes formula out there, and quite a few simple trees as well.  One thing that makes **ragtop** a bit more useful than most other packages is that it treats dividends and term structures without too much pain.  Assume we have some nontrivial term structures and dividends
 
-```{r ts_fcns, echo=TRUE, comment=""}
+```{r ts_fcns}
 ## Dividends
 divs = data.frame(time = seq(from = 0.11, to = 2, by = 0.25),
                   fixed = seq(1.5, 1, length.out = 8),
@@ -92,7 +92,7 @@ paste0("Cumulated variance to 18 months is ", vc(1.5, 0))
 
 then we can price vanilla options
 
-```{r blackscholes_ts, comment="", echo=TRUE}
+```{r blackscholes_ts}
 black_scholes_on_term_structures(
    callput = TSLAMarket$options[500, 'callput'],
    S0 = TSLAMarket$S0,
@@ -106,7 +106,7 @@ black_scholes_on_term_structures(
 
 American exercise options
 
-```{r amer_ts, echo=TRUE, comment=""}
+```{r amer_ts}
 american(
     callput = TSLAMarket$options[400, 'callput'],
     S0 = TSLAMarket$S0,
@@ -120,7 +120,7 @@ american(
 
 We can also find volatilities of European exercise options
 
-```{r implied_bs_volatility_def_ts, comment="", echo =T}
+```{r implied_bs_volatility_def_ts}
 implied_volatility_with_term_struct(
     option_price = 19, callput = PUT,
     S0 = 185.17, K = 182.50,
@@ -132,7 +132,7 @@ implied_volatility_with_term_struct(
 
 as well as American exercise options
 
-```{r amer_ts_iv, echo=TRUE, comment=""}
+```{r amer_ts_iv}
 american_implied_volatility(
     option_price = 19, callput = PUT,
     S0 = 185.17, K = 182.50,
