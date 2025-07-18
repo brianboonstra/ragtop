@@ -37,7 +37,7 @@ PUT = -1
 #'  probability.
 #'
 #' All inputs must either be scalars or have the same nonscalar shape.
-#' @param callput 1 for calls, -1 for puts
+#' @param callput \code{1} for calls, \code{-1} for puts
 #' @param S0 initial underlying price
 #' @param K strike
 #' @param r risk-free interest rate

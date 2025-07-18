@@ -25,7 +25,7 @@
 #'  \code{const_default_intensity} set to zero (the default).
 #'
 #' @param option_price Present option value
-#' @param callput 1 for calls, -1 for puts
+#' @param callput \code{1} for calls, \code{-1} for puts
 #' @param S0 initial underlying price
 #' @param K strike
 #' @param r risk-free interest rate
@@ -134,7 +134,7 @@ implied_volatility = function(option_price, callput, S0, K, r, time,
 #'   a given option price.
 #'
 #' @param option_price Present option values (may be a vector)
-#' @param callput 1 for calls, -1 for puts (may be a vector)
+#' @param callput \code{1} for calls, \code{-1} for puts (may be a vector)
 #' @param S0 initial underlying price (may be a vector)
 #' @param K strike (may be a vector)
 #' @param r risk-free interest rate (may be a vector)
@@ -333,7 +333,7 @@ equivalent_bs_vola_to_jump = function(jump_process_vola, time,
 #'   algorithm with constant rates, \code{\link{implied_volatility_with_term_struct}} when
 #'   volatilities or survival probabilities also have a nontrivial term structure
 #' @param option_price Present option values (may be a vector)
-#' @param callput 1 for calls, -1 for puts (may be a vector)
+#' @param callput \code{1} for calls, \code{-1} for puts (may be a vector)
 #' @param S0 initial underlying prices (may be a vector)
 #' @param K strikes (may be a vector)
 #' @param discount_factor_fcn A function for computing present values to
@@ -404,7 +404,7 @@ implied_volatilities_with_rates_struct = function(option_price, callput, S0, K, 
 #'   pricing algorithm, \code{\link{implied_volatilities_with_rates_struct}} when
 #'   neither volatilities nor survival probabilities have a nontrivial term structure
 #' @param option_price Option price to match
-#' @param callput 1 for calls, -1 for puts
+#' @param callput \code{1} for calls, \code{-1} for puts
 #' @param S0 initial underlying price
 #' @param K strike
 #' @param time Time to expiration
@@ -515,7 +515,7 @@ implied_volatility_with_term_struct = function(option_price, callput, S0, K, tim
 #'   underlying pricing algorithm
 #' @inheritParams form_present_value_grid
 #' @inheritParams american
-#' @param callput 1 for calls, -1 for puts
+#' @param callput \code{1} for calls, \code{-1} for puts
 #' @param K strike
 #' @param time Time from \code{0} until expiration
 #' @param option_price Option price to match

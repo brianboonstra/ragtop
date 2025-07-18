@@ -23,7 +23,7 @@ implied_volatilities(
 \arguments{
 \item{option_price}{Present option values (may be a vector)}
 
-\item{callput}{1 for calls, -1 for puts (may be a vector)}
+\item{callput}{\code{1} for calls, \code{-1} for puts (may be a vector)}
 
 \item{S0}{initial underlying price (may be a vector)}
 

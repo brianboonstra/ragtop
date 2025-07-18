@@ -28,7 +28,7 @@ american(
 )
 }
 \arguments{
-\item{callput}{1 for calls, -1 for puts (may be a vector of the same)}
+\item{callput}{\code{1} for calls, \code{-1} for puts (may be a vector of the same)}
 
 \item{S0}{initial underlying price}
 
