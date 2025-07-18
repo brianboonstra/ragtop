@@ -20,7 +20,7 @@ implied_volatility_with_term_struct(
 \arguments{
 \item{option_price}{Option price to match}
 
-\item{callput}{1 for calls, -1 for puts}
+\item{callput}{\code{1} for calls, \code{-1} for puts}
 
 \item{S0}{initial underlying price}
 
