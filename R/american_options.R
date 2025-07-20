@@ -23,7 +23,7 @@
 #' first half consists of AmericanOption objects and
 #' second half consists of EuropeanOption objects
 #' having the same exercise specification
-#' @param callput 1 for calls, -1 for puts
+#' @param callput \code{1} for calls, \code{-1} for puts
 #' @param K strike
 #' @param time Time from \code{0} until expiration
 #' @family American Exercise Equity Options
@@ -62,7 +62,7 @@ control_variate_pairs = function(callput, K, time)
 #'
 #' @inheritParams form_present_value_grid
 #' @inheritParams construct_implicit_grid_structure
-#' @param callput 1 for calls, -1 for puts (may be a vector of the same)
+#' @param callput \code{1} for calls, \code{-1} for puts (may be a vector of the same)
 #' @param S0 initial underlying price
 #' @param K strike (may be a vector)
 #' @param time Time from \code{0} until expiration (may be a vector)

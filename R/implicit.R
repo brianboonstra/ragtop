@@ -147,9 +147,9 @@ construct_tridiagonals = function(sigma, structure_constant, drift)
 #'   arguments \code{T}, \code{t}
 #' @param prev_grid_values A vector of space grid values from the
 #'  previously calculated timestep
-#' @param instrument If not NULL/NA,  must have a \code{recovery_fcn} and
+#' @param instrument If not \code{NULL}/\code{NA},  must have a \code{recovery_fcn} and
 #'  an \code{optionality_fcn} though those properties are
-#'  themselves allowed to be NA.
+#'  themselves allowed to be \code{NA}.
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
 #'   then expected to be equal to \code{fixed + proportional * S / S0}

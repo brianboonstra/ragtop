@@ -7,7 +7,7 @@
 control_variate_pairs(callput, K, time)
 }
 \arguments{
-\item{callput}{1 for calls, -1 for puts}
+\item{callput}{\code{1} for calls, \code{-1} for puts}
 
 \item{K}{strike}
 
