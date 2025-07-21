@@ -157,7 +157,7 @@ if (requireNamespace('R.cache', quietly = TRUE)) {
   treasury_df = R.cache::addMemoization(treasury_df_raw)
 }
 
-#' Convert output of BondValuation::AnnivDates to inputd for Bond
+#' Convert output of BondValuation::AnnivDates to inputs for Bond
 #'
 #' The BondValuation package provides day count convention treatments superior
 #'  to quantmod or any other R package known (as of May 2019).  This function
