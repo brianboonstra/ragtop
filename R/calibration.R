@@ -73,7 +73,7 @@ implied_volatility = function(option_price, callput, S0, K, r, time,
     flog.warn("The provided option price %s is so low that no positive volatility can explain it.  Minimum values would be %s",
               option_price, min_value,
               name='ragtop.calibration.implied_volatility.lowprice')
-    return(NA)
+    return(NA_real_)
   } else {
     flog.debug("Option price price %s exceeds the minimum price %s so a solution exists",
                option_price, min_value,
@@ -83,7 +83,7 @@ implied_volatility = function(option_price, callput, S0, K, r, time,
     flog.warn("The provided option price %s is so high that it exceeds the maximum volatility specified %s, at which the price is %s",
               option_price, max_vola, max_value,
               name='ragtop.calibration.implied_volatility.highprice')
-    return(NA)
+    return(NA_real_)
   } else {
     flog.debug("Option price price %s less than the maximum price %s so a solution exists",
                option_price, max_value,
@@ -206,7 +206,7 @@ equivalent_jump_vola_to_bs = function(bs_vola, time,
                                                         dividend_rate=dividend_rate)$Price
   if (default_free_price<=min_value) {
     flog.warn("The provided survival probability is so low that it alone implies more than the provided default-free volatility")
-    return(NA)
+    return(NA_real_)
   } else {
     flog.debug("Default free price %s exceeds the minimum price %s so a solution exists",
                default_free_price, min_value, name='ragtop.calibration.equivalent_jump_vola_to_bs')
@@ -228,7 +228,7 @@ equivalent_jump_vola_to_bs = function(bs_vola, time,
     vola = vola + vola_adj
     if (vola<0) {
       flog.warn("The provided survival probability is so low that we cannot find the provided default-free volatility")
-      return(NA)
+      return(NA_real_)
     }
     bs_vals = black_scholes_on_term_structures(-1, 1, 1, time,
                                                const_volatility=vola,
@@ -453,7 +453,7 @@ implied_volatility_with_term_struct = function(option_price, callput, S0, K, tim
     flog.warn("The provided option price %s is so low that no positive volatility can explain it.  Minimum values would be %s",
               option_price, min_value,
               name='ragtop.calibration.implied_volatility_with_term_struct')
-    return(NA)
+    return(NA_real_)
   } else {
     flog.debug("Option price price %s exceeds the minimum price %s so a solution exists",
                option_price, min_value,
@@ -463,7 +463,7 @@ implied_volatility_with_term_struct = function(option_price, callput, S0, K, tim
     flog.warn("The provided option price %s is so high that it exceeds the maximum volatility specified %s, at which the price is %s",
               option_price, max_vola, max_value,
               name='ragtop.calibration.implied_volatility_with_term_struct')
-    return(NA)
+    return(NA_real_)
   } else {
     flog.debug("Option price price %s less than the maximum price %s so a solution exists",
                option_price, max_value,
@@ -579,7 +579,7 @@ american_implied_volatility = function(option_price, callput, S0, K, time,
     flog.warn("The provided option price %s is so low that no positive volatility can explain it.  Minimum values would be %s",
               option_price, min_value,
               name='ragtop.calibration.american_implied_volatility')
-    return(NA)
+    return(NA_real_)
   } else {
     flog.debug("Option price price %s exceeds the minimum price %s so a solution exists",
                option_price, min_value,
@@ -589,7 +589,7 @@ american_implied_volatility = function(option_price, callput, S0, K, time,
     flog.warn("The provided option price %s is so high that it exceeds the maximum volatility specified %s, at which the price is %s",
               option_price, max_vola, max_value,
               name='ragtop.calibration.american_implied_volatility')
-    return(NA)
+    return(NA_real_)
   } else {
     flog.debug("Option price price %s less than the maximum price %s so a solution exists",
                option_price, max_value,
@@ -693,7 +693,7 @@ implied_jump_process_volatility = function(instrument_price, instrument,
     flog.warn("The provided instrument price %s is so low that no positive volatility can explain it.  Minimum values would be %s",
               instrument_price, min_value,
               name='ragtop.calibration.implied_jump_process_volatility')
-    return(NA)
+    return(NA_real_)
   } else {
     flog.debug("Instrument price price %s exceeds the minimum price %s so a solution exists",
                instrument_price, min_value,
@@ -703,7 +703,7 @@ implied_jump_process_volatility = function(instrument_price, instrument,
     flog.warn("The provided option price %s is so high that it exceeds the maximum volatility specified %s, at which the price is %s",
               instrument_price, max_vola, max_value,
               name='ragtop.calibration.implied_jump_process_volatility')
-    return(NA)
+    return(NA_real_)
   } else {
     flog.debug("Option price price %s less than the maximum price %s so a solution exists",
                instrument_price, max_value,
@@ -1193,7 +1193,7 @@ fit_to_option_market = function(variance_instruments,
                               flog.warn("Could not compute penalty with p=%s, s=%s, h=%s, returning NA.  Message was \n%s",
                                         p,s,h,errmsg,
                                         name='ragtop.calibration.fit_to_option_market.compute')
-                              return(NA)
+                              return(NA_real_)
                             },finally={
                               flog.info("Computed penalty with p=%s, s=%s, h=%s, ix_s=%s",
                                         p,s,h,ix_s,
@@ -1236,7 +1236,7 @@ fit_to_option_market = function(variance_instruments,
                       flog.error("Unable to use s=%s p=%s to form variance, even though we calibrated:\n%s",
                                 s,p,errmsg,
                                 name='ragtop.calibration.fit_to_option_market')
-                      return(NA)
+                      return(NA_real_)
                     }
   )
   list(h=h, s=best_s, p=best_p, default_intensity_fcn=def_intens_f,
