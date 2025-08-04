@@ -103,7 +103,7 @@ EuropeanOption = setRefClass(
     recovery_fcn = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
       "Return 0 for calls and discounted future payout for puts."
       recovery = 0
-      if (-1==callput) {
+      if (callput == -1) {
         df = discount_factor_fctn(maturity, t)
         recovery = strike * df
         if (recovery>2*max(S)) {
@@ -136,7 +136,7 @@ AmericanOption = setRefClass(
     recovery_fcn = function(v,S,t,...) {
       "Return 0 for calls and discounted future payout for puts."
       recovery = 0
-      if (-1==callput) {
+      if (callput == -1) {
         recovery = strike
       }
       recovery

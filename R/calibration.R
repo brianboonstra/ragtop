@@ -805,7 +805,7 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
                                    ...)
 {
   N = length(eq_options)
-  if (N != length(mid_prices) || (0==N)) {
+  if (N != length(mid_prices) || (N == 0)) {
     stop("Number of prices to match must agree with number of options (",N,") in the calibration of variance")
   } else {
     flog.info("fit_variance_cumulation on %s options...", N,
