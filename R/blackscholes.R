@@ -101,7 +101,7 @@ blackscholes = function(callput, S0, K, r, time, vola,
   delta = exp(-q*time)*callput * stats::pnorm(callput*d1)
   vega = S0*exp(-q*time) * stats::dnorm(d1)*sqrt(time)*abs(callput)  # Include abs(callput) to properly vectorize
   surv_prob = exp(-default_intensity*time)
-  default_value = max(0, -callput*K*exp(-r*time))
+  default_value = pmax(0, -callput*K*exp(-r*time))
   surv_delta = 0
   surv_vega = 0
   ans = list(Price=surv_prob*v + (1-surv_prob)*default_value,
