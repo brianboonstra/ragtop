@@ -75,7 +75,7 @@ blackscholes = function(callput, S0, K, r, time, vola,
       # Discount without consideration for default intensity.  For options
       #  the absence of dividends in case of default is handled by terminal
       #  likelihood.
-      # Subtracting present value properly adjusts the terminal distibution
+      # Subtracting present value properly adjusts the terminal distribution
       #  in case of proportional dividends.  For fixed dividends, only a
       #  grid scheme can properly handle it.  We just pretend they are
       #  proportional here.

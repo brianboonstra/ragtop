@@ -472,7 +472,7 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
 #'   be written.  Its size should be at least
 #'   \code{(1+starting_time_step, length(z), length(instruments))}
 #' @param starting_time_step The index into time_pts of the first timestep
-#'  to be emplyed.  This must be no larger than the length of time_pts, minus one
+#'  to be employed.  This must be no larger than the length of time_pts, minus one
 #' @param time_pts Time nodes to be treated on the grid
 #' @param original_grid_values Grid values to timestep from
 #' @param instruments A list of instruments to be priced.  Each
