@@ -828,7 +828,7 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
     iv
   }
   override_Tmax = NA
-  solver_tolerance = max(0.005, 0.005 * abs(mid_prices))
+  solver_tolerance = pmax(0.005, 0.005 * abs(mid_prices))
   vols = as.numeric(initial_vols_guess)
   if (force_same_grid) {
     override_Tmax = eq_options[[length(eq_options)]]$maturity
