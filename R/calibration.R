@@ -371,7 +371,7 @@ implied_volatilities_with_rates_struct = function(option_price, callput, S0, K, 
             name='ragtop.calibration.implied_volatilities_with_rates_struct')
   df = data.frame(option_price=option_price, callput=callput, S0=S0, K=K, r=r, time=time,
                   const_default_intensity=const_default_intensity,
-                  divrate=divrate, borrow_cost=divrate,
+                  divrate=divrate, borrow_cost=borrow_cost,
                   relative_tolerance=relative_tolerance,
                   max.iter=max.iter,
                   max_vola=max_vola)
