@@ -39,7 +39,7 @@ shift_for_dividends = function(grid_values_before_shift, stock_prices, div_sum)
     x = stock_prices, y = grid_values_before_shift,
     xout = shifted_prices,
     method = "natural"
-  ) # natural method allows linear extrapolation
+  ) # natural method allows linear extrapolation, which is Neumann boundary conditions
   new_grid_values = spl$y
   new_grid_values
 }
