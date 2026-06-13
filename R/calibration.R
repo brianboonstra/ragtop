@@ -1255,7 +1255,7 @@ fit_to_option_market = function(variance_instruments,
 #' @param S0 Current underlying price
 #' @param base_default_intensity Overall default intensity (in natural units)
 #' @param min_maturity Minimum option maturity to allow in calibration
-#' @param min_moneyness Maximum option strike as a proportion of S0 to allow in calibration
+#' @param min_moneyness Minimum option strike as a proportion of S0 to allow in calibration
 #' @param max_moneyness Maximum option strike as a proportion of S0  to allow in calibration
 #' @param options_df A data frame of American option details.  It should
 #' have columns \code{callput}, \code{K}, \code{time},
@@ -1310,7 +1310,7 @@ fit_to_option_market_df = function(
   atm_put_prices = options_df$mid[atm_put_ix]
   atm_put_spreads = options_df$spread[atm_put_ix]
 
-  valid_moneyness_ix = ((options_df$K > options_df*S0) &
+  valid_moneyness_ix = ((options_df$K > min_moneyness*S0) &
                           (options_df$K < max_moneyness*S0))
   other_opt_ix = (options_df$time>min_maturity) & (!atm_put_ix) & valid_moneyness_ix
 
