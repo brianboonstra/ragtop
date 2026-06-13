@@ -269,7 +269,7 @@ CouponBond = setRefClass(
       }
       new_cash = df*(last_computed_cash - cashflows)
       flog.info("Updating %s last_computed_cash (was: %s) discounted by %s to %s and subtracted cashflows %s discounted to %s to get %s.",
-                name, last_computed_cash, df, df*new_cash,
+                name, last_computed_cash, df, df*last_computed_cash,
                 cashflows, df*cashflows, new_cash, name="ragtop.instruments.cashflows.bond")
       last_computed_cash <<- new_cash
       cashflows
