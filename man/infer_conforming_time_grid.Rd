@@ -24,13 +24,13 @@ At its base, this function chooses a time grid with \code{1+min_num_time_steps}
   one of the supplied instruments are also inserted.
 }
 \seealso{
-Other Implicit Grid Solver: 
-\code{\link{construct_implicit_grid_structure}()},
-\code{\link{find_present_value}()},
-\code{\link{form_present_value_grid}()},
-\code{\link{integrate_pde}()},
-\code{\link{iterate_grid_from_timestep}()},
-\code{\link{take_implicit_timestep}()},
-\code{\link{timestep_instruments}()}
+Other Implicit Grid Solver:
+\code{\link[=construct_implicit_grid_structure]{construct_implicit_grid_structure()}},
+\code{\link[=find_present_value]{find_present_value()}},
+\code{\link[=form_present_value_grid]{form_present_value_grid()}},
+\code{\link[=integrate_pde]{integrate_pde()}},
+\code{\link[=iterate_grid_from_timestep]{iterate_grid_from_timestep()}},
+\code{\link[=take_implicit_timestep]{take_implicit_timestep()}},
+\code{\link[=timestep_instruments]{timestep_instruments()}}
 }
 \concept{Implicit Grid Solver}

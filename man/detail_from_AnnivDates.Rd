@@ -2,7 +2,7 @@
 % Please edit documentation in R/term_structures.R
 \name{detail_from_AnnivDates}
 \alias{detail_from_AnnivDates}
-\title{Convert output of BondValuation::AnnivDates to inputd for Bond}
+\title{Convert output of BondValuation::AnnivDates to inputs for Bond}
 \usage{
 detail_from_AnnivDates(
   anvdates,
