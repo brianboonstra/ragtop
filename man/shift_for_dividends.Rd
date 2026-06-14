@@ -22,8 +22,8 @@ An object like \code{grid_values_before_shift} with entries shifted
 Shift a set of grid values for dividends paid, using spline interpolation
 }
 \seealso{
-Other Dividends: 
-\code{\link{adjust_for_dividends}()},
-\code{\link{time_adj_dividends}()}
+Other Dividends:
+\code{\link[=adjust_for_dividends]{adjust_for_dividends()}},
+\code{\link[=time_adj_dividends]{time_adj_dividends()}}
 }
 \concept{Dividends}
