@@ -898,7 +898,7 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
       } else {
         distance = computed_price - mid_prices[[i]]
         flog.info("Term struct solver for instrument %s tested vola %s and found price %s which is distance %s from %s",
-                  i, v, computed_price, civ, distance, mid_prices[[i]],
+                  i, v, computed_price, distance, mid_prices[[i]],
                   name='ragtop.calibration.fit_variance_cumulation.distance')
       }
       distance
