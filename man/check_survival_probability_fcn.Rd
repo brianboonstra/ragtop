@@ -27,9 +27,9 @@ supplied \code{survival_probability_fcn} on the ordered
 increasing or fall outside \eqn{[0,1]}.
 }
 \seealso{
-Other Input Checking: 
-\code{\link{check_discount_factor_fcn}()},
-\code{\link{check_variance_cumulation_fcn}()},
-\code{\link{warn_once_negative_default_intensity}()}
+Other Input Checking:
+\code{\link[=check_discount_factor_fcn]{check_discount_factor_fcn()}},
+\code{\link[=check_variance_cumulation_fcn]{check_variance_cumulation_fcn()}},
+\code{\link[=warn_once_negative_default_intensity]{warn_once_negative_default_intensity()}}
 }
 \concept{Input Checking}

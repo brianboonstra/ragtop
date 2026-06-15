@@ -30,9 +30,9 @@ Create a fresh wrapper for each top-level pricing call so that the
 "already warned" state is scoped to that call and resets on the next.
 }
 \seealso{
-Other Input Checking: 
-\code{\link{check_discount_factor_fcn}()},
-\code{\link{check_survival_probability_fcn}()},
-\code{\link{check_variance_cumulation_fcn}()}
+Other Input Checking:
+\code{\link[=check_discount_factor_fcn]{check_discount_factor_fcn()}},
+\code{\link[=check_survival_probability_fcn]{check_survival_probability_fcn()}},
+\code{\link[=check_variance_cumulation_fcn]{check_variance_cumulation_fcn()}}
 }
 \concept{Input Checking}

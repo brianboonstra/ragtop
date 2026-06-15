@@ -42,10 +42,10 @@ This is a convenience function for calibrating variance cumulation (the
 \seealso{
 \code{\link{fit_to_option_market}} the underlying fit algorithm
 
-Other Equity Dependent Default Intensity: 
-\code{\link{find_present_value}()},
-\code{\link{fit_variance_cumulation}()},
-\code{\link{form_present_value_grid}()},
-\code{\link{implied_jump_process_volatility}()}
+Other Equity Dependent Default Intensity:
+\code{\link[=find_present_value]{find_present_value()}},
+\code{\link[=fit_variance_cumulation]{fit_variance_cumulation()}},
+\code{\link[=form_present_value_grid]{form_present_value_grid()}},
+\code{\link[=implied_jump_process_volatility]{implied_jump_process_volatility()}}
 }
 \concept{Equity Dependent Default Intensity}
