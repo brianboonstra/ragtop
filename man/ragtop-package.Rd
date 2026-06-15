@@ -113,5 +113,10 @@ print(vfit$volatilities)
 \author{
 \strong{Maintainer}: Brian K. Boonstra \email{ragtop@boonstra.org}
 
+Authors:
+\itemize{
+  \item Brian K. Boonstra \email{ragtop@boonstra.org}
+}
+
 }
 \keyword{internal}

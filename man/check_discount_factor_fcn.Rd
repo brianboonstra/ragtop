@@ -32,9 +32,9 @@ infinity carry no usable information about the reversed factor, so
 such pairs are silently ignored rather than flagged.
 }
 \seealso{
-Other Input Checking: 
-\code{\link{check_survival_probability_fcn}()},
-\code{\link{check_variance_cumulation_fcn}()},
-\code{\link{warn_once_negative_default_intensity}()}
+Other Input Checking:
+\code{\link[=check_survival_probability_fcn]{check_survival_probability_fcn()}},
+\code{\link[=check_variance_cumulation_fcn]{check_variance_cumulation_fcn()}},
+\code{\link[=warn_once_negative_default_intensity]{warn_once_negative_default_intensity()}}
 }
 \concept{Input Checking}

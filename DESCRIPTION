@@ -2,7 +2,7 @@ Type: Package
 Package: ragtop
 Title: Pricing Equity Derivatives with Extensions of Black-Scholes
 Version: 1.2.1
-Date: 2026-06-14
+Date: 2026-06-15
 Authors@R: 
     person(c("Brian", "K."), "Boonstra", , "ragtop@boonstra.org", role = c("aut", "cre"))
 Description: Algorithms to price American and European equity options,

@@ -26,9 +26,9 @@ evaluates the supplied \code{variance_cumulation_fcn} on the ordered
 be nondecreasing.
 }
 \seealso{
-Other Input Checking: 
-\code{\link{check_discount_factor_fcn}()},
-\code{\link{check_survival_probability_fcn}()},
-\code{\link{warn_once_negative_default_intensity}()}
+Other Input Checking:
+\code{\link[=check_discount_factor_fcn]{check_discount_factor_fcn()}},
+\code{\link[=check_survival_probability_fcn]{check_survival_probability_fcn()}},
+\code{\link[=warn_once_negative_default_intensity]{warn_once_negative_default_intensity()}}
 }
 \concept{Input Checking}
