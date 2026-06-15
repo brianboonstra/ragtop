@@ -88,20 +88,20 @@ If any instrument in the \code{instruments} has a strike, then the grid will be
  normalized to the last such instrument's strike.
 }
 \seealso{
-Other Equity Dependent Default Intensity:
-\code{\link[=find_present_value]{find_present_value()}},
-\code{\link[=fit_to_option_market_df]{fit_to_option_market_df()}},
-\code{\link[=fit_variance_cumulation]{fit_variance_cumulation()}},
-\code{\link[=implied_jump_process_volatility]{implied_jump_process_volatility()}}
+Other Equity Dependent Default Intensity: 
+\code{\link{find_present_value}()},
+\code{\link{fit_to_option_market_df}()},
+\code{\link{fit_variance_cumulation}()},
+\code{\link{implied_jump_process_volatility}()}
 
-Other Implicit Grid Solver:
-\code{\link[=construct_implicit_grid_structure]{construct_implicit_grid_structure()}},
-\code{\link[=find_present_value]{find_present_value()}},
-\code{\link[=infer_conforming_time_grid]{infer_conforming_time_grid()}},
-\code{\link[=integrate_pde]{integrate_pde()}},
-\code{\link[=iterate_grid_from_timestep]{iterate_grid_from_timestep()}},
-\code{\link[=take_implicit_timestep]{take_implicit_timestep()}},
-\code{\link[=timestep_instruments]{timestep_instruments()}}
+Other Implicit Grid Solver: 
+\code{\link{construct_implicit_grid_structure}()},
+\code{\link{find_present_value}()},
+\code{\link{infer_conforming_time_grid}()},
+\code{\link{integrate_pde}()},
+\code{\link{iterate_grid_from_timestep}()},
+\code{\link{take_implicit_timestep}()},
+\code{\link{timestep_instruments}()}
 }
 \concept{Equity Dependent Default Intensity}
 \concept{Implicit Grid Solver}

@@ -6,3 +6,4 @@ inst/doc
 *.Rhistory
 /Meta/
 /doc/
+exercise_checks.R

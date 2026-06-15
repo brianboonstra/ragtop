@@ -52,30 +52,25 @@ variance_cumulation_from_vols = function(vols_df)
   last_vol = vols_df$volatility[[N]]
   vols_df$fwd_vols = sqrt(fwd_variances/time_diffs)
   cumul_var_0 = function(x) {
-    if (x==0) {
-      cmvar = 0
-    } else if (x>=max_t) {
-      cmvar = cumulated_variances[[N+1]] + vols_df$fwd_vols[[N]]^2 * (x-max_t)
-      flog.debug("Found %s was beyond max_t %s, N=%s, using time diff %s from last anchor time max_t=%s applied to fwd vol %s and prev var %s",
-                 x, max_t, N, (x-max_t), max_t, vols_df$fwd_vols[[N]], cumulated_variances[[N]],
-                 name='ragtop.term_structures.variance_cumulation_from_vols')
-    } else {
-      k = findInterval(x, augmented_t)  # Will not be larger than N
-      dt = x - augmented_t[[k]]
-      if (dt<0) {
-        stop("Negative time interval after call to findInterval() in variance_cumulation_from_vols()")
-      }
-      cmvar = cumulated_variances[[k]] + vols_df$fwd_vols[[k]]^2 * dt
-      flog.debug("Found k=%s, using time diff %s from prev anchor time %s applied to fwd vol %s and prev var %s",
-                 k, dt, augmented_t[[k]], vols_df$fwd_vols[[k]], cumulated_variances[[k]],
-                 name='ragtop.term_structures.variance_cumulation_from_vols')
+    if (any(x < 0)) {
+      stop("Negative time passed to cumulative variance function in variance_cumulation_from_vols()")
     }
+    # findInterval lands each x in [augmented_t[k], augmented_t[k+1]); for
+    #  nonnegative x it is in 1..N+1.  The x==0 case (k=1) and the x>=max_t
+    #  case (k=N+1) both fall out of the one formula once we clamp the forward
+    #  vol index to N, since vols_df$fwd_vols has only N entries.
+    k = findInterval(x, augmented_t)
+    fwd_ix = pmin(k, N)
+    cmvar = cumulated_variances[k] + vols_df$fwd_vols[fwd_ix]^2 * (x - augmented_t[k])
+    flog.debug("Cumulative variance at times %s (anchor indexes %s) is %s",
+               toString(x), toString(k), toString(cmvar),
+               name='ragtop.term_structures.variance_cumulation_from_vols')
     cmvar
   }
   cumul_var = function(T,t=0) {
     cv = cumul_var_0(T) - cumul_var_0(t)
-    if ((T>t) && (cv<=0)) {
-      stop("Nonsensical cumulative variance ", cv, " from t=", t, " to T=", T)
+    if (any((T>t) & (cv<=0))) {
+      stop("Nonsensical cumulative variance ", toString(cv), " from t=", toString(t), " to T=", toString(T))
     }
     cv
   }
@@ -104,14 +99,14 @@ spot_to_df_fcn = function(yield_curve) {
   yield_curve$fwd_rate = fwd_rates[[length(fwd_rates)]]
   yield_curve$fwd_rate[1:(length(yield_curve$fwd_rate)-1)] = fwd_rates
   ycdf = function(x) {
-    loc_df = NA
     n = findInterval(x, yield_curve$time)
-    if (n>0) {
-      dt = (x-yield_curve$time[[n]])
-      loc_df = yield_curve$dfs[[n]] * exp(-yield_curve$fwd_rate[[n]]*dt)
-    } else {
-      loc_df = exp(-yield_curve$rate[[1]]*x)
-    }
+    loc_df = numeric(length(x))
+    # Times at or beyond the first curve knot (n>0) use the piecewise-constant
+    #  forward rate from the bracketing knot; earlier times use the first spot rate.
+    on_curve = n > 0
+    loc_df[on_curve] = yield_curve$dfs[n[on_curve]] *
+      exp(-yield_curve$fwd_rate[n[on_curve]] * (x[on_curve] - yield_curve$time[n[on_curve]]))
+    loc_df[!on_curve] = exp(-yield_curve$rate[[1]] * x[!on_curve])
     loc_df
   }
   treasury_df_fcn = function(T,t=0,...) {ycdf(T)/ycdf(t)}

@@ -60,13 +60,13 @@ Backwardate grid values for all the given instruments from a set of grid
   of time \code{t}.
 }
 \seealso{
-Other Implicit Grid Solver:
-\code{\link[=construct_implicit_grid_structure]{construct_implicit_grid_structure()}},
-\code{\link[=find_present_value]{find_present_value()}},
-\code{\link[=form_present_value_grid]{form_present_value_grid()}},
-\code{\link[=infer_conforming_time_grid]{infer_conforming_time_grid()}},
-\code{\link[=integrate_pde]{integrate_pde()}},
-\code{\link[=iterate_grid_from_timestep]{iterate_grid_from_timestep()}},
-\code{\link[=take_implicit_timestep]{take_implicit_timestep()}}
+Other Implicit Grid Solver: 
+\code{\link{construct_implicit_grid_structure}()},
+\code{\link{find_present_value}()},
+\code{\link{form_present_value_grid}()},
+\code{\link{infer_conforming_time_grid}()},
+\code{\link{integrate_pde}()},
+\code{\link{iterate_grid_from_timestep}()},
+\code{\link{take_implicit_timestep}()}
 }
 \concept{Implicit Grid Solver}
