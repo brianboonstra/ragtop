@@ -185,8 +185,8 @@ accelerated_coupon_value = function(t, coupons_df, discount_factor_fcn,
                                     acceleration_t=Inf)
 {
   coups = coupons_df[(coupons_df$payment_time<=acceleration_t) & (coupons_df$payment_time>t),]
-  disc_factors = discount_factor_fcn(t, coups$payment_time)
-  pvs = coups$payment_size / disc_factors
+  disc_factors = discount_factor_fcn(coups$payment_time, t)
+  pvs = coups$payment_size * disc_factors
   sum(pvs)
 }
 
