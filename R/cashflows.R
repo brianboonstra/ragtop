@@ -160,8 +160,10 @@ adjust_for_dividends = function(grid_values, t, dt, r, h, S, S0, dividends)
 value_from_prior_coupons = function(t, coupons_df, discount_factor_fcn, model_t=0)
 {
   coups = coupons_df[(coupons_df$payment_time<=t) & (coupons_df$payment_time>model_t),]
-  disc_factors = discount_factor_fcn(coups$payment_time, t)
-  pvs = coups$payment_size / disc_factors
+  # Avoid underflow by getting inv disc facts and multiplying, shifting underflow
+  # management to `discount_factor_fcn`
+  inv_disc_factors = discount_factor_fcn(coups$payment_time, t)
+  pvs = coups$payment_size * inv_disc_factors
   sum(pvs)
 }
 
@@ -183,8 +185,8 @@ accelerated_coupon_value = function(t, coupons_df, discount_factor_fcn,
                                     acceleration_t=Inf)
 {
   coups = coupons_df[(coupons_df$payment_time<=acceleration_t) & (coupons_df$payment_time>t),]
-  disc_factors = discount_factor_fcn(t, coups$payment_time)
-  pvs = coups$payment_size / disc_factors
+  disc_factors = discount_factor_fcn(coups$payment_time, t)
+  pvs = coups$payment_size * disc_factors
   sum(pvs)
 }
 

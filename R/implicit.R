@@ -413,6 +413,11 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
                             dividends=NULL)
 {
   time_pts = infer_conforming_time_grid(min_num_time_steps, Tmax, instruments=instruments)
+  # Warn (but do not stop) if the supplied term-structure functions are ill-behaved
+  check_discount_factor_fcn(discount_factor_fcn, time_pts)
+  check_variance_cumulation_fcn(variance_cumulation_fcn, time_pts)
+  # Guard the intensity function so its many calls warn at most once about negatives
+  default_intensity_fcn = warn_once_negative_default_intensity(default_intensity_fcn)
   num_time_pts = length(time_pts)
   num_time_steps = num_time_pts-1
   num_space_pts = length(z)

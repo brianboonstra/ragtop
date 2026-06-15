@@ -1,3 +1,9 @@
+# ragtop 1.2.1 (CRAN)
+
+Version 1.2.1 incorporates an important bugfix thanks to M Muecke, handling accumulation of previously-paid coupons.
+
+Version 1.2.1 also add some vectorization and sanity checks with warnings, as well as other minor fixes suggested by Muecke.
+
 # ragtop 1.2.0 (CRAN)
 
 Version 1.2.0 recovers from deprecation / archiving which happened due to CI finding test failures in its limSolve dependency.  limSolve has now resolved those problems.

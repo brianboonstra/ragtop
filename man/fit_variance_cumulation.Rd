@@ -102,21 +102,21 @@ nonlinear transformation that just
 happens to come from the straight Black-Scholes model.
 }
 \seealso{
-Other Implied Volatilities:
-\code{\link[=american_implied_volatility]{american_implied_volatility()}},
-\code{\link[=equivalent_bs_vola_to_jump]{equivalent_bs_vola_to_jump()}},
-\code{\link[=equivalent_jump_vola_to_bs]{equivalent_jump_vola_to_bs()}},
-\code{\link[=implied_jump_process_volatility]{implied_jump_process_volatility()}},
-\code{\link[=implied_volatilities]{implied_volatilities()}},
-\code{\link[=implied_volatilities_with_rates_struct]{implied_volatilities_with_rates_struct()}},
-\code{\link[=implied_volatility]{implied_volatility()}},
-\code{\link[=implied_volatility_with_term_struct]{implied_volatility_with_term_struct()}}
+Other Implied Volatilities: 
+\code{\link{american_implied_volatility}()},
+\code{\link{equivalent_bs_vola_to_jump}()},
+\code{\link{equivalent_jump_vola_to_bs}()},
+\code{\link{implied_jump_process_volatility}()},
+\code{\link{implied_volatilities}()},
+\code{\link{implied_volatilities_with_rates_struct}()},
+\code{\link{implied_volatility}()},
+\code{\link{implied_volatility_with_term_struct}()}
 
-Other Equity Dependent Default Intensity:
-\code{\link[=find_present_value]{find_present_value()}},
-\code{\link[=fit_to_option_market_df]{fit_to_option_market_df()}},
-\code{\link[=form_present_value_grid]{form_present_value_grid()}},
-\code{\link[=implied_jump_process_volatility]{implied_jump_process_volatility()}}
+Other Equity Dependent Default Intensity: 
+\code{\link{find_present_value}()},
+\code{\link{fit_to_option_market_df}()},
+\code{\link{form_present_value_grid}()},
+\code{\link{implied_jump_process_volatility}()}
 }
 \concept{Equity Dependent Default Intensity}
 \concept{Implied Volatilities}

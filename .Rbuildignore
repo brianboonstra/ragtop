@@ -20,3 +20,6 @@
 ^\.github$
 ^doc$
 ^Meta$
+^\.claude$
+^exercise_checks\.R$
+^CLAUDE\.md$

@@ -146,3 +146,12 @@ test_that("Dividend adjustments working", {
   expect_equal(adjust_for_dividends(20*(20:28), 1.9, 0.3, 0.05, 0.09, (20:28), 25.5, div_near_1_yr)[2],
                420)
 })
+
+
+test_that("Past coupon accumulation working", {
+  coups=data.frame(payment_size=c(100,100,100), payment_time=c(1,2,3))
+  t = 5
+  mydf = function(T, t, ...){exp(-0.1*(T-t))}
+  v = value_from_prior_coupons(t, coups, mydf)
+  expect_gt(v, sum(coups$payment_size))
+})
