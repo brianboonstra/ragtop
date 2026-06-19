@@ -75,6 +75,7 @@ Other Implicit Grid Solver:
 \code{\link[=form_present_value_grid]{form_present_value_grid()}},
 \code{\link[=infer_conforming_time_grid]{infer_conforming_time_grid()}},
 \code{\link[=integrate_pde]{integrate_pde()}},
+\code{\link[=pde_matrix_solve]{pde_matrix_solve()}},
 \code{\link[=take_implicit_timestep]{take_implicit_timestep()}},
 \code{\link[=timestep_instruments]{timestep_instruments()}}
 }

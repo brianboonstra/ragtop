@@ -1,8 +1,8 @@
 Type: Package
 Package: ragtop
 Title: Pricing Equity Derivatives with Extensions of Black-Scholes
-Version: 1.2.1
-Date: 2026-06-15
+Version: 1.3.0
+Date: 2026-06-19
 Authors@R: 
     person(c("Brian", "K."), "Boonstra", , "ragtop@boonstra.org", role = c("aut", "cre"))
 Description: Algorithms to price American and European equity options,
@@ -19,15 +19,16 @@ Depends:
     R (>= 3.5)
 Imports:
     futile.logger (>= 1.4.1),
-    limSolve (>= 2.0.1),
     methods (>= 3.2.2),
     stats
 Suggests:
     BondValuation,
     ggplot2,
     knitr,
+    limSolve (>= 2.0.1),
     lubridate,
     MASS,
+    Matrix,
     R.cache,
     RColorBrewer,
     reshape2,
