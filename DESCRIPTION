@@ -19,15 +19,16 @@ Depends:
     R (>= 3.5)
 Imports:
     futile.logger (>= 1.4.1),
-    limSolve (>= 2.0.1),
     methods (>= 3.2.2),
     stats
 Suggests:
     BondValuation,
     ggplot2,
     knitr,
+    limSolve (>= 2.0.1),
     lubridate,
     MASS,
+    Matrix,
     R.cache,
     RColorBrewer,
     reshape2,
