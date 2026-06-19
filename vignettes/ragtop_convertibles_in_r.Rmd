@@ -426,15 +426,19 @@ twitter_bv = if (requireNamespace("BondValuation", quietly = TRUE)) {
   tryCatch(
       BondValuation::AnnivDates(
         Em=as.Date('2018-06-11'),    # Issue date
-        Mat=as.Date('2024-06-15'), 
-        CpY=2, 
+        Mat=as.Date('2024-06-15'),
+        CpY=2,
         FIPD=as.Date('2018-12-15'),   # First coupon
         FIAD=as.Date('2018-06-15'),   # Beginning of first coupon accrual
         RV=1000,   # Notional
-        Coup=0.25, 
+        Coup=0.25,
         DCC=which(BondValuation::List.DCC$DCC.Name=='30/360'),  # 30/360 daycount convention
         EOM=0
-      )
+      ),
+      # BondValuation::AnnivDates() errors on some platforms (e.g. macOS
+      #  arm64); fall back to skipping this example rather than failing the
+      #  whole vignette build
+      error = function(e) NULL
   )
 } else NULL
 

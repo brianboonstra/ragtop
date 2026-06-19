@@ -1,8 +1,8 @@
-# ragtop 1.3.0
+# ragtop 1.3.1
 
-Version 1.3.0 uses `limSolve` for matrix operations when available, otherwise falls back to `Matrix::bandSparse` solvers.  As a result, `limSolve` is demoted from a dependency to a suggested package.
+Version 1.3.1 uses `limSolve` for matrix operations when available, otherwise falls back to `Matrix::bandSparse` solvers.  As a result, `limSolve` is demoted from a dependency to a suggested package.
 
-The file `matrix.R` is added to handle this, along with new regression tests.
+The file `matrix.R` is added to handle this, along with new regression tests.  Vignette dependency on `BondValuation` is now guarded.
 
 # ragtop 1.2.1 (CRAN)
 

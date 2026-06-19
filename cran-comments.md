@@ -1,9 +1,11 @@
 ## Submission comments
-Version raised to 1.3.0:
+Version raised to 1.3.1:
 
-ragtop version 1.2.1 deprecates limSolve to a suggested package, providing substitutes when unavailable.
+ragtop version 1.3.1 deprecates limSolve to a suggested package, providing substitutes when unavailable.  It also fixes a vignette build problem on some platforms.
 
 Details:
+  - The CRAN package check results had timezone-dependent errors due to usage of the `BondValuation` package on MacOS arm64.
+  - This was supposed to have been fixed in v1.2.1 but the `tryCatch()` lacked an error handler, now added.
   - The `limSolve` package has gone through some periods of unreliability.
   - But, `limSolve` provides a convenient gateway to LAPACK DGTSV Gaussian elimination with partial pivoting.
   - We use `limSolve::Solve.tridiag()` guarded by a namespace check, otherwise fall back to banded methods from `Matrix` or Thomas' algorithm in pure R.
@@ -17,6 +19,7 @@ Details:
 * Github CI Ubuntu-latest 24.04.04 LTS (devel), unstable 2026-06-17 r90169
 * Github CI Windows Server 2025 x64 (20260614.141.1), R 4.6.0
 * CRAN Win-builder Windows Server 2022 x64 (build 20348, x86_64-w64-mingw32) unstable 2026-06-18 r90173 ucrt
+* CRAN Mac-builder 
 
 ## R CMD check results
 One NOTE from win-builder:
