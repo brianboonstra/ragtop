@@ -153,7 +153,6 @@ construct_tridiagonals = function(sigma, structure_constant, drift)
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
 #'   then expected to be equal to \code{fixed + proportional * S / S0}
-#' @import limSolve
 #' @return Grid values for the instrument after taking the implicit timestep
 #' @family Implicit Grid Solver
 #' @export
@@ -172,12 +171,7 @@ take_implicit_timestep = function(t, S, full_discount_factor,
 
   # The value of holding this security at time t, assuming it will survive
   # to t+dt just comes from inverting our finite difference matrix
-  hold_cond_on_surv = limSolve::Solve.tridiag(tridiag_matrix_entries$sub,
-                                              tridiag_matrix_entries$diag,
-                                              tridiag_matrix_entries$super,
-                                              prev_grid_values)
-  # limSolve::Solve.tridiag() uses LAPACK DGTSV Gaussian elimination
-  #  with partial pivoting rather than the naive tridiagonal algorithm
+  hold_cond_on_surv = pde_matrix_solve(tridiag_matrix_entries, prev_grid_values)
 
   # We assume our derivative can have no negative values, so
   # we floor it at zero
