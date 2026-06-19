@@ -207,7 +207,6 @@ If we price options of various strikes $K$ in our model using a constant $\sigma
 ```{r plot_skew_by_power, cache=TRUE, fig.width=6, fig.height=4}
   skew_for_power = function(p,h=0.05,strikes=c(50,100,200)) {
     library(ragtop)
-    library(limSolve)
     library(stringr)
     library(MASS)
     pct2 = function(T,t){exp(-0.02*(T-t))}
