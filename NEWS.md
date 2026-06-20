@@ -1,4 +1,4 @@
-# ragtop 1.3.1
+# ragtop 1.3.1 (CRAN)
 
 Version 1.3.1 uses `limSolve` for matrix operations when available, otherwise falls back to `Matrix::bandSparse` solvers.  As a result, `limSolve` is demoted from a dependency to a suggested package.
 
