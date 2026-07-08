@@ -117,12 +117,35 @@ construct_tridiagonals = function(sigma, structure_constant, drift)
   neumann_drift_high = drift[N]
   diag[N] = 1. + neumann_drift_high
   subdiag[Nm1] = -neumann_drift_high
+
+  n_nan_ix = sum(!is.finite(diag))
+  if (n_nan_ix>0) {
+    flog.fatal("Some diagonal entries (N=%s) were not finite in construct_tridiagonals(). Here, sigma ranged from %s to %s, the structure_constant was %s and the drift ranged from %s to %s",
+               toString(n_nan_ix), toString(max(sigma)), toString(max(sigma)), toString(max(structure_constant)), toString(max(drift)), toString(max(drift)),
+               name='ragtop.implicit.timestep.construct_tridiagonals')
+    stop("Nonfinite diagonal entries in PDE solver")
+  }
+  n_nan_ix = sum(!is.finite(superdiag))
+  if (n_nan_ix>0) {
+    flog.fatal("Some superdiagonal entries (N=%s) were not finite in construct_tridiagonals(). Here, sigma ranged from %s to %s, the structure_constant was %s and the drift ranged from %s to %s",
+               toString(n_nan_ix), toString(max(sigma)), toString(max(sigma)), toString(max(structure_constant)), toString(max(drift)), toString(max(drift)),
+               name='ragtop.implicit.timestep.construct_tridiagonals')
+    stop("Nonfinite seperdiagonal entries in PDE solver")
+  }
+  n_nan_ix = sum(!is.finite(subdiag))
+  if (n_nan_ix>0) {
+    flog.fatal("Some subdiagonal entries (N=%s) were not finite in construct_tridiagonals(). Here, sigma ranged from %s to %s, the structure_constant was %s and the drift ranged from %s to %s",
+               toString(n_nan_ix), toString(max(sigma)), toString(max(sigma)), toString(max(structure_constant)), toString(max(drift)), toString(max(drift)),
+               name='ragtop.implicit.timestep.construct_tridiagonals')
+    stop("Nonfinite subdiagonal entries in PDE solver")
+  }
   bad_ix = (abs(diag[2:Nm1])-abs(subdiag[1:(Nm1 - 1)])-abs(superdiag[2:Nm1])<0)
   if (any(bad_ix)) {
     flog.info("Implicit routine encountered potentially noninvertible matrix.  Bad indexes: %s",
               toString(which(bad_ix)),
               name='ragtop.implicit.timestep.construct_tridiagonals')
   }
+
   list(super = superdiag, diag = diag, sub = subdiag)
 }
 
@@ -276,7 +299,12 @@ timestep_instruments = function(z, prev_grid_values,
     prev_instr_grid_values = div_adj_grid_values[,k]
     if (instrument$maturity >= t) {
       if (all(is.na(prev_instr_grid_values))) {
-        instr_grid_vals = full_discount_factor * instrument$optionality_fcn(0, S, t)
+        instr_grid_vals = full_discount_factor * instrument$terminal_values(0, S, t)
+        if (anyNA(instr_grid_vals)) {
+          flog.error("Instrument %s has maturity %s >= %s but we are finding %s of %s NaN values when querying its optionality_fcn.",
+                     instr_name, instrument$maturity, t, sum(is.na(instr_grid_vals)), length(instr_grid_vals),
+                     name='ragtop.implicit.timestep')
+        }
       } else {
         # Update hold value for cashflows
         instr_methods = instrument$getRefClass()$methods()
@@ -308,8 +336,8 @@ timestep_instruments = function(z, prev_grid_values,
                   name='ragtop.implicit.timestep')
       }
     } else {
-      flog.info("Instrument %s has maturity %s prior to interval [%s,%s].  Skipping any grid computation.",
-                instr_name, instrument$maturity, t, t+dt,
+      flog.info("Instrument %s has maturity %s beyond interval [%s,%s].  Skipping any grid computation and forcing all %s instr_grid_vals entries to NA.",
+                instr_name, instrument$maturity, t, t+dt, length(prev_instr_grid_values),
                 name='ragtop.implicit.timestep')
       instr_grid_vals = NA*(prev_instr_grid_values)
     }
@@ -416,6 +444,9 @@ integrate_pde <- function(z, min_num_time_steps, S0, Tmax, instruments,
   num_time_steps = num_time_pts-1
   num_space_pts = length(z)
   num_instruments = length(instruments)
+  for (k in seq_along(instruments)) {
+    instruments[[k]]$reset_caches()
+  }
   grid = array(data=NA, dim=c(num_time_pts, num_space_pts, num_instruments))
   S_final = stock_level_fcn(z, Tmax)
   df_final = discount_factor_fcn(Tmax, 0)
@@ -496,6 +527,9 @@ iterate_grid_from_timestep = function(starting_time_step, time_pts, z, S0, instr
   new_grid_values = original_grid_values
   # Take starting_time_step timesteps to integrate
   for (m in (starting_time_step:1)) {
+    flog.info("PDE solver taking timestep %s of %s",
+              toString(starting_time_step+1-m), toString(starting_time_step),
+              name = "ragtop.implicit.iterate_grid_from_timestep")
     t = time_pts[[m]]
     dt = time_pts[[m+1]] - time_pts[[m]]
     new_grid_values = timestep_instruments(
@@ -659,7 +693,8 @@ find_present_value = function(S0, num_time_steps, instruments,
                                    borrow_cost=0.0,
                                    dividend_rate=0.0,
                                    structure_constant=2.0,
-                                   std_devs_width=3.0)
+                                   std_devs_width=3.0,
+                                   grid_center=NA)
 {
   if (is.blank(dividends)) {
     divs_descr = "NULL"
@@ -669,6 +704,7 @@ find_present_value = function(S0, num_time_steps, instruments,
   flog.info("find_present_value(S0=%s, num_time_steps=%s, <%s instruments>, <divs: %s>, structure_constant=%s, std_devs_width=%s)",
             S0, num_time_steps, length(instruments), divs_descr, structure_constant, std_devs_width,
             name='ragtop.implicit.find_present_value')
+
   if (is.null(names(instruments))) {
     names(instruments) = lapply(instruments,
                                 function(inst) {inst$name})
@@ -684,7 +720,8 @@ find_present_value = function(S0, num_time_steps, instruments,
                                                borrow_cost=borrow_cost,
                                                dividend_rate=dividend_rate,
                                                structure_constant=structure_constant,
-                                               std_devs_width=std_devs_width)
+                                               std_devs_width=std_devs_width,
+                                               grid_center=grid_center)
   present_values = list()
   for (k in seq_along(instruments)) {
     instrument = instruments[[k]]

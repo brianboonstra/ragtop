@@ -26,6 +26,8 @@ columns \code{payment_time} and \code{payment_size}.}
 
 \item{\code{optionality_fcn(v, S, t, ...)}}{Return the notional value in the shape of \code{S} at any time on or after maturity, otherwise just return \code{v}}
 
+\item{\code{reset_caches()}}{Clear any memoization caches so this instrument can be repriced afresh.  Subclasses extend this to clear their own caches.}
+
 \item{\code{total_coupon_values_between(
   small_t,
   big_t,

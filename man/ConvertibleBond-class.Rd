@@ -23,6 +23,8 @@ Convertible bond with exercise into stock
 
 \item{\code{optionality_fcn(v, S, t, discount_factor_fctn = discount_factor_fcn, ...)}}{Return the greater of hold value \code{v} or exercise value at each stock price level in \code{S}.  If the given date is beyond maturity, return value at maturity.}
 
+\item{\code{reset_caches()}}{Clear the accrued-coupon cache in addition to inherited caches.}
+
 \item{\code{terminal_values(v, ...)}}{Return a terminal value. defaults to simply calling \code{optionality_fcn}.}
 
 \item{\code{update_cashflows(

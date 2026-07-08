@@ -380,7 +380,22 @@ cb_value = form_present_value_grid(
   variance_cumulation_fcn=calib_varnce$cumulation_function)
 ```
 
-For convenience, **ragtop** also exposes the full grid from its solver, allowing us to calculate delta and gamma
+
+If we want greeks, this is handled for us, allowing us to calculate delta and gamma cheaply, and more expensive greeks as well.  
+```{r greeks_cb, echo=TRUE, comment=""}
+cb_value_and_greeks = ragtop::find_greeks(
+  greeks=c("delta", "gamma", "vega", "credit_dv01"),
+  S0=S0, 
+  instruments=list(CB=cb),
+  num_time_steps=250,
+  default_intensity_fcn=calibrated_intensity_f,
+  discount_factor_fcn = disct_fcn,
+  variance_cumulation_fcn=calib_varnce$cumulation_function)
+round(unlist(cb_value_and_greeks),4)
+```
+
+
+For convenience, **ragtop** also exposes the full grid from its solver.  Here we show, for example, how that delta is computed under the hood
 
 ```{r grid_cb_delta, echo=TRUE, comment=""}
 cbprices = ragtop::form_present_value_grid(
@@ -402,7 +417,7 @@ delta
 ```
 
 
-or to make a plot
+and how to make a plot
 
 ```{r grid_cb_plot, echo=TRUE, comment=""}
 present_value = present_value_interp(S0)

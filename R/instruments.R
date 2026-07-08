@@ -54,6 +54,10 @@ GridPricedInstrument = setRefClass(
                 last_computed_grid = "numeric",
                 name = "character"),
   methods = list(
+    reset_caches = function() {
+      "Clear any memoization caches so this instrument can be repriced afresh.  Subclasses extend this to clear their own caches."
+      last_computed_grid <<- numeric(0)
+    },
     recovery_fcn = function(v,S,t,...) {
       "Return recovery value, given non-default values \\code{v} at time \\code{t}.  Subclasses may be more elaborate, this method simply returns 0.0."
       0.0
@@ -212,6 +216,11 @@ CouponBond = setRefClass(
   contains="ZeroCouponBond",
   fields=list(coupons="data.frame", last_computed_cash="numeric"),
   methods = list(
+    reset_caches = function() {
+      "Clear the accrued-coupon cache in addition to inherited caches."
+      callSuper()
+      last_computed_cash <<- numeric(0)
+    },
     accumulate_coupon_values_before = function(t, discount_factor_fctn=discount_factor_fcn) {
       "Compute the sum of coupon present values as of \\code{t} according to \\code{discount_factor_fctn}"
       ac = 0
@@ -346,6 +355,14 @@ ConvertibleBond = setRefClass(
               last_used_S="numeric",
               last_used_t="numeric"),
   methods=list(
+    reset_caches = function() {
+      "Clear the exercise-decision caches in addition to inherited caches."
+      callSuper()
+      last_computed_exercise_value <<- numeric(0)
+      last_computed_exercise_decision <<- logical(0)
+      last_used_S <<- numeric(0)
+      last_used_t <<- numeric(0)
+    },
     compute_exercise_decision = function(v,S,t,discount_factor_fctn=discount_factor_fcn,...) {
       flog.info("Evaluating exercise decisions of convertible bond %s at t=%s", name, t,
                 name="ragtop.instruments.exercise.convertible")
@@ -354,7 +371,7 @@ ConvertibleBond = setRefClass(
       #  a fair comparison
       exercise_values = S * conversion_ratio
       if (t >= maturity) {
-        if (all(v <= 0)) {  # Must be initialization of grid
+        if ((all(v <= 0)) || all(is.na(v))) {  # Must be initialization of grid
           total_early_exercise_value = exercise_values
           v = notional + 0*S
           flog.info("Since instrument %s t=%s was at or beyond the maturity %s, initialized total_early_exercise_value with S * conversion_ratio",
@@ -427,6 +444,10 @@ ConvertibleBond = setRefClass(
       flog.info("Last computed exer values for %s have %s cases of early exercise",
                 name, sum(exer$exercise_indexes), name="ragtop.instruments.exercise.convertible")
       ev[exer$exercise_indexes] = exer$exercise_values[exer$exercise_indexes]
+      if (anyNA(ev)) {
+        flog.warn("Last computed post-early-exercise values for %s have %s cases of NaN values",
+                  name, sum(is.na(ev)), name="ragtop.instruments.exercise.convertible")
+      }
       last_computed_grid <<- ev
       last_computed_grid
     },

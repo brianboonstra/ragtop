@@ -1,8 +1,16 @@
-# ragtop 1.3.0
+# ragtop 2.0.0
 
-Version 1.3.0 uses `limSolve` for matrix operations when available, otherwise falls back to `Matrix::bandSparse` solvers.  As a result, `limSolve` is demoted from a dependency to a suggested package.
+Version 2.0.0 adds risk sensitivity ("greeks") calculations along with the supporting cache infrastructure that makes them efficient.
 
-The file `matrix.R` is added to handle this, along with new regression tests.
+* New `find_greeks()` computes delta, gamma, vega, rates DV01 and credit DV01 for grid-priced instruments.  Delta and gamma are read directly from a single pricing grid, while vega, rates DV01 and credit DV01 come from central-difference "bumping" of the supplied term structure functions.  Callers may request any subset of the greeks.
+* Instruments now provide `reset_caches()`, and `integrate_pde()` clears per-run instrument state automatically.  A single instrument object can therefore be priced repeatedly (as in bump-and-reprice greeks) without recreating it.
+* Fixed the `futile.logger` layout so that logger names no longer leak into formatted log messages.
+
+# ragtop 1.3.1 (CRAN)
+
+Version 1.3.1 uses `limSolve` for matrix operations when available, otherwise falls back to `Matrix::bandSparse` solvers.  As a result, `limSolve` is demoted from a dependency to a suggested package.
+
+The file `matrix.R` is added to handle this, along with new regression tests.  Vignette dependency on `BondValuation` is now guarded.
 
 # ragtop 1.2.1 (CRAN)
 

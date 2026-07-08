@@ -121,3 +121,4 @@ vs_with_and_without = find_present_value(S0=252,
 test_that("Recovery rates matter", {
   expect_gt(vs_with_and_without$StdRecov, 1.05 * vs_with_and_without$NoRecov)
 })
+

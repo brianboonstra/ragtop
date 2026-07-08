@@ -79,6 +79,36 @@ test_that("American options in control variate scheme", {
   expect_equal(amer_put_price_20k_steps, cv_amer_price, tolerance=2.e-2)
 })
 
+# Repricing one American option object (e.g. bump-and-reprice greeks) must match
+#  pricing fresh objects, because integrate_pde resets per-run caches.
+make_reuse_amer = function() AmericanOption(maturity=1, strike=110, callput=-1, name='ReuseAmer')
+amer_base_fresh = find_present_value(S0=100, instruments=list(ReuseAmer=make_reuse_amer()),
+                                     const_short_rate=0.06, const_volatility=0.20,
+                                     num_time_steps=200, std_devs_width=5)$ReuseAmer
+amer_bump_fresh = find_present_value(S0=100, instruments=list(ReuseAmer=make_reuse_amer()),
+                                     const_short_rate=0.06, const_volatility=0.30,
+                                     num_time_steps=200, std_devs_width=5)$ReuseAmer
+reuse_amer = make_reuse_amer()
+amer_base = find_present_value(S0=100, instruments=list(ReuseAmer=reuse_amer),
+                               const_short_rate=0.06, const_volatility=0.20,
+                               num_time_steps=200, std_devs_width=5)$ReuseAmer
+amer_bump = find_present_value(S0=100, instruments=list(ReuseAmer=reuse_amer),
+                               const_short_rate=0.06, const_volatility=0.30,
+                               num_time_steps=200, std_devs_width=5)$ReuseAmer
+test_that("Reusing an American option object matches fresh objects", {
+  expect_equal(amer_base, amer_base_fresh)
+  expect_equal(amer_bump, amer_bump_fresh)
+  # Sanity: the vol bump actually moved the price, so this is a real test
+  expect_false(isTRUE(all.equal(amer_base, amer_bump)))
+})
+
+test_that("reset_caches clears the American option grid cache", {
+  ao = make_reuse_amer()
+  ao$last_computed_grid = c(1, 2, 3)
+  ao$reset_caches()
+  expect_length(ao$last_computed_grid, 0)
+})
+
 long_term_ITM_put = EuropeanOption(maturity=3.53, strike=200, callput=PUT,
                                   discount_factor_fcn=pct2, name='Put200')
 default_intensity_fcn= function(t, S, ...){h=0.05;p=1;0.95*h+0.05*h*(100/S)^p}

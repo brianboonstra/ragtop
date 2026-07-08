@@ -9,12 +9,15 @@ TIME_RESOLUTION_SIGNIF_DIGITS = 7
 #' @export
 TIME_RESOLUTION_FACTOR = 10^(-TIME_RESOLUTION_SIGNIF_DIGITS)
 
-log_layout_fcn = function(level, msg, ...)
+log_layout_fcn = function(level, msg, id="", ...)
 {
+  # futile.logger invokes the layout as layout(level, msg, name, ...), so the
+  #  third positional argument is the logger name.  We must absorb it in `id`
+  #  (unused here) rather than let it leak into the sprintf format arguments.
   if (length(list(...)) > 0) {
-    parsed <- lapply(list(...), function(x) ifelse(is.null(x),
+    parsed = lapply(list(...), function(x) ifelse(is.null(x),
                                                    "NULL", x))
-    msg <- do.call(sprintf, c(msg, parsed))
+    msg = do.call(sprintf, c(msg, parsed))
   }
   sprintf("%s %s\n", names(level), msg)
 }

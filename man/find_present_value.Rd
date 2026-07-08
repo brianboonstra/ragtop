@@ -25,7 +25,8 @@ find_present_value(
   borrow_cost = 0,
   dividend_rate = 0,
   structure_constant = 2,
-  std_devs_width = 3
+  std_devs_width = 3,
+  grid_center = NA
 )
 }
 \arguments{
@@ -73,6 +74,8 @@ and the square of space intervals \code{dz^2}}
 
 \item{std_devs_width}{The number of standard deviations, in \code{sigma * sqrt(T)}
 units, to incorporate into the grid}
+
+\item{grid_center}{A reasonable central value for the grid, defaults to S0 or an instrument strike}
 }
 \value{
 A list of present values, with the same names as \code{instruments}

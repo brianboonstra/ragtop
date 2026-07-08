@@ -83,7 +83,7 @@ and \code{proportional}.  Dividend size at the given \code{time} is}
 \item{...}{Further arguments to \code{\link{find_present_value}}}
 }
 \value{
-A list with two elements, \code{volatilities} and \code{cumulation_function}.  The \code{cumulation_function} will
+A list with three elements, \code{volatilities}, \code{times} and \code{cumulation_function}.  The \code{cumulation_function} will
   be a 2-parameter function giving cumulated variances, as created by \code{\link{variance_cumulation_from_vols}}
 }
 \description{
