@@ -153,6 +153,42 @@ american_implied_volatility(
 #> [1] 0.113407
 ```
 
+### Pricing Convertible Bonds
+
+In addition to standard options, you can price more sophisticated
+instruments, including in particular convertible bonds
+
+``` r
+S0=241.80
+varc = ragtop::variance_cumulation_from_vols(
+  data.frame(
+    time=c(0.13, 0.38, 0.63, 0.72, 1.72), 
+    volatility=c(0.48, 0.46, 0.46, 0.45, 0.45)
+    ))
+disct_fcn = ragtop::spot_to_df_fcn(
+  data.frame(time=c(1, 5, 10, 15),rate=c(0.01, 0.02, 0.03, 0.05))
+  )
+
+cb = ragtop::ConvertibleBond(
+  maturity=2.87, conversion_ratio=2.7788, notional=1000,
+  coupons=data.frame(
+    payment_time=seq(2.8, 0, by=-0.25),
+    payment_size=1000*0.0025/4),
+  discount_factor_fcn = disct_fcn
+  )
+price_and_greeks = ragtop::find_greeks(
+  greeks=c("delta", "vega", "credit_dv01"),
+  S0=S0,
+  instruments=list(CB=cb),
+  num_time_steps=250,
+  default_intensity_fcn = function(t, S, ...){0.03 + 0.01 * (S0/S)^1.5},
+  discount_factor_fcn = disct_fcn,
+  variance_cumulation_fcn=varc)
+round(unlist(price_and_greeks),4)
+#>       price.CB       delta.CB       gamma.CB        vega.CB credit_dv01.CB 
+#>       989.2065         1.6682         0.0040       371.9968     -1717.6481
+```
+
 ## More Sophisticated Calibration
 
 You can also find more complete calibration routines in **ragtop**. See
