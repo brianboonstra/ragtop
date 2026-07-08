@@ -780,7 +780,7 @@ implied_jump_process_volatility = function(instrument_price, instrument,
 #'   \code{survival_probability_fcn} if specified
 #' @param dividends A \code{data.frame} with columns \code{time}, \code{fixed},
 #'   and \code{proportional}.  Dividend size at the given \code{time} is
-#' @return A list with two elements, \code{volatilities} and \code{cumulation_function}.  The \code{cumulation_function} will
+#' @return A list with three elements, \code{volatilities}, \code{times} and \code{cumulation_function}.  The \code{cumulation_function} will
 #'   be a 2-parameter function giving cumulated variances, as created by \code{\link{variance_cumulation_from_vols}}
 #' @keywords calibration
 #' @keywords Black-Scholes
@@ -812,6 +812,9 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
               name='ragtop.calibration.fit_variance_cumulation')
   }
   maturities = as.numeric(lapply(eq_options, function(x){x$maturity}))
+  if (!(all(diff(maturities)>0))) {
+    stop("Option maturities used for obtaining variance cumulation must be in strictly increasing order")
+  }
   compute_var_cum_f = function(vs) {
     variance_cumulation_from_vols(data.frame(volatility=as.numeric(vs), time=maturities))
   }
@@ -971,9 +974,10 @@ fit_variance_cumulation = function(S0, eq_options, mid_prices, spreads=NULL,
               i, vols[i],
               name='ragtop.calibration.fit_variance_cumulation')
     last_cumul_variance = vols[i]^2 * eq_opt$maturity
+    last_time = eq_opt$maturity
   }
   cfunc = compute_var_cum_f(vols)
-  list(volatilities=vols, cumulation_function=cfunc)
+  list(volatilities=vols, times=maturities, cumulation_function=cfunc)
 }
 
 
