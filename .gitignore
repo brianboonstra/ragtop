@@ -1,8 +1,14 @@
+CLAUDE.md
+.DS_Store
 .Rproj.user
 .Rhistory
 .RData
 inst/doc
-
+docs
+papers/Figs
+vignettes/Figs
+vignettes/ragtop_convertibles_in_r.R
+vignettes/ragtop_convertibles_in_r.html
 *.Rhistory
 /Meta/
 /doc/

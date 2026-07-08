@@ -23,3 +23,7 @@
 ^\.claude$
 ^exercise_checks\.R$
 ^CLAUDE\.md$
+^docs$
+^_pkgdown\.yml$
+^.*\.Rcheck$
+^00_pkg_src.*$
