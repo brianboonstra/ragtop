@@ -28,6 +28,8 @@ decisions.
 
 \item{\code{recovery_fcn(v, S, t, ...)}}{Return recovery value, given non-default values \code{v} at time \code{t}.  Subclasses may be more elaborate, this method simply returns 0.0.}
 
+\item{\code{reset_caches()}}{Clear any memoization caches so this instrument can be repriced afresh.  Subclasses extend this to clear their own caches.}
+
 \item{\code{terminal_values(v, ...)}}{Return a terminal value. defaults to simply calling \code{optionality_fcn}.}
 }}
 
