@@ -1,4 +1,4 @@
-# ragtop 2.0.0
+# ragtop 2.0.0 (CRAN)
 
 Version 2.0.0 adds risk sensitivity ("greeks") calculations along with the supporting cache infrastructure that makes them efficient.
 
